@@ -17,10 +17,13 @@ Improved matching engine written in Javascript
 ## Installation
 
 Install with npm:
+
 ```sh
 npm install hft-limit-order-book --save
 ```
+
 Install with yarn:
+
 ```sh
 yarn add hft-limit-order-book
 ```
@@ -30,9 +33,9 @@ yarn add hft-limit-order-book
 To start using order book you need to import `OrderBook` and create new instance:
 
 ```js
-import { OrderBook } from "hft-limit-order-book";
+import { OrderBook } from 'hft-limit-order-book'
 
-const lob = new OrderBook();
+const lob = new OrderBook()
 ```
 
 Then you be able to use next primary functions:
@@ -70,6 +73,7 @@ processLimitOrder(side: 'buy' | 'sell', orderID: string, size: number, price: nu
 ```
 
 For example:
+
 ```
 processLimitOrder("sell", "uinqueID", 55, 100);
 
@@ -133,6 +137,7 @@ processMarketOrder(side: 'buy' | 'sell', size: number);
 ```
 
 For example:
+
 ```
 processMarketOrder('sell', 6);
 
@@ -156,7 +161,7 @@ asks: 110 -> 5
 --------------  ->  --------------
 bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
-                    
+
 done         - 2 (or more orders)
 partial      - nil
 quantityLeft - 4
@@ -178,12 +183,13 @@ asks: 110 -> 5
 --------------  ->  --------------
 bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
-                    
+
 done         - 2 (or more orders)
 partial      - nil
 quantityLeft - 4
 
 ```
+
 ## Contributing
 
 I would greatly appreciate any contributions to make this project better. Please make sure to follow the below guidelines before getting your hands dirty.
@@ -196,6 +202,4 @@ I would greatly appreciate any contributions to make this project better. Please
 
 ## License
 
-hft-limit-order-book is [MIT licensed](LICENSE).
-
-See [LICENSE](LICENSE) and [AUTHORS](AUTHORS) files
+Copyright [Andrea Fassina](https://github.com/fasenderos), Licensed under [MIT](LICENSE).
