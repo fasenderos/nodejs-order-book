@@ -2,11 +2,11 @@
 
 > Ported from [Go orderbook](https://github.com/i25959341/orderbook)
 
-# NodeJS orderbook
+# hft-limit-order-book
 
 :star: Star me on GitHub — it motivates me a lot!
 
-Improved matching engine written in Javascript (NodeJS)
+Improved matching engine written in Javascript
 
 ## Features
 

@@ -1,7 +1,7 @@
 {
   "name": "hft-limit-order-book",
   "version": "0.0.1",
-  "description": "Ultra-fast Limit Order Book for high-frequency trading (HFT) for NodeJS. NOTE: Still early and not production ready.",
+  "description": "Ultra-fast Limit Order Book for high-frequency trading (HFT) for NodeJS.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "umd:main": "dist/umd/index.js",
@@ -39,6 +39,7 @@
     "matching-algorithm",
     "matching-engine",
     "nodejs",
+    "orderbook",
     "order-book",
     "typescript",
     "trading"
