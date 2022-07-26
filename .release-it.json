@@ -1,0 +1,11 @@
+{
+  "git": {
+    "commitMessage": "chore(release): nestjs-ccxt@${version}"
+  },
+  "github": {
+    "release": true
+  },
+  "hooks": {
+    "after:bump": "conventional-changelog -i CHANGELOG.md -s && git add CHANGELOG.md"
+  }
+}
