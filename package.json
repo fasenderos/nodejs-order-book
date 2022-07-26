@@ -1,6 +1,6 @@
 {
   "name": "hft-limit-order-book",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Ultra-fast Limit Order Book for high-frequency trading (HFT) for NodeJS.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
