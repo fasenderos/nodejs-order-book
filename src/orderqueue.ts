@@ -54,7 +54,12 @@ export class OrderQueue {
   update = (oldOrder: Order, newOrder: Order) => {
     this._volume -= oldOrder.size
     this._volume += newOrder.size
-    oldOrder = newOrder
+    // Remove old order from head
+    this.orders.removeOne(0)
+    // Add new order to head // TODO head?? or tail???
+    this.orders.unshift(newOrder)
+    delete this.ordersMap[oldOrder.id]
+    this.ordersMap[newOrder.id] = 0
   }
 
   // removes order from the queue

@@ -24,6 +24,7 @@
     "release:patch": "standard-version --release-as patch",
     "release:major": "standard-version --release-as major",
     "test": "jest --no-cache --runInBand",
+    "test:dev": "jest --no-cache --runInBand --watch",
     "test:cov": "jest --coverage --no-cache --runInBand"
   },
   "publishConfig": {
