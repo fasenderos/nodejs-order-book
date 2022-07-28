@@ -1,24 +1,24 @@
-import LinkedList, { Node, NodeData } from 'dbly-linked-list'
+import Denque from 'denque'
 import { Order } from './order'
 
 export class OrderQueue {
   private _price: number
   private _volume: number
-  private orders: LinkedList
+  private orders: Denque<Order>
   private ordersMap: { [key: string]: number } = {}
 
   constructor(price: number) {
     this._price = price
     this._volume = 0
-    this.orders = new LinkedList()
+    this.orders = new Denque<Order>()
   }
 
   // returns the number of orders in queue
   len = (): number => {
-    return this.orders.getSize()
+    return this.orders.length
   }
 
-  toArray = (): NodeData[] => {
+  toArray = (): Order[] => {
     return this.orders.toArray()
   }
 
@@ -33,34 +33,34 @@ export class OrderQueue {
   }
 
   // returns top order in queue
-  head = () => {
-    return this.orders.getHeadNode()
+  head = (): Order | undefined => {
+    return this.orders.peekFront()
   }
 
   // returns bottom order in queue
-  tail = () => {
-    return this.orders.getTailNode()
+  tail = (): Order | undefined => {
+    return this.orders.peekBack()
   }
 
   // adds order to tail of the queue
   append = (order: Order): Order => {
     this._volume += order.size
-    this.orders.insert(order)
-    this.ordersMap[order.id] = this.orders.getSize() - 1
+    this.orders.push(order)
+    this.ordersMap[order.id] = this.orders.length - 1
     return order
   }
 
   // sets up new order to list value
-  update = (node: Node, nodeData: Order, order: Order) => {
-    this._volume -= nodeData.size
-    this._volume += order.size
-    node.data = order
+  update = (oldOrder: Order, newOrder: Order) => {
+    this._volume -= oldOrder.size
+    this._volume += newOrder.size
+    oldOrder = newOrder
   }
 
   // removes order from the queue
   remove = (order: Order) => {
     this._volume -= order.size
-    this.orders.removeAt(this.ordersMap[order.id])
+    this.orders.removeOne(this.ordersMap[order.id])
     delete this.ordersMap[order.id]
   }
 }

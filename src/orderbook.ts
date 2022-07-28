@@ -205,28 +205,23 @@ export class OrderBook {
     }
     if (response.quantityLeft) {
       while (orderQueue.len() > 0 && response.quantityLeft > 0) {
-        const headOrderEl = orderQueue.head()
-        if (headOrderEl) {
-          const headOrder = headOrderEl.getData<Order>()
-          if (headOrder) {
-            if (response.quantityLeft < headOrder.size) {
-              response.partial = new Order(
-                headOrder.id,
-                headOrder.side,
-                headOrder.size - response.quantityLeft,
-                headOrder.price,
-                headOrder.time
-              )
+        const headOrder = orderQueue.head()
+        if (headOrder) {
+          if (response.quantityLeft < headOrder.size) {
+            response.partial = new Order(
+              headOrder.id,
+              headOrder.side,
+              headOrder.size - response.quantityLeft,
+              headOrder.price,
+              headOrder.time
+            )
 
-              response.partialQuantityProcessed = response.quantityLeft
-              orderQueue.update(headOrderEl, headOrder, response.partial)
-              response.quantityLeft = 0
-            } else {
-              response.quantityLeft = response.quantityLeft - headOrder.size
-              response.done = response.done.concat(
-                this.cancelOrder(headOrder.id)
-              )
-            }
+            response.partialQuantityProcessed = response.quantityLeft
+            orderQueue.update(headOrder, response.partial)
+            response.quantityLeft = 0
+          } else {
+            response.quantityLeft = response.quantityLeft - headOrder.size
+            response.done = response.done.concat(this.cancelOrder(headOrder.id))
           }
         }
       }

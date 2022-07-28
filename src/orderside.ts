@@ -1,5 +1,4 @@
 import createRBTree from 'functional-red-black-tree'
-import { NodeData } from 'dbly-linked-list'
 import { Order } from './order'
 import { OrderQueue } from './orderqueue'
 
@@ -95,7 +94,7 @@ export class OrderSide {
 
   // returns all orders
   orders = () => {
-    let orders: NodeData[] = []
+    let orders: Order[] = []
     for (const price in this.prices) {
       if (Object.prototype.hasOwnProperty.call(this.prices, price)) {
         const allOrders = this.prices[price].toArray()
