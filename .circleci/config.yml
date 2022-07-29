@@ -40,7 +40,7 @@ jobs:
       - *install-deps
       - run:
           name: Unit tests
-          command: npm run test
+          command: npm run test:cov
       - codecov/upload:
           file: './coverage/clover.xml'
 
