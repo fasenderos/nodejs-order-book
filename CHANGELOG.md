@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.6](https://github.com/fasenderos/hft-limit-order-book/compare/v0.0.5...v0.0.6) (2022-07-29)
+
+
+### Features
+
+* add benchmark ([6b52088](https://github.com/fasenderos/hft-limit-order-book/commits/6b52088491fdc8ee913721bddf315bfae556ec04))
+
 ### [0.0.5](https://github.com/fasenderos/hft-limit-order-book/compare/v0.0.4...v0.0.5) (2022-07-29)
 
 
