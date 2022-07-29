@@ -66,7 +66,7 @@ export class OrderSide {
   maxPriceQueue = (): OrderQueue | undefined => {
     if (this.depthSide > 0) {
       const max = this.priceTree.end
-      if (max) return max.value
+      return max.value
     }
   }
 
@@ -74,20 +74,20 @@ export class OrderSide {
   minPriceQueue = (): OrderQueue | undefined => {
     if (this.depthSide > 0) {
       const min = this.priceTree.begin
-      if (min) return min.value
+      return min.value
     }
   }
 
   // returns nearest OrderQueue with price less than given
   lessThan = (price: number): OrderQueue | undefined => {
     const node = this.priceTree.lt(price)
-    return node?.value
+    return node.value
   }
 
   // returns nearest OrderQueue with price greater than given
   greaterThan = (price: number): OrderQueue | undefined => {
     const node = this.priceTree.gt(price)
-    return node?.value
+    return node.value
   }
 
   // returns all orders
