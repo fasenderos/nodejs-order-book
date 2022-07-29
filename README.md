@@ -12,13 +12,18 @@
 
 :star: Star me on GitHub — it motivates me a lot!
 
-Improved matching engine written in Javascript
+Ultra-fast matching engine written in Javascript
 
 ## Features
 
 - Standard price-time priority
 - Supports both market and limit orders
 - Supports order cancelling
+- **High performance (above 300k trades per second)**
+
+**Machine:** ASUS ExpertBook, 11th Gen Intel(R) Core(TM) i7-1165G7, 2.80Ghz, 16GB RAM, Node.js v18.4.0.
+
+<img src="https://user-images.githubusercontent.com/1219087/181792292-8619ee25-bf75-4871-a06c-bd6c82157f33.png" alt="hft-limit-order-book-benchmark" title="hft-limit-order-book benchmark" />
 
 ## Installation
 
@@ -194,6 +199,40 @@ done         - 2 (or more orders)
 partial      - nil
 quantityLeft - 4
 
+```
+
+## Development
+
+### Build
+
+Build production (distribution) files in your dist folder:
+
+```sh
+npm run build
+```
+
+### Testing
+
+To run all the unit-test
+
+```sh
+npm run test
+```
+
+### Coverage
+
+Run testing coverage
+
+```sh
+npm run test:cov
+```
+
+### Benchmarking
+
+Before running benchmark, be sure to have builded the source code with 'npm run build'
+
+```sh
+npm run bench
 ```
 
 ## Contributing
