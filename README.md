@@ -1,4 +1,10 @@
-> NOTE: Still early and not production ready.
+<p align="center">
+    <a href="https://www.npmjs.com/package/hft-limit-order-book" target="_blank"><img src="https://img.shields.io/npm/v/hft-limit-order-book?color=blue" alt="NPM Version"></a>
+    <a href="https://github.com/fasenderos/hft-limit-order-book/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/npm/l/hft-limit-order-book" alt="Package License"></a>
+    <a href="https://www.npmjs.com/package/hft-limit-order-book" target="_blank"><img src="https://img.shields.io/npm/dm/hft-limit-order-book" alt="NPM Downloads"></a>
+    <a href="https://circleci.com/gh/fasenderos/hft-limit-order-book" target="_blank"><img src="https://img.shields.io/circleci/build/github/fasenderos/hft-limit-order-book/main" alt="CircleCI" ></a>
+    <a href="https://codecov.io/github/fasenderos/hft-limit-order-book" target="_blank"><img src="https://img.shields.io/codecov/c/github/fasenderos/hft-limit-order-book" alt="Codecov"></a>
+</p>
 
 > Ported from [Go orderbook](https://github.com/i25959341/orderbook)
 
@@ -17,10 +23,13 @@ Improved matching engine written in Javascript
 ## Installation
 
 Install with npm:
+
 ```sh
 npm install hft-limit-order-book --save
 ```
+
 Install with yarn:
+
 ```sh
 yarn add hft-limit-order-book
 ```
@@ -30,9 +39,9 @@ yarn add hft-limit-order-book
 To start using order book you need to import `OrderBook` and create new instance:
 
 ```js
-import { OrderBook } from "hft-limit-order-book";
+import { OrderBook } from 'hft-limit-order-book'
 
-const lob = new OrderBook();
+const lob = new OrderBook()
 ```
 
 Then you be able to use next primary functions:
@@ -70,6 +79,7 @@ processLimitOrder(side: 'buy' | 'sell', orderID: string, size: number, price: nu
 ```
 
 For example:
+
 ```
 processLimitOrder("sell", "uinqueID", 55, 100);
 
@@ -133,6 +143,7 @@ processMarketOrder(side: 'buy' | 'sell', size: number);
 ```
 
 For example:
+
 ```
 processMarketOrder('sell', 6);
 
@@ -156,7 +167,7 @@ asks: 110 -> 5
 --------------  ->  --------------
 bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
-                    
+
 done         - 2 (or more orders)
 partial      - nil
 quantityLeft - 4
@@ -178,12 +189,13 @@ asks: 110 -> 5
 --------------  ->  --------------
 bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
-                    
+
 done         - 2 (or more orders)
 partial      - nil
 quantityLeft - 4
 
 ```
+
 ## Contributing
 
 I would greatly appreciate any contributions to make this project better. Please make sure to follow the below guidelines before getting your hands dirty.
@@ -196,6 +208,4 @@ I would greatly appreciate any contributions to make this project better. Please
 
 ## License
 
-hft-limit-order-book is [MIT licensed](LICENSE).
-
-See [LICENSE](LICENSE) and [AUTHORS](AUTHORS) files
+Copyright [Andrea Fassina](https://github.com/fasenderos), Licensed under [MIT](LICENSE).

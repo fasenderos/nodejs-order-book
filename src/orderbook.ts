@@ -66,7 +66,7 @@ export class OrderBook {
 
     while (size > 0 && sideToProcess.len() > 0) {
       const bestPrice = iter()
-      if (bestPrice === null) break
+      if (!bestPrice) break
       const { done, partial, partialQuantityProcessed, quantityLeft } =
         this.processQueue(bestPrice, size)
       response.done = response.done.concat(done)
@@ -110,7 +110,8 @@ export class OrderBook {
 
     const order = this.orders[orderID]
     if (order) {
-      throw new ErrOrderExists('orderbook: order already exists')
+      response.err = new ErrOrderExists('orderbook: order already exists')
+      return response
     }
 
     if (!size || typeof size !== 'number' || size <= 0) {
@@ -205,28 +206,24 @@ export class OrderBook {
     }
     if (response.quantityLeft) {
       while (orderQueue.len() > 0 && response.quantityLeft > 0) {
-        const headOrderEl = orderQueue.head()
-        if (headOrderEl) {
-          const headOrder = headOrderEl.getData<Order>()
-          if (headOrder) {
-            if (response.quantityLeft < headOrder.size) {
-              response.partial = new Order(
-                headOrder.id,
-                headOrder.side,
-                headOrder.size - response.quantityLeft,
-                headOrder.price,
-                headOrder.time
-              )
+        const headOrder = orderQueue.head()
+        if (headOrder) {
+          if (response.quantityLeft < headOrder.size) {
+            response.partial = new Order(
+              headOrder.id,
+              headOrder.side,
+              headOrder.size - response.quantityLeft,
+              headOrder.price,
+              headOrder.time
+            )
 
-              response.partialQuantityProcessed = response.quantityLeft
-              orderQueue.update(headOrderEl, headOrder, response.partial)
-              response.quantityLeft = 0
-            } else {
-              response.quantityLeft = response.quantityLeft - headOrder.size
-              response.done = response.done.concat(
-                this.cancelOrder(headOrder.id)
-              )
-            }
+            response.partialQuantityProcessed = response.quantityLeft
+            orderQueue.update(headOrder, response.partial)
+            response.quantityLeft = 0
+          } else {
+            response.quantityLeft = response.quantityLeft - headOrder.size
+            const canceledOrder = this.cancelOrder(headOrder.id)
+            if (canceledOrder) response.done.push(canceledOrder)
           }
         }
       }
@@ -235,12 +232,8 @@ export class OrderBook {
   }
 
   // returns order by id
-  order = (orderID: string) => {
-    const order = this.orders[orderID]
-    if (!order) {
-      return null
-    }
-    return order
+  order = (orderID: string): Order | undefined => {
+    return this.orders[orderID]
   }
 
   // Depth returns price levels and volume at price level
@@ -248,14 +241,14 @@ export class OrderBook {
     let level = this.asks.maxPriceQueue()
     const asks = []
     const bids = []
-    while (level !== null) {
+    while (level) {
       const levelPrice = level.price()
       asks.push([levelPrice, level.volume()])
       level = this.asks.lessThan(levelPrice)
     }
 
     level = this.bids.maxPriceQueue()
-    while (level !== null) {
+    while (level) {
       const levelPrice = level.price()
       bids.push([levelPrice, level.volume()])
       level = this.bids.lessThan(levelPrice)
@@ -264,11 +257,9 @@ export class OrderBook {
   }
 
   // CancelOrder removes order with given ID from the order book
-  cancelOrder = (orderID: string): Order | [] => {
+  cancelOrder = (orderID: string): Order | undefined => {
     const order = this.orders[orderID]
-    if (!order) {
-      return []
-    }
+    if (!order) return
     delete this.orders[orderID]
     if (order.side === Side.BUY) {
       return this.bids.remove(order)
@@ -280,9 +271,9 @@ export class OrderBook {
   // if err is not nil price returns total price of all levels in side
   calculateMarketPrice = (side: Side, size: number) => {
     let price = 0
-    let err
-    let level: OrderQueue | null
-    let iter: (price: number) => OrderQueue | null
+    let err = null
+    let level: OrderQueue | undefined
+    let iter: (price: number) => OrderQueue | undefined
 
     if (side === Side.BUY) {
       level = this.asks.minPriceQueue()
@@ -292,7 +283,7 @@ export class OrderBook {
       iter = this.bids.lessThan
     }
 
-    while (size > 0 && level !== null) {
+    while (size > 0 && level) {
       const levelVolume = level.volume()
       const levelPrice = level.price()
       if (this.greaterThanOrEqual(size, levelVolume)) {

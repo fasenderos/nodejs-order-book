@@ -22,14 +22,6 @@ export class ErrOrderExists extends Error {
   }
 }
 
-export class ErrOrderNotExists extends Error {
-  constructor(m: string) {
-    super(m)
-    // Set the prototype explicitly.
-    Object.setPrototypeOf(this, ErrOrderNotExists.prototype)
-  }
-}
-
 export class ErrInsufficientQuantity extends Error {
   constructor(m: string) {
     super(m)

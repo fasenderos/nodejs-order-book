@@ -1,7 +1,7 @@
 {
   "name": "hft-limit-order-book",
-  "version": "0.0.2",
-  "description": "Ultra-fast Limit Order Book for high-frequency trading (HFT) for NodeJS.",
+  "version": "0.0.5",
+  "description": "Node.js Lmit Order Book for high-frequency trading (HFT).",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "umd:main": "dist/umd/index.js",
@@ -24,6 +24,7 @@
     "release:patch": "standard-version --release-as patch",
     "release:major": "standard-version --release-as major",
     "test": "jest --no-cache --runInBand",
+    "test:dev": "jest --no-cache --runInBand --watch",
     "test:cov": "jest --coverage --no-cache --runInBand"
   },
   "publishConfig": {
@@ -56,7 +57,7 @@
     "url": "https://github.com/fasenderos/hft-limit-order-book/issues"
   },
   "dependencies": {
-    "dbly-linked-list": "0.3.5",
+    "denque": "2.1.0",
     "functional-red-black-tree": "1.0.1"
   },
   "devDependencies": {
@@ -64,10 +65,8 @@
     "@commitlint/config-conventional": "17.0.3",
     "@types/functional-red-black-tree": "1.0.1",
     "@types/jest": "28.1.6",
-    "@typescript-eslint/eslint-plugin": "5.30.7",
-    "@typescript-eslint/parser": "5.30.7",
-    "autocannon": "^7.9.0",
-    "benchmark": "2.1.4",
+    "@typescript-eslint/eslint-plugin": "5.31.0",
+    "@typescript-eslint/parser": "5.31.0",
     "eslint": "8.20.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.2.1",

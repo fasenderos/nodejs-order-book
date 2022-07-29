@@ -1,5 +1,4 @@
 import createRBTree from 'functional-red-black-tree'
-import { NodeData } from 'dbly-linked-list'
 import { Order } from './order'
 import { OrderQueue } from './orderqueue'
 
@@ -64,38 +63,36 @@ export class OrderSide {
   }
 
   // returns maximal level of price
-  maxPriceQueue = (): OrderQueue | null => {
+  maxPriceQueue = (): OrderQueue | undefined => {
     if (this.depthSide > 0) {
       const max = this.priceTree.end
-      if (max) return max.value || null
+      if (max) return max.value
     }
-    return null
   }
 
   // returns maximal level of price
-  minPriceQueue = () => {
+  minPriceQueue = (): OrderQueue | undefined => {
     if (this.depthSide > 0) {
       const min = this.priceTree.begin
-      if (min) return min.value || null
+      if (min) return min.value
     }
-    return null
   }
 
   // returns nearest OrderQueue with price less than given
-  lessThan = (price: number) => {
+  lessThan = (price: number): OrderQueue | undefined => {
     const node = this.priceTree.lt(price)
-    return node?.value || null
+    return node?.value
   }
 
   // returns nearest OrderQueue with price greater than given
-  greaterThan = (price: number) => {
+  greaterThan = (price: number): OrderQueue | undefined => {
     const node = this.priceTree.gt(price)
-    return node?.value || null
+    return node?.value
   }
 
   // returns all orders
-  orders = () => {
-    let orders: NodeData[] = []
+  orders = (): Order[] => {
+    let orders: Order[] = []
     for (const price in this.prices) {
       if (Object.prototype.hasOwnProperty.call(this.prices, price)) {
         const allOrders = this.prices[price].toArray()
@@ -108,7 +105,7 @@ export class OrderSide {
   toString = (): string => {
     let s = ''
     let level = this.maxPriceQueue()
-    while (level !== null) {
+    while (level) {
       s += `\n${level.price()} -> ${level.volume()}`
       level = this.lessThan(level.price())
     }
