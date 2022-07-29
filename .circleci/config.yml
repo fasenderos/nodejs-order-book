@@ -1,0 +1,54 @@
+version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.2
+
+aliases:
+  - &restore-cache
+    restore_cache:
+      key: dependency-cache-{{ checksum "package.json" }}
+  - &install-deps
+    run:
+      name: Install dependencies
+      command: npm ci
+  - &build-packages
+    run:
+      name: Build
+      command: npm run build
+
+jobs:
+  build:
+    working_directory: ~/hft-limit-order-book
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - checkout
+      - *restore-cache
+      - *install-deps
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - *build-packages
+
+  test:
+    working_directory: ~/hft-limit-order-book
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - checkout
+      - *restore-cache
+      - *install-deps
+      - run:
+          name: Unit tests
+          command: npm run test
+      - codecov/upload:
+          file: './coverage/clover.xml'
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
