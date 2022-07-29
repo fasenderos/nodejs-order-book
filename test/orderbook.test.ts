@@ -96,6 +96,32 @@ describe('OrderBook', () => {
     expect(process6.done.length).toBe(7)
     expect(process6.partial).toBeNull()
     expect(process6.partialQuantityProcessed).toBeNull()
+
+    // @ts-ignore
+    const process7 = ob.processLimitOrder(Side.SELL, `fake-wrong-size`, '0', 40)
+    expect(process7.err).toBeInstanceOf(ErrInvalidQuantity)
+
+    const process8 = ob.processLimitOrder(
+      Side.SELL,
+      `fake-wrong-size`,
+      // @ts-ignore
+      null,
+      40
+    )
+    expect(process8.err).toBeInstanceOf(ErrInvalidQuantity)
+
+    const process9 = ob.processLimitOrder(
+      Side.SELL,
+      `fake-wrong-price`,
+      10,
+      // @ts-ignore
+      '40'
+    )
+    expect(process9.err).toBeInstanceOf(ErrInvalidPrice)
+
+    // @ts-ignore
+    const process10 = ob.processLimitOrder(Side.SELL, `fake-wrong-price`, 10)
+    expect(process10.err).toBeInstanceOf(ErrInvalidPrice)
   })
 
   test('test processMarketOrder', () => {
@@ -123,6 +149,14 @@ describe('OrderBook', () => {
     expect(process3.partial).toBeNull()
     expect(process3.partialQuantityProcessed).toBeNull()
     expect(process3.quantityLeft).toBe(2)
+
+    // @ts-ignore
+    const process4 = ob.processMarketOrder(Side.SELL, '0')
+    expect(process4.err).toBeInstanceOf(ErrInsufficientQuantity)
+
+    // @ts-ignore
+    const process5 = ob.processMarketOrder(Side.SELL)
+    expect(process5.err).toBeInstanceOf(ErrInsufficientQuantity)
   })
   test('test priceCalculation', () => {
     const ob = new OrderBook()

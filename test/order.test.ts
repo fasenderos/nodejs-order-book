@@ -44,6 +44,7 @@ describe('Order', () => {
     expect(order.size).toBe(size)
     expect(order.price).toBe(price)
     expect(order.time).toBe(fakeTimestamp)
+    expect(dateNowSpy).toBeCalled()
     expect(order.toObject()).toMatchObject({
       id,
       side,
