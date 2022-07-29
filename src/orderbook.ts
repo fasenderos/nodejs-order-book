@@ -1,9 +1,4 @@
-import {
-  ErrInsufficientQuantity,
-  ErrInvalidPrice,
-  ErrInvalidQuantity,
-  ErrOrderExists,
-} from './errors'
+import { ERROR, CustomError } from './errors'
 import { Order } from './order'
 import { OrderQueue } from './orderqueue'
 import { OrderSide } from './orderside'
@@ -48,9 +43,7 @@ export class OrderBook {
       err: null,
     }
     if (!size || typeof size !== 'number' || size <= 0) {
-      response.err = new ErrInsufficientQuantity(
-        'orderbook: invalid order quantity'
-      )
+      response.err = CustomError(ERROR.ErrInsufficientQuantity)
       return response
     }
 
@@ -110,17 +103,17 @@ export class OrderBook {
 
     const order = this.orders[orderID]
     if (order) {
-      response.err = new ErrOrderExists('orderbook: order already exists')
+      response.err = CustomError(ERROR.ErrOrderExists)
       return response
     }
 
     if (!size || typeof size !== 'number' || size <= 0) {
-      response.err = new ErrInvalidQuantity('orderbook: invalid order quantity')
+      response.err = CustomError(ERROR.ErrInvalidQuantity)
       return response
     }
 
     if (!price || typeof price !== 'number' || price <= 0) {
-      response.err = new ErrInvalidPrice('orderbook: invalid order price')
+      response.err = CustomError(ERROR.ErrInvalidPrice)
       return response
     }
 
@@ -269,7 +262,13 @@ export class OrderBook {
 
   // CalculateMarketPrice returns total market price for requested quantity
   // if err is not nil price returns total price of all levels in side
-  calculateMarketPrice = (side: Side, size: number) => {
+  calculateMarketPrice = (
+    side: Side,
+    size: number
+  ): {
+    price: number
+    err: null | Error
+  } => {
     let price = 0
     let err = null
     let level: OrderQueue | undefined
@@ -297,9 +296,7 @@ export class OrderBook {
     }
 
     if (size > 0) {
-      err = new ErrInsufficientQuantity(
-        'orderbook: insufficient quantity to calculate price'
-      )
+      err = CustomError(ERROR.ErrInsufficientQuantity)
     }
 
     return { price, err }

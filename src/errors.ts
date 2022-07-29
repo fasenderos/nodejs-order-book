@@ -1,37 +1,22 @@
-export class ErrInvalidQuantity extends Error {
-  constructor(m: string) {
-    super(m)
-    // Set the prototype explicitly.
-    Object.setPrototypeOf(this, ErrInvalidQuantity.prototype)
-  }
+export enum ERROR {
+  Default = 'Something wrong',
+  ErrInvalidQuantity = 'orderbook: invalid order quantity',
+  ErrInsufficientQuantity = 'orderbook: insufficient quantity to calculate price',
+  ErrInvalidPrice = 'orderbook: invalid order price',
+  ErrOrderExists = 'orderbook: order already exists',
 }
 
-export class ErrInvalidPrice extends Error {
-  constructor(m: string) {
-    super(m)
-    // Set the prototype explicitly.
-    Object.setPrototypeOf(this, ErrInvalidPrice.prototype)
+export const CustomError = (error?: ERROR | string): Error => {
+  switch (error) {
+    case ERROR.ErrInvalidQuantity:
+      return new Error(ERROR.ErrInvalidQuantity)
+    case ERROR.ErrInsufficientQuantity:
+      return new Error(ERROR.ErrInsufficientQuantity)
+    case ERROR.ErrInvalidPrice:
+      return new Error(ERROR.ErrInvalidPrice)
+    case ERROR.ErrOrderExists:
+      return new Error(ERROR.ErrOrderExists)
+    default:
+      return new Error(`${ERROR.Default}${error ? ': ' + error : ''}`)
   }
 }
-
-export class ErrOrderExists extends Error {
-  constructor(m: string) {
-    super(m)
-    // Set the prototype explicitly.
-    Object.setPrototypeOf(this, ErrOrderExists.prototype)
-  }
-}
-
-export class ErrInsufficientQuantity extends Error {
-  constructor(m: string) {
-    super(m)
-    // Set the prototype explicitly.
-    Object.setPrototypeOf(this, ErrInsufficientQuantity.prototype)
-  }
-}
-
-//  ErrInvalidQuantity      = errors.New("orderbook: invalid order quantity")
-// 	ErrInvalidPrice         = errors.New("orderbook: invalid order price")
-// 	ErrOrderExists          = errors.New("orderbook: order already exists")
-// 	ErrOrderNotExists       = errors.New("orderbook: order does not exist")
-// 	ErrInsufficientQuantity = errors.New("orderbook: insufficient quantity to calculate price")

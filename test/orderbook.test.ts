@@ -1,13 +1,7 @@
 import { Order } from '../src/order'
 import { Side } from '../src/side'
-import { OrderSide } from '../src/orderside'
 import { OrderBook } from '../src/orderbook'
-import {
-  ErrInsufficientQuantity,
-  ErrInvalidPrice,
-  ErrInvalidQuantity,
-  ErrOrderExists,
-} from '../src/errors'
+import { ERROR } from '../src/errors'
 
 const addDepth = (ob: OrderBook, prefix: string, quantity: number) => {
   for (let index = 50; index < 100; index += 10) {
@@ -80,13 +74,13 @@ describe('OrderBook', () => {
     expect(process2.partialQuantityProcessed).toBe(9)
 
     const process3 = ob.processLimitOrder(Side.SELL, `buy-70`, 11, 40)
-    expect(process3.err).toBeInstanceOf(ErrOrderExists)
+    expect(process3.err?.message).toBe(ERROR.ErrOrderExists)
 
     const process4 = ob.processLimitOrder(Side.SELL, `fake-70`, 0, 40)
-    expect(process4.err).toBeInstanceOf(ErrInvalidQuantity)
+    expect(process4.err?.message).toBe(ERROR.ErrInvalidQuantity)
 
     const process5 = ob.processLimitOrder(Side.SELL, `fake-70`, 10, 0)
-    expect(process5.err).toBeInstanceOf(ErrInvalidPrice)
+    expect(process5.err?.message).toBe(ERROR.ErrInvalidPrice)
 
     const removed = ob.cancelOrder('order-b100')
     expect(removed).toBeUndefined()
@@ -99,7 +93,7 @@ describe('OrderBook', () => {
 
     // @ts-ignore
     const process7 = ob.processLimitOrder(Side.SELL, `fake-wrong-size`, '0', 40)
-    expect(process7.err).toBeInstanceOf(ErrInvalidQuantity)
+    expect(process7.err?.message).toBe(ERROR.ErrInvalidQuantity)
 
     const process8 = ob.processLimitOrder(
       Side.SELL,
@@ -108,7 +102,7 @@ describe('OrderBook', () => {
       null,
       40
     )
-    expect(process8.err).toBeInstanceOf(ErrInvalidQuantity)
+    expect(process8.err?.message).toBe(ERROR.ErrInvalidQuantity)
 
     const process9 = ob.processLimitOrder(
       Side.SELL,
@@ -117,11 +111,11 @@ describe('OrderBook', () => {
       // @ts-ignore
       '40'
     )
-    expect(process9.err).toBeInstanceOf(ErrInvalidPrice)
+    expect(process9.err?.message).toBe(ERROR.ErrInvalidPrice)
 
     // @ts-ignore
     const process10 = ob.processLimitOrder(Side.SELL, `fake-wrong-price`, 10)
-    expect(process10.err).toBeInstanceOf(ErrInvalidPrice)
+    expect(process10.err?.message).toBe(ERROR.ErrInvalidPrice)
   })
 
   test('test processMarketOrder', () => {
@@ -138,7 +132,7 @@ describe('OrderBook', () => {
     expect(process1.partialQuantityProcessed).toBe(1)
 
     const process2 = ob.processMarketOrder(Side.BUY, 0)
-    expect(process2.err).toBeInstanceOf(ErrInsufficientQuantity)
+    expect(process2.err?.message).toBe(ERROR.ErrInsufficientQuantity)
 
     const process3 =
       // { done, partial, partialQuantityProcessed, quantityLeft, err } =
@@ -152,11 +146,11 @@ describe('OrderBook', () => {
 
     // @ts-ignore
     const process4 = ob.processMarketOrder(Side.SELL, '0')
-    expect(process4.err).toBeInstanceOf(ErrInsufficientQuantity)
+    expect(process4.err?.message).toBe(ERROR.ErrInsufficientQuantity)
 
     // @ts-ignore
     const process5 = ob.processMarketOrder(Side.SELL)
-    expect(process5.err).toBeInstanceOf(ErrInsufficientQuantity)
+    expect(process5.err?.message).toBe(ERROR.ErrInsufficientQuantity)
   })
   test('test priceCalculation', () => {
     const ob = new OrderBook()
@@ -172,7 +166,7 @@ describe('OrderBook', () => {
 
     const calc2 = ob.calculateMarketPrice(Side.BUY, 200)
 
-    expect(calc2.err).toBeInstanceOf(ErrInsufficientQuantity)
+    expect(calc2.err?.message).toBe(ERROR.ErrInsufficientQuantity)
     expect(calc2.price).toBe(18000)
 
     const calc3 = ob.calculateMarketPrice(Side.SELL, 115)
@@ -182,7 +176,7 @@ describe('OrderBook', () => {
 
     const calc4 = ob.calculateMarketPrice(Side.SELL, 200)
 
-    expect(calc4.err).toBeInstanceOf(ErrInsufficientQuantity)
+    expect(calc4.err?.message).toBe(ERROR.ErrInsufficientQuantity)
     expect(calc4.price).toBe(10500)
   })
   test('test priceCalculation', () => {
