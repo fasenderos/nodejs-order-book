@@ -51,24 +51,38 @@ import { OrderBook } from 'hft-limit-order-book'
 const lob = new OrderBook()
 ```
 
-Then you be able to use next primary functions:
+Then you'll be able to use next primary functions:
 
 ```js
-lob.processLimitOrder(side: 'buy' | 'sell', orderID: string, size: number, price: number);
+lob.createOrder(type: 'limit' | 'market', side: 'buy' | 'sell', size: number, price: number, orderID: string)
 
-lob.processMarketOrder(side: 'buy' | 'sell', size: number);
+lob.limit(side: 'buy' | 'sell', orderID: string, size: number, price: number);
 
-lob.modifyOrder(orderID: string, { side: 'buy' | 'sell', size: number, price: number });
+lob.market(side: 'buy' | 'sell', size: number);
 
-lob.cancelOrder(orderID: string);
+lob.modify(orderID: string, { side: 'buy' | 'sell', size: number, price: number });
+
+lob.cancel(orderID: string);
 ```
 
 ## About primary functions
 
-### ProcessLimitOrder
+To add an order to the order book you can call the general `createOrder()` function or calling the underlying `limit()` or `market()` functions
+
+### Create Order
 
 ```js
-// processLimitOrder places new order to the OrderBook
+// Create a limit order
+createOrder('limit', side: 'buy' | 'sell', size: number, price: number, orderID: string);
+
+// Create a market order
+createOrder('market', side: 'buy' | 'sell', size: number);
+```
+
+### Process Limit Order
+
+```js
+// Places new order to the OrderBook
 // Arguments:
 //      side     - what do you want to do (ob.Sell or ob.Buy)
 //      orderID  - unique order ID in depth
@@ -84,13 +98,16 @@ lob.cancelOrder(orderID: string);
 //                partial done and placed to the orderbook without full quantity - partial will contain
 //                your order with quantity to left
 //      partialQuantityProcessed - if partial order is not nil this result contains processed quatity from partial order
+
+limit(side: 'buy' | 'sell', orderID: string, size: number, price: number);
+// or
 processLimitOrder(side: 'buy' | 'sell', orderID: string, size: number, price: number);
 ```
 
 For example:
 
 ```
-processLimitOrder("sell", "uinqueID", 55, 100);
+limit("sell", "uinqueID", 55, 100);
 
 asks: 110 -> 5      110 -> 5
       100 -> 1      100 -> 56
@@ -100,11 +117,10 @@ bids: 90  -> 5      90  -> 5
 
 done    - nil
 partial - nil
-
 ```
 
 ```
-processLimitOrder("buy", "uinqueID", 7, 120);
+limit("buy", "uinqueID", 7, 120);
 
 asks: 110 -> 5
       100 -> 1
@@ -115,11 +131,10 @@ bids: 90  -> 5      120 -> 1
 
 done    - 2 (or more orders)
 partial - uinqueID order
-
 ```
 
 ```
-processLimitOrder("buy", "uinqueID", 3, 120);
+limit("buy", "uinqueID", 3, 120);
 
 asks: 110 -> 5
       100 -> 1      110 -> 3
@@ -129,13 +144,12 @@ bids: 90  -> 5      90  -> 5
 
 done    - 1 order with 100 price, (may be also few orders with 110 price) + uinqueID order
 partial - 1 order with price 110
-
 ```
 
-### ProcessMarketOrder
+### Process Market Order
 
 ```js
-// processMarketOrder immediately gets definite quantity from the order book with market price
+// Immediately gets definite quantity from the order book with market price
 // Arguments:
 //      side     - what do you want to do (ob.Sell or ob.Buy)
 //      quantity - how much quantity you want to sell or buy
@@ -148,13 +162,16 @@ partial - 1 order with price 110
 //      partial      - not nil if your order has done but top order is not fully done
 //      partialQuantityProcessed - if partial order is not nil this result contains processed quatity from partial order
 //      quantityLeft - more than zero if it is not enought orders to process all quantity
+
+market(side: 'buy' | 'sell', size: number);
+// or
 processMarketOrder(side: 'buy' | 'sell', size: number);
 ```
 
 For example:
 
 ```
-processMarketOrder('sell', 6);
+market('sell', 6);
 
 asks: 110 -> 5      110 -> 5
       100 -> 1      100 -> 1
@@ -165,11 +182,10 @@ bids: 90  -> 5      80 -> 1
 done         - 2 (or more orders)
 partial      - 1 order with price 80
 quantityLeft - 0
-
 ```
 
 ```
-processMarketOrder('buy', 10);
+market('buy', 10);
 
 asks: 110 -> 5
       100 -> 1
@@ -180,18 +196,21 @@ bids: 90  -> 5      90  -> 5
 done         - 2 (or more orders)
 partial      - nil
 quantityLeft - 4
-
 ```
 
-### ModifyOrder
+### Modify an existing order
 
 ```js
-// modifyOrder Modify an existing order with given ID
+// Modify an existing order with given ID
+modify(orderID: string, { side: 'buy' | 'sell', size: number, price: number });
+// or
 modifyOrder(orderID: string, { side: 'buy' | 'sell', size: number, price: number });
 ```
 
+For example:
+
 ```
-processLimitOrder("sell", "uinqueID", 55, 100);
+limit("sell", "uinqueID", 55, 100);
 
 asks: 110 -> 5      110 -> 5
       100 -> 1      100 -> 56
@@ -200,7 +219,7 @@ bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
 
 // Modify the size from 55 to 65
-modifyOrder("uinqueID", { side: "sell", size: 65, price: 100 })
+modify("uinqueID", { side: "sell", size: 65, price: 100 })
 
 asks: 110 -> 5      110 -> 5
       100 -> 56     100 -> 66
@@ -210,7 +229,7 @@ bids: 90  -> 5      90  -> 5
 
 
 // Modify the price from 100 to 110
-modifyOrder("uinqueID", { side: "sell", size: 65, price: 110 })
+modify("uinqueID", { side: "sell", size: 65, price: 110 })
 
 asks: 110 -> 5
       100 -> 66     110 -> 71
@@ -220,15 +239,19 @@ bids: 90  -> 5      90  -> 5
 
 ```
 
-### CancelOrder
+### Cancel Order
 
 ```js
-// cancelOrder removes order with given ID from the order book
+// Removes order with given ID from the order book
+cancel(orderID: string);
+// or
 cancelOrder(orderID: string);
 ```
 
+For example:
+
 ```
-cancelOrder("myUniqueID-Sell-1-with-100")
+cancel("myUniqueID-Sell-1-with-100")
 
 asks: 110 -> 5
       100 -> 1      110 -> 5

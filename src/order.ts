@@ -6,6 +6,11 @@ export interface OrderUpdate {
   side: Side
 }
 
+export enum OrderType {
+  LIMIT = 'limit',
+  MARKET = 'market',
+}
+
 export class Order {
   private _id: string
   private _side: Side

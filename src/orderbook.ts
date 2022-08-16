@@ -1,5 +1,5 @@
 import { ERROR, CustomError } from './errors'
-import { Order, OrderUpdate } from './order'
+import { Order, OrderType, OrderUpdate } from './order'
 import { OrderQueue } from './orderqueue'
 import { OrderSide } from './orderside'
 import { Side } from './side'
@@ -21,6 +21,57 @@ export class OrderBook {
     this.asks = new OrderSide()
   }
 
+  /**
+   *  Add an order to the order book
+   *
+   *  @param {OrderType} type
+   *         REQUIRED. A string literal type of order that can be `limit` or `market`
+   *  @param {Side} side
+   *         REQUIRED. A string literal for the direction of your order `sell` or `buy`
+   *  @param {number} size
+   *         REQUIRED. How much you want to sell or buy
+   *  @param {number} [price]
+   *         OPTIONAL. The price at which the order is to be fullfilled (only for limit order)
+   *  @param {string} [orderID]
+   *         OPTIONAL. Unique order ID in depth (only for limit order)
+   *  @returns {ProcessOrder}
+   *           An object with the result of the process or an error
+   */
+  createOrder = (
+    // Common for all order types
+    type: OrderType,
+    side: Side,
+    size: number,
+    // Specific for limit order type
+    price?: number,
+    orderID?: string
+  ): ProcessOrder => {
+    switch (type) {
+      case OrderType.MARKET:
+        return this.market(side, size)
+      case OrderType.LIMIT:
+        return this.limit(side, orderID as string, size, price as number)
+      default:
+        return { err: CustomError(ERROR.ErrInvalidOrderType) } as ProcessOrder
+    }
+  }
+
+  // Alias for the old primary function names
+  /** @deprecated Since version 1.1.0. Will be deleted in version 2.0. Use market instead. */
+  processMarketOrder = (side: Side, size: number) => this.market(side, size)
+  /** @deprecated Since version 1.1.0. Will be deleted in version 2.0. Use limit instead. */
+  processLimitOrder = (
+    side: Side,
+    orderID: string,
+    size: number,
+    price: number
+  ) => this.limit(side, orderID, size, price)
+  /** @deprecated Since version 1.1.0. Will be deleted in version 2.0. Use modify instead. */
+  modifyOrder = (orderID: string, orderUpdate: OrderUpdate) =>
+    this.modify(orderID, orderUpdate)
+  /** @deprecated Since version 1.1.0. Will be deleted in version 2.0. Use cancel instead. */
+  cancelOrder = (orderID: string) => this.cancel(orderID)
+
   // ProcessMarketOrder immediately gets definite quantity from the order book with market price
   // Arguments:
   //      side     - what do you want to do (ob.Sell or ob.Buy)
@@ -34,7 +85,7 @@ export class OrderBook {
   //      partial      - not nil if your order has done but top order is not fully done
   //      partialQuantityProcessed - if partial order is not nil this result contains processed quatity from partial order
   //      quantityLeft - more than zero if it is not enought orders to process all quantity
-  processMarketOrder = (side: Side, size: number) => {
+  market = (side: Side, size: number): ProcessOrder => {
     const response: ProcessOrder = {
       done: [],
       partial: null,
@@ -87,12 +138,12 @@ export class OrderBook {
   //                partial done and placed to the orderbook without full quantity - partial will contain
   //                your order with quantity to left
   //      partialQuantityProcessed - if partial order is not nil this result contains processed quatity from partial order
-  processLimitOrder = (
+  limit = (
     side: Side,
     orderID: string,
     size: number,
     price: number
-  ) => {
+  ): ProcessOrder => {
     const response: ProcessOrder = {
       done: [],
       partial: null,
@@ -215,7 +266,7 @@ export class OrderBook {
             response.quantityLeft = 0
           } else {
             response.quantityLeft = response.quantityLeft - headOrder.size
-            const canceledOrder = this.cancelOrder(headOrder.id)
+            const canceledOrder = this.cancel(headOrder.id)
             if (canceledOrder) response.done.push(canceledOrder)
           }
         }
@@ -250,7 +301,7 @@ export class OrderBook {
   }
 
   // Modify an existing order with given ID
-  modifyOrder = (
+  modify = (
     orderID: string,
     orderUpdate: OrderUpdate
   ): Order | undefined | void => {
@@ -267,7 +318,7 @@ export class OrderBook {
   }
 
   // Removes order with given ID from the order book
-  cancelOrder = (orderID: string): Order | undefined => {
+  cancel = (orderID: string): Order | undefined => {
     const order = this.orders[orderID]
     if (!order) return
     delete this.orders[orderID]

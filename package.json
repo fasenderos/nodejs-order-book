@@ -22,9 +22,9 @@
     "prepublishOnly": "pinst --disable",
     "publishGitTag": "cross-var git tag v$npm_package_version && git push --tags",
     "release": "standard-version && npm run publishGitTag",
+    "release:major": "standard-version --release-as major && npm run publishGitTag",
     "release:minor": "standard-version --release-as minor && npm run publishGitTag",
     "release:patch": "standard-version --release-as patch && npm run publishGitTag",
-    "release:major": "standard-version --release-as major && npm run publishGitTag",
     "test": "jest --no-cache --runInBand",
     "test:dev": "jest --no-cache --runInBand --watch",
     "test:cov": "jest --coverage --no-cache --runInBand"

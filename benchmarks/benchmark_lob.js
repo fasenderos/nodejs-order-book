@@ -6,7 +6,7 @@ const gaussian = require('gaussian')
 /* New Limits */
 function spamLimitOrders(book, count) {
   for (let i = 0; i < count; i++) {
-    book.processLimitOrder('buy', i.toString(), 50, i)
+    book.limit('buy', i.toString(), 50, i)
   }
 }
 
@@ -55,7 +55,7 @@ bench('Spam 300000 new Limits', function (b) {
 /* New Orders */
 function spamOrders(book, count, variance = 5) {
   for (let i = 0; i < count; i++) {
-    book.processLimitOrder('buy', i.toString(), 50, i % variance)
+    book.limit('buy', i.toString(), 50, i % variance)
   }
 }
 
@@ -96,15 +96,10 @@ function spamOrdersRandomCancels(
   cancel_every = 5
 ) {
   const price_distribution = gaussian(mean, variance)
-  book.processLimitOrder('buy', '0', 50, price_distribution.ppf(Math.random()))
+  book.limit('buy', '0', 50, price_distribution.ppf(Math.random()))
   for (let i = 1; i < count; i++) {
-    book.processLimitOrder(
-      'buy',
-      i.toString(),
-      50,
-      price_distribution.ppf(Math.random())
-    )
-    if (i % cancel_every == 0) book.cancelOrder((i - cancel_every).toString())
+    book.limit('buy', i.toString(), 50, price_distribution.ppf(Math.random()))
+    if (i % cancel_every == 0) book.cancel((i - cancel_every).toString())
   }
 }
 
@@ -151,10 +146,10 @@ function spamLimitRandomOrders(
   for (let i = 1; i < count; i++) {
     const price_ = price.ppf(Math.random())
     const quantity_ = quantity.ppf(Math.random())
-    book.processLimitOrder('buy', i.toString(), 100, price_)
+    book.limit('buy', i.toString(), 100, price_)
     if (i % order_every == 0)
       // random submit a market order
-      book.processMarketOrder('sell', quantity_)
+      book.market('sell', quantity_)
   }
 }
 
@@ -193,8 +188,8 @@ function spamLimitManyMarketOrders(
   for (let i = 1; i < count; i++) {
     const price_ = price.ppf(Math.random())
     const quantity_ = quantity.ppf(Math.random())
-    book.processLimitOrder('buy', i.toString(), 100, price_)
-    book.processMarketOrder('sell', quantity_)
+    book.limit('buy', i.toString(), 100, price_)
+    book.market('sell', quantity_)
   }
 }
 

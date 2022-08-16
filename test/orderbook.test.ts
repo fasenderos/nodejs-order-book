@@ -1,15 +1,15 @@
-import { Order, OrderUpdate } from '../src/order'
+import { Order, OrderType, OrderUpdate } from '../src/order'
 import { Side } from '../src/side'
 import { OrderBook } from '../src/orderbook'
 import { ERROR } from '../src/errors'
 
 const addDepth = (ob: OrderBook, prefix: string, quantity: number) => {
   for (let index = 50; index < 100; index += 10) {
-    ob.processLimitOrder(Side.BUY, `${prefix}buy-${index}`, quantity, index)
+    ob.limit(Side.BUY, `${prefix}buy-${index}`, quantity, index)
   }
 
   for (let index = 100; index < 150; index += 10) {
-    ob.processLimitOrder(Side.SELL, `${prefix}sell-${index}`, quantity, index)
+    ob.limit(Side.SELL, `${prefix}sell-${index}`, quantity, index)
   }
 
   return
@@ -21,7 +21,7 @@ describe('OrderBook', () => {
     const size = 2
     for (let index = 50; index < 100; index += 10) {
       const { done, partial, partialQuantityProcessed, quantityLeft, err } =
-        ob.processLimitOrder(Side.BUY, `buy-${index}`, size, index)
+        ob.limit(Side.BUY, `buy-${index}`, size, index)
       expect(done.length).toBe(0)
       expect(partial).toBeNull()
       expect(partialQuantityProcessed).toBeNull()
@@ -30,7 +30,7 @@ describe('OrderBook', () => {
 
     for (let index = 100; index < 150; index += 10) {
       const { done, partial, partialQuantityProcessed, quantityLeft, err } =
-        ob.processLimitOrder(Side.SELL, `sell-${index}`, size, index)
+        ob.limit(Side.SELL, `sell-${index}`, size, index)
       expect(done.length).toBe(0)
       expect(partial).toBeNull()
       expect(partialQuantityProcessed).toBeNull()
@@ -51,14 +51,14 @@ describe('OrderBook', () => {
     })
   })
 
-  test('test processLimitOrder', () => {
+  test('test limit', () => {
     const ob = new OrderBook()
 
     addDepth(ob, '', 2)
 
     const process1 =
       // { done, partial, partialQuantityProcessed, quantityLeft, err }
-      ob.processLimitOrder(Side.BUY, 'order-b100', 1, 100)
+      ob.limit(Side.BUY, 'order-b100', 1, 100)
     expect(process1.err).toBeNull()
     expect(process1.done[0].id).toBe('order-b100')
     expect(process1.partial?.id).toBe('sell-100')
@@ -66,36 +66,44 @@ describe('OrderBook', () => {
 
     const process2 =
       // { done, partial, partialQuantityProcessed, quantityLeft, err } =
-      ob.processLimitOrder(Side.BUY, `order-b150`, 10, 150)
+      ob.limit(Side.BUY, `order-b150`, 10, 150)
 
     expect(process2.err).toBeNull()
     expect(process2.done.length).toBe(5)
     expect(process2.partial?.id).toBe('order-b150')
     expect(process2.partialQuantityProcessed).toBe(9)
 
-    const process3 = ob.processLimitOrder(Side.SELL, `buy-70`, 11, 40)
+    const process3 = ob.limit(Side.SELL, `buy-70`, 11, 40)
     expect(process3.err?.message).toBe(ERROR.ErrOrderExists)
 
-    const process4 = ob.processLimitOrder(Side.SELL, `fake-70`, 0, 40)
+    const process4 = ob.limit(Side.SELL, `fake-70`, 0, 40)
     expect(process4.err?.message).toBe(ERROR.ErrInvalidQuantity)
 
+    // Test also the deprecated alias function. // TODO fix me when the deprecated function will be removed
     const process5 = ob.processLimitOrder(Side.SELL, `fake-70`, 10, 0)
     expect(process5.err?.message).toBe(ERROR.ErrInvalidPrice)
 
-    const removed = ob.cancelOrder('order-b100')
+    const removed = ob.cancel('order-b100')
     expect(removed).toBeUndefined()
 
-    const process6 = ob.processLimitOrder(Side.SELL, 'order-s40', 11, 40)
+    // Test also the createOrder method
+    const process6 = ob.createOrder(
+      OrderType.LIMIT,
+      Side.SELL,
+      11,
+      40,
+      'order-s40'
+    )
     expect(process6.err).toBeNull()
     expect(process6.done.length).toBe(7)
     expect(process6.partial).toBeNull()
     expect(process6.partialQuantityProcessed).toBeNull()
 
     // @ts-ignore
-    const process7 = ob.processLimitOrder(Side.SELL, `fake-wrong-size`, '0', 40)
+    const process7 = ob.limit(Side.SELL, `fake-wrong-size`, '0', 40)
     expect(process7.err?.message).toBe(ERROR.ErrInvalidQuantity)
 
-    const process8 = ob.processLimitOrder(
+    const process8 = ob.limit(
       Side.SELL,
       `fake-wrong-size`,
       // @ts-ignore
@@ -104,7 +112,7 @@ describe('OrderBook', () => {
     )
     expect(process8.err?.message).toBe(ERROR.ErrInvalidQuantity)
 
-    const process9 = ob.processLimitOrder(
+    const process9 = ob.limit(
       Side.SELL,
       `fake-wrong-price`,
       10,
@@ -114,29 +122,31 @@ describe('OrderBook', () => {
     expect(process9.err?.message).toBe(ERROR.ErrInvalidPrice)
 
     // @ts-ignore
-    const process10 = ob.processLimitOrder(Side.SELL, `fake-wrong-price`, 10)
+    const process10 = ob.limit(Side.SELL, `fake-wrong-price`, 10)
     expect(process10.err?.message).toBe(ERROR.ErrInvalidPrice)
   })
 
-  test('test processMarketOrder', () => {
+  test('test market', () => {
     const ob = new OrderBook()
 
     addDepth(ob, '', 2)
 
     const process1 =
       // { done, partial, partialQuantityProcessed, quantityLeft, err }
-      ob.processMarketOrder(Side.BUY, 3)
+      ob.market(Side.BUY, 3)
 
     expect(process1.err).toBeNull()
     expect(process1.quantityLeft).toBe(0)
     expect(process1.partialQuantityProcessed).toBe(1)
 
+    // Test also the deprecated alias function. // TODO fix me when the deprecated function will be removed
     const process2 = ob.processMarketOrder(Side.BUY, 0)
     expect(process2.err?.message).toBe(ERROR.ErrInsufficientQuantity)
 
+    // Test also the createOrder method
     const process3 =
       // { done, partial, partialQuantityProcessed, quantityLeft, err } =
-      ob.processMarketOrder(Side.SELL, 12)
+      ob.createOrder(OrderType.MARKET, Side.SELL, 12)
 
     expect(process3.done.length).toBe(5)
     expect(process3.err).toBeNull()
@@ -145,21 +155,29 @@ describe('OrderBook', () => {
     expect(process3.quantityLeft).toBe(2)
 
     // @ts-ignore
-    const process4 = ob.processMarketOrder(Side.SELL, '0')
+    const process4 = ob.market(Side.SELL, '0')
     expect(process4.err?.message).toBe(ERROR.ErrInsufficientQuantity)
 
     // @ts-ignore
-    const process5 = ob.processMarketOrder(Side.SELL)
+    const process5 = ob.market(Side.SELL)
     expect(process5.err?.message).toBe(ERROR.ErrInsufficientQuantity)
   })
 
-  test('test modifyOrder', () => {
+  test('createOrder error', () => {
+    const ob = new OrderBook()
+    addDepth(ob, '', 2)
+    // @ts-ignore
+    const result = ob.createOrder('wrong-market-type', Side.SELL, 10)
+    expect(result.err?.message).toBe(ERROR.ErrInvalidOrderType)
+  })
+
+  test('test modify', () => {
     const ob = new OrderBook()
 
     addDepth(ob, '', 2)
 
-    ob.processLimitOrder(Side.BUY, 'first-order', 1000, 52)
-    ob.processLimitOrder(Side.SELL, 'second-order', 1000, 200)
+    ob.limit(Side.BUY, 'first-order', 1000, 52)
+    ob.limit(Side.SELL, 'second-order', 1000, 200)
 
     // Test BUY side
     const orderUpdateSize1: OrderUpdate = {
@@ -168,7 +186,7 @@ describe('OrderBook', () => {
       price: 52,
     }
     // Response is the updated order or undefined if no order exist
-    const response1 = ob.modifyOrder('first-order', orderUpdateSize1)
+    const response1 = ob.modify('first-order', orderUpdateSize1)
     expect(response1?.size).toBe(orderUpdateSize1.size)
 
     const orderUpdatePrice1: OrderUpdate = {
@@ -177,6 +195,7 @@ describe('OrderBook', () => {
       price: 82,
     }
     // Response is the updated order or undefined if no order exist
+    // Test also the deprecated alias function. // TODO fix me when the deprecated function will be removed
     const response2 = ob.modifyOrder('first-order', orderUpdatePrice1)
     expect(response2?.price).toBe(orderUpdatePrice1.price)
 
@@ -187,7 +206,7 @@ describe('OrderBook', () => {
       price: 200,
     }
     // Response is the updated order or undefined if no order exist
-    const response3 = ob.modifyOrder('second-order', orderUpdateSize2)
+    const response3 = ob.modify('second-order', orderUpdateSize2)
     expect(response3?.size).toBe(orderUpdateSize2.size)
 
     const orderUpdatePrice2: OrderUpdate = {
@@ -196,7 +215,7 @@ describe('OrderBook', () => {
       price: 250,
     }
     // Response is the updated order or undefined if no order exist
-    const response4 = ob.modifyOrder('second-order', orderUpdatePrice2)
+    const response4 = ob.modify('second-order', orderUpdatePrice2)
     expect(response4?.price).toBe(orderUpdatePrice2.price)
 
     // Test throw error when the side is not of type 'Side'
@@ -207,7 +226,7 @@ describe('OrderBook', () => {
         size: 990,
         price: 250,
       }
-      ob.modifyOrder('second-order', errorUpdate)
+      ob.modify('second-order', errorUpdate)
     } catch (error) {
       if (error instanceof Error) {
         // TypeScript knows err is Error
@@ -216,7 +235,7 @@ describe('OrderBook', () => {
     }
 
     // Test modify an unexisting order
-    const resp = ob.modifyOrder('unexisting-order', orderUpdatePrice1)
+    const resp = ob.modify('unexisting-order', orderUpdatePrice1)
     expect(resp).toBeUndefined()
   })
 

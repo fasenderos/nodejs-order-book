@@ -4,8 +4,9 @@ export enum ERROR {
   ErrInsufficientQuantity = 'orderbook: insufficient quantity to calculate price',
   ErrInvalidPrice = 'orderbook: invalid order price',
   ErrInvalidPriceLevel = 'orderbook: invalid order price level',
-  ErrInvalidSide = 'orderbook: given neither "bid" nor "ask"',
+  ErrInvalidSide = "orderbook: given neither 'bid' nor 'ask'",
   ErrOrderExists = 'orderbook: order already exists',
+  ErrInvalidOrderType = "orderbook: supperted order type are 'limit' and 'market'",
 }
 
 export const CustomError = (error?: ERROR | string): Error => {
@@ -22,6 +23,8 @@ export const CustomError = (error?: ERROR | string): Error => {
       return new Error(ERROR.ErrOrderExists)
     case ERROR.ErrInvalidSide:
       return new Error(ERROR.ErrInvalidSide)
+    case ERROR.ErrInvalidOrderType:
+      return new Error(ERROR.ErrInvalidOrderType)
     default:
       return new Error(`${ERROR.Default}${error ? ': ' + error : ''}`)
   }
