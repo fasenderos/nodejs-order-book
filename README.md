@@ -7,7 +7,7 @@
     <a href="https://github.com/fasenderos/hft-limit-order-book"><img src="https://badgen.net/badge/icon/typescript?icon=typescript&label" alt="Built with TypeScript"></a>
 </p>
 
-> Initially Ported from [Go orderbook](https://github.com/i25959341/orderbook), this orderbook has been enhanced with new features
+> Initially ported from [Go orderbook](https://github.com/i25959341/orderbook), this order book has been enhanced with new features
 
 # hft-limit-order-book
 
@@ -187,7 +187,7 @@ quantityLeft - 4
 
 ```js
 // modifyOrder Modify an existing order with given ID
-modifyOrder(orderID: string);
+modifyOrder(orderID: string, { side: 'buy' | 'sell', size: number, price: number });
 ```
 
 ```
