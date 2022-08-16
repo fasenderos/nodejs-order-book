@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/fasenderos/hft-limit-order-book/compare/v1.0.0...v1.1.0) (2022-08-16)
+
+
+### Features
+
+* add createOrder method and deprecated old function names ([8a12fc7](https://github.com/fasenderos/hft-limit-order-book/commits/8a12fc73a25290bb26128bfc43882151e8690df7))
+
 ## [1.0.0](https://github.com/fasenderos/hft-limit-order-book/compare/v0.0.6...v1.0.0) (2022-08-16)
 
 
