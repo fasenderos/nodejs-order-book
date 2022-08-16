@@ -45,4 +45,22 @@ describe('OrderQueue', () => {
     expect(head3).toMatchObject(order2)
     expect(tail3).toMatchObject(order2)
   })
+
+  test('it should update order size and the volume', () => {
+    const price = 100
+    const oq = new OrderQueue(price)
+    const order1 = new Order('order1', Side.SELL, 5, price)
+    const order2 = new Order('order2', Side.SELL, 5, price)
+
+    oq.append(order1)
+    oq.append(order2)
+
+    expect(oq.volume()).toBe(10)
+
+    const newSize = 10
+    oq.updateOrderSize(order1, newSize)
+
+    expect(oq.volume()).toBe(15)
+    expect(order1.size).toBe(newSize)
+  })
 })

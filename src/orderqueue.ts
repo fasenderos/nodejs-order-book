@@ -5,6 +5,7 @@ export class OrderQueue {
   private _price: number
   private _volume: number
   private orders: Denque<Order>
+  // { orderID: index } index in denque
   private ordersMap: { [key: string]: number } = {}
 
   constructor(price: number) {
@@ -67,5 +68,11 @@ export class OrderQueue {
     this._volume -= order.size
     this.orders.removeOne(this.ordersMap[order.id])
     delete this.ordersMap[order.id]
+  }
+
+  updateOrderSize = (order: Order, newSize: number) => {
+    this._volume += newSize - order.size // update volume
+    order.size = newSize
+    order.time = Date.now()
   }
 }

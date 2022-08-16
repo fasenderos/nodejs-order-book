@@ -1,5 +1,11 @@
 import { Side } from './side'
 
+export interface OrderUpdate {
+  size: number
+  price: number
+  side: Side
+}
+
 export class Order {
   private _id: string
   private _side: Side
@@ -36,9 +42,15 @@ export class Order {
   get size(): number {
     return this._size
   }
+  set size(size: number) {
+    this._size = size
+  }
   // returns timestamp of the order
   get time(): number {
     return this._time
+  }
+  set time(time: number) {
+    this._time = time
   }
   // returns string rappresentation of the order
   toString = (): string => {

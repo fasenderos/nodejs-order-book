@@ -1,5 +1,6 @@
 import createRBTree from 'functional-red-black-tree'
-import { Order } from './order'
+import { CustomError, ERROR } from './errors'
+import { Order, OrderUpdate } from './order'
 import { OrderQueue } from './orderqueue'
 
 export class OrderSide {
@@ -48,9 +49,8 @@ export class OrderSide {
   remove = (order: Order): Order => {
     const price = order.price
     const strPrice = price.toString()
-
+    if (!this.prices[strPrice]) throw CustomError(ERROR.ErrInvalidPriceLevel)
     this.prices[strPrice].remove(order)
-
     if (this.prices[strPrice].len() === 0) {
       delete this.prices[strPrice]
       this.priceTree = this.priceTree.remove(price)
@@ -60,6 +60,33 @@ export class OrderSide {
     this.numOrders -= 1
     this._volume -= order.size
     return order
+  }
+
+  update = (oldOrder: Order, orderUpdate: OrderUpdate): Order | undefined => {
+    if (
+      orderUpdate.price !== undefined &&
+      orderUpdate.price !== oldOrder.price
+    ) {
+      // Price changed. Remove order and update tree.
+      this.remove(oldOrder)
+      const newOrder = new Order(
+        oldOrder.id,
+        oldOrder.side,
+        orderUpdate.size || oldOrder.size,
+        orderUpdate.price
+      )
+      this.append(newOrder)
+      return newOrder
+    } else if (
+      orderUpdate.size !== undefined &&
+      orderUpdate.size !== oldOrder.size
+    ) {
+      // Quantity changed. Price is the same.
+      const strPrice = oldOrder.price.toString()
+      this._volume += orderUpdate.size - oldOrder.size
+      this.prices[strPrice].updateOrderSize(oldOrder, orderUpdate.size)
+      return oldOrder
+    }
   }
 
   // returns maximal level of price

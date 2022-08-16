@@ -1,4 +1,4 @@
-import { Order } from '../src/order'
+import { Order, OrderUpdate } from '../src/order'
 import { Side } from '../src/side'
 import { OrderBook } from '../src/orderbook'
 import { ERROR } from '../src/errors'
@@ -152,6 +152,74 @@ describe('OrderBook', () => {
     const process5 = ob.processMarketOrder(Side.SELL)
     expect(process5.err?.message).toBe(ERROR.ErrInsufficientQuantity)
   })
+
+  test('test modifyOrder', () => {
+    const ob = new OrderBook()
+
+    addDepth(ob, '', 2)
+
+    ob.processLimitOrder(Side.BUY, 'first-order', 1000, 52)
+    ob.processLimitOrder(Side.SELL, 'second-order', 1000, 200)
+
+    // Test BUY side
+    const orderUpdateSize1: OrderUpdate = {
+      side: Side.BUY,
+      size: 990,
+      price: 52,
+    }
+    // Response is the updated order or undefined if no order exist
+    const response1 = ob.modifyOrder('first-order', orderUpdateSize1)
+    expect(response1?.size).toBe(orderUpdateSize1.size)
+
+    const orderUpdatePrice1: OrderUpdate = {
+      side: Side.BUY,
+      size: 990,
+      price: 82,
+    }
+    // Response is the updated order or undefined if no order exist
+    const response2 = ob.modifyOrder('first-order', orderUpdatePrice1)
+    expect(response2?.price).toBe(orderUpdatePrice1.price)
+
+    // Test SELL side
+    const orderUpdateSize2: OrderUpdate = {
+      side: Side.SELL,
+      size: 990,
+      price: 200,
+    }
+    // Response is the updated order or undefined if no order exist
+    const response3 = ob.modifyOrder('second-order', orderUpdateSize2)
+    expect(response3?.size).toBe(orderUpdateSize2.size)
+
+    const orderUpdatePrice2: OrderUpdate = {
+      side: Side.SELL,
+      size: 990,
+      price: 250,
+    }
+    // Response is the updated order or undefined if no order exist
+    const response4 = ob.modifyOrder('second-order', orderUpdatePrice2)
+    expect(response4?.price).toBe(orderUpdatePrice2.price)
+
+    // Test throw error when the side is not of type 'Side'
+    try {
+      const errorUpdate: OrderUpdate = {
+        // @ts-ignore
+        side: 'fake-side',
+        size: 990,
+        price: 250,
+      }
+      ob.modifyOrder('second-order', errorUpdate)
+    } catch (error) {
+      if (error instanceof Error) {
+        // TypeScript knows err is Error
+        expect(error?.message).toBe(ERROR.ErrInvalidSide)
+      }
+    }
+
+    // Test modify an unexisting order
+    const resp = ob.modifyOrder('unexisting-order', orderUpdatePrice1)
+    expect(resp).toBeUndefined()
+  })
+
   test('test priceCalculation', () => {
     const ob = new OrderBook()
 

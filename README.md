@@ -7,7 +7,7 @@
     <a href="https://github.com/fasenderos/hft-limit-order-book"><img src="https://badgen.net/badge/icon/typescript?icon=typescript&label" alt="Built with TypeScript"></a>
 </p>
 
-> Ported from [Go orderbook](https://github.com/i25959341/orderbook)
+> Initially Ported from [Go orderbook](https://github.com/i25959341/orderbook), this orderbook has been enhanced with new features
 
 # hft-limit-order-book
 
@@ -20,6 +20,7 @@ Ultra-fast matching engine written in Javascript
 - Standard price-time priority
 - Supports both market and limit orders
 - Supports order cancelling
+- Supports order price and/or size updating
 - **High performance (above 300k trades per second)**
 
 **Machine:** ASUS ExpertBook, 11th Gen Intel(R) Core(TM) i7-1165G7, 2.80Ghz, 16GB RAM, Node.js v18.4.0.
@@ -55,7 +56,9 @@ Then you be able to use next primary functions:
 ```js
 lob.processLimitOrder(side: 'buy' | 'sell', orderID: string, size: number, price: number);
 
-lob.processMarketOrder(side 'buy' | 'sell', size: number);
+lob.processMarketOrder(side: 'buy' | 'sell', size: number);
+
+lob.modifyOrder(orderID: string, { side: 'buy' | 'sell', size: number, price: number });
 
 lob.cancelOrder(orderID: string);
 ```
@@ -180,6 +183,43 @@ quantityLeft - 4
 
 ```
 
+### ModifyOrder
+
+```js
+// modifyOrder Modify an existing order with given ID
+modifyOrder(orderID: string);
+```
+
+```
+processLimitOrder("sell", "uinqueID", 55, 100);
+
+asks: 110 -> 5      110 -> 5
+      100 -> 1      100 -> 56
+--------------  ->  --------------
+bids: 90  -> 5      90  -> 5
+      80  -> 1      80  -> 1
+
+// Modify the size from 55 to 65
+modifyOrder("uinqueID", { side: "sell", size: 65, price: 100 })
+
+asks: 110 -> 5      110 -> 5
+      100 -> 56     100 -> 66
+--------------  ->  --------------
+bids: 90  -> 5      90  -> 5
+      80  -> 1      80  -> 1
+
+
+// Modify the price from 100 to 110
+modifyOrder("uinqueID", { side: "sell", size: 65, price: 110 })
+
+asks: 110 -> 5
+      100 -> 66     110 -> 71
+--------------  ->  --------------
+bids: 90  -> 5      90  -> 5
+      80  -> 1      80  -> 1
+
+```
+
 ### CancelOrder
 
 ```js
@@ -188,7 +228,7 @@ cancelOrder(orderID: string);
 ```
 
 ```
-cancelOrder("myUinqueID-Sell-1-with-100")
+cancelOrder("myUniqueID-Sell-1-with-100")
 
 asks: 110 -> 5
       100 -> 1      110 -> 5

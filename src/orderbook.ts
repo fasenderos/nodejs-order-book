@@ -1,5 +1,5 @@
 import { ERROR, CustomError } from './errors'
-import { Order } from './order'
+import { Order, OrderUpdate } from './order'
 import { OrderQueue } from './orderqueue'
 import { OrderSide } from './orderside'
 import { Side } from './side'
@@ -249,7 +249,24 @@ export class OrderBook {
     return [asks, bids]
   }
 
-  // CancelOrder removes order with given ID from the order book
+  // Modify an existing order with given ID
+  modifyOrder = (
+    orderID: string,
+    orderUpdate: OrderUpdate
+  ): Order | undefined | void => {
+    const order = this.orders[orderID]
+    if (!order) return
+    const side = orderUpdate.side
+    if (side === Side.BUY) {
+      return this.bids.update(order, orderUpdate)
+    } else if (side === Side.SELL) {
+      return this.asks.update(order, orderUpdate)
+    } else {
+      throw CustomError(ERROR.ErrInvalidSide)
+    }
+  }
+
+  // Removes order with given ID from the order book
   cancelOrder = (orderID: string): Order | undefined => {
     const order = this.orders[orderID]
     if (!order) return
