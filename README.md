@@ -259,10 +259,6 @@ asks: 110 -> 5
 bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
 
-done         - 2 (or more orders)
-partial      - nil
-quantityLeft - 4
-
 ```
 
 ## Development
