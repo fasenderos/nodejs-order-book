@@ -4,7 +4,7 @@ on:
   push:
     paths-ignore:
       - '.github/ISSUE_TEMPLATE/**'
-      - 'docs/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
       - '.editorconfig'
       - 'CODE_OF_CONDUCT.md'
       - 'CONTRIBUTING.md'
@@ -17,7 +17,7 @@ on:
   pull_request:
     paths-ignore:
       - '.github/ISSUE_TEMPLATE/**'
-      - 'docs/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
       - '.editorconfig'
       - 'CODE_OF_CONDUCT.md'
       - 'CONTRIBUTING.md'
