@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "@commitlint/cli": "17.2.0",
-    "@commitlint/config-conventional": "17.1.0",
+    "@commitlint/config-conventional": "17.2.0",
     "@types/functional-red-black-tree": "1.0.1",
     "@types/jest": "28.1.8",
     "@typescript-eslint/eslint-plugin": "5.42.0",
