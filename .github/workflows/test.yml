@@ -3,21 +3,27 @@ name: Test
 on:
   push:
     paths-ignore:
+      - '.github/ISSUE_TEMPLATE/**'
       - 'docs/**'
-      - 'README.md'
-      - 'LICENSE'
       - '.editorconfig'
       - 'CODE_OF_CONDUCT.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE'
+      - 'README.md'
+      - 'SECURITY.md'
     branches:
       - main
       - master
   pull_request:
     paths-ignore:
+      - '.github/ISSUE_TEMPLATE/**'
       - 'docs/**'
-      - 'README.md'
-      - 'LICENSE'
       - '.editorconfig'
       - 'CODE_OF_CONDUCT.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE'
+      - 'README.md'
+      - 'SECURITY.md'
     branches:
       - main
       - master
