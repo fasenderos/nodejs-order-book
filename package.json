@@ -73,7 +73,7 @@
     "eslint-plugin-prettier": "4.2.1",
     "fastify": "^4.3.0",
     "gaussian": "^1.2.0",
-    "husky": "8.0.1",
+    "husky": "8.0.2",
     "jest": "28.1.3",
     "lint-staged": "13.0.3",
     "nanobench": "3.0.0",
