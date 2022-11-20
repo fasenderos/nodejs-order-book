@@ -1,7 +1,17 @@
 {
   "name": "hft-limit-order-book",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Node.js Lmit Order Book for high-frequency trading (HFT).",
+  "author": "Andrea Fassina <andrea.fassina82@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/fasenderos/hft-limit-order-book",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:fasenderos/hft-limit-order-book.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fasenderos/hft-limit-order-book/issues"
+  },
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "umd:main": "dist/umd/index.js",
@@ -28,35 +38,6 @@
     "test:dev": "jest --no-cache --runInBand --watch",
     "test:cov": "jest --coverage --no-cache --runInBand",
     "prepare": "husky install"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "exchange",
-    "hft",
-    "hft-trading",
-    "limit-order-book",
-    "matching-algorithm",
-    "matching-engine",
-    "nodejs",
-    "orderbook",
-    "order-book",
-    "typescript",
-    "trading"
-  ],
-  "author": "Andrea Fassina <andrea.fassina82@gmail.com>",
-  "license": "MIT",
-  "homepage": "https://github.com/fasenderos/hft-limit-order-book",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:fasenderos/hft-limit-order-book.git"
-  },
-  "bugs": {
-    "url": "https://github.com/fasenderos/hft-limit-order-book/issues"
   },
   "dependencies": {
     "denque": "2.1.0",
@@ -86,6 +67,25 @@
     "webpack": "5.75.0",
     "webpack-cli": "5.0.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "exchange",
+    "hft",
+    "hft-trading",
+    "limit-order-book",
+    "matching-algorithm",
+    "matching-engine",
+    "nodejs",
+    "orderbook",
+    "order-book",
+    "typescript",
+    "trading"
+  ],
   "lint-staged": {
     "*.ts": [
       "prettier --write"
