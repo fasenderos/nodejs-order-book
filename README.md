@@ -79,10 +79,10 @@ createOrder('limit', side: 'buy' | 'sell', size: number, price: number, orderID:
 createOrder('market', side: 'buy' | 'sell', size: number);
 ```
 
-### Process Limit Order
+### Create Limit Order
 
 ```js
-// Places new order to the OrderBook
+// Places new limit order to the OrderBook
 // Arguments:
 //      side     - what do you want to do (ob.Sell or ob.Buy)
 //      orderID  - unique order ID in depth
@@ -100,8 +100,6 @@ createOrder('market', side: 'buy' | 'sell', size: number);
 //      partialQuantityProcessed - if partial order is not nil this result contains processed quatity from partial order
 
 limit(side: 'buy' | 'sell', orderID: string, size: number, price: number);
-// or
-processLimitOrder(side: 'buy' | 'sell', orderID: string, size: number, price: number);
 ```
 
 For example:
@@ -146,10 +144,10 @@ done    - 1 order with 100 price, (may be also few orders with 110 price) + uinq
 partial - 1 order with price 110
 ```
 
-### Process Market Order
+### Create Market Order
 
 ```js
-// Immediately gets definite quantity from the order book with market price
+// Places new market order to the OrderBook. Immediately gets definite quantity from the order book with market price
 // Arguments:
 //      side     - what do you want to do (ob.Sell or ob.Buy)
 //      quantity - how much quantity you want to sell or buy
@@ -164,8 +162,6 @@ partial - 1 order with price 110
 //      quantityLeft - more than zero if it is not enought orders to process all quantity
 
 market(side: 'buy' | 'sell', size: number);
-// or
-processMarketOrder(side: 'buy' | 'sell', size: number);
 ```
 
 For example:
@@ -203,8 +199,6 @@ quantityLeft - 4
 ```js
 // Modify an existing order with given ID
 modify(orderID: string, { side: 'buy' | 'sell', size: number, price: number });
-// or
-modifyOrder(orderID: string, { side: 'buy' | 'sell', size: number, price: number });
 ```
 
 For example:
@@ -243,8 +237,6 @@ bids: 90  -> 5      90  -> 5
 ```js
 // Removes order with given ID from the order book
 cancel(orderID: string);
-// or
-cancelOrder(orderID: string);
 ```
 
 For example:

@@ -79,10 +79,6 @@ describe('OrderBook', () => {
     const process4 = ob.limit(Side.SELL, `fake-70`, 0, 40)
     expect(process4.err?.message).toBe(ERROR.ErrInvalidQuantity)
 
-    // Test also the deprecated alias function. // TODO fix me when the deprecated function will be removed
-    const process5 = ob.processLimitOrder(Side.SELL, `fake-70`, 10, 0)
-    expect(process5.err?.message).toBe(ERROR.ErrInvalidPrice)
-
     const removed = ob.cancel('order-b100')
     expect(removed).toBeUndefined()
 
@@ -139,10 +135,6 @@ describe('OrderBook', () => {
     expect(process1.quantityLeft).toBe(0)
     expect(process1.partialQuantityProcessed).toBe(1)
 
-    // Test also the deprecated alias function. // TODO fix me when the deprecated function will be removed
-    const process2 = ob.processMarketOrder(Side.BUY, 0)
-    expect(process2.err?.message).toBe(ERROR.ErrInsufficientQuantity)
-
     // Test also the createOrder method
     const process3 =
       // { done, partial, partialQuantityProcessed, quantityLeft, err } =
@@ -194,10 +186,6 @@ describe('OrderBook', () => {
       size: 990,
       price: 82,
     }
-    // Response is the updated order or undefined if no order exist
-    // Test also the deprecated alias function. // TODO fix me when the deprecated function will be removed
-    const response2 = ob.modifyOrder('first-order', orderUpdatePrice1)
-    expect(response2?.price).toBe(orderUpdatePrice1.price)
 
     // Test SELL side
     const orderUpdateSize2: OrderUpdate = {

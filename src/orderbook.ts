@@ -56,23 +56,7 @@ export class OrderBook {
     }
   }
 
-  // Alias for the old primary function names
-  /** @deprecated Since version 1.1.0. Will be deleted in version 2.0. Use market instead. */
-  processMarketOrder = (side: Side, size: number) => this.market(side, size)
-  /** @deprecated Since version 1.1.0. Will be deleted in version 2.0. Use limit instead. */
-  processLimitOrder = (
-    side: Side,
-    orderID: string,
-    size: number,
-    price: number
-  ) => this.limit(side, orderID, size, price)
-  /** @deprecated Since version 1.1.0. Will be deleted in version 2.0. Use modify instead. */
-  modifyOrder = (orderID: string, orderUpdate: OrderUpdate) =>
-    this.modify(orderID, orderUpdate)
-  /** @deprecated Since version 1.1.0. Will be deleted in version 2.0. Use cancel instead. */
-  cancelOrder = (orderID: string) => this.cancel(orderID)
-
-  // ProcessMarketOrder immediately gets definite quantity from the order book with market price
+  // Places new market order and gets definite quantity from the order book with market price
   // Arguments:
   //      side     - what do you want to do (ob.Sell or ob.Buy)
   //      quantity - how much quantity you want to sell or buy
@@ -122,7 +106,7 @@ export class OrderBook {
     return response
   }
 
-  // ProcessLimitOrder places new order to the OrderBook
+  // Places new limit order to the OrderBook
   // Arguments:
   //      side     - what do you want to do (ob.Sell or ob.Buy)
   //      orderID  - unique order ID in depth
@@ -275,12 +259,12 @@ export class OrderBook {
     return response
   }
 
-  // returns order by id
+  // Returns order by id
   order = (orderID: string): Order | undefined => {
     return this.orders[orderID]
   }
 
-  // Depth returns price levels and volume at price level
+  // Returns price levels and volume at price level
   depth = () => {
     let level = this.asks.maxPriceQueue()
     const asks = []
@@ -328,7 +312,7 @@ export class OrderBook {
     return this.asks.remove(order)
   }
 
-  // CalculateMarketPrice returns total market price for requested quantity
+  // Returns total market price for requested quantity
   // if err is not nil price returns total price of all levels in side
   calculateMarketPrice = (
     side: Side,
