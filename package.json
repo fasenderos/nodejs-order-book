@@ -44,7 +44,7 @@
     "functional-red-black-tree": "1.0.1"
   },
   "devDependencies": {
-    "@commitlint/cli": "17.2.0",
+    "@commitlint/cli": "17.3.0",
     "@commitlint/config-conventional": "17.2.0",
     "@types/functional-red-black-tree": "1.0.1",
     "@types/jest": "28.1.8",
