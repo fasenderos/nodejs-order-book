@@ -48,7 +48,7 @@
     "@commitlint/config-conventional": "17.4.4",
     "@types/functional-red-black-tree": "1.0.2",
     "@types/jest": "28.1.8",
-    "@typescript-eslint/eslint-plugin": "5.53.0",
+    "@typescript-eslint/eslint-plugin": "5.54.0",
     "@typescript-eslint/parser": "5.53.0",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",
