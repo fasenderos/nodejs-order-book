@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.2](https://github.com/fasenderos/hft-limit-order-book/compare/v2.0.1...v2.0.2) (2023-03-21)
+
+
+### Bug Fixes
+
+* incorrect size amount on partial processed order ([#156](https://github.com/fasenderos/hft-limit-order-book/issues/156)) ([25cca3f](https://github.com/fasenderos/hft-limit-order-book/commits/25cca3f3222c8d76a89cb1ecb28ecf43b62f6956))
+
 ### [2.0.1](https://github.com/fasenderos/hft-limit-order-book/compare/v2.0.0...v2.0.1) (2022-11-20)
 
 
