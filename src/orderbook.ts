@@ -99,10 +99,10 @@ export class OrderBook {
     }
 
     while (size > 0 && sideToProcess.len() > 0) {
+      // if sideToProcess.len > 0 it is not necessary to verify that bestPrice exists
       const bestPrice = iter()
-      if (!bestPrice) break
       const { done, partial, partialQuantityProcessed, quantityLeft } =
-        this.processQueue(bestPrice, size)
+        this.processQueue(bestPrice as OrderQueue, size)
       response.done = response.done.concat(done)
       response.partial = partial
       response.partialQuantityProcessed = partialQuantityProcessed
