@@ -77,6 +77,12 @@ export class OrderBook {
       quantityLeft: null,
       err: null,
     }
+
+    if (side !== Side.SELL && side !== Side.BUY) {
+      response.err = CustomError(ERROR.ErrInvalidSide)
+      return response
+    }
+
     if (!size || typeof size !== 'number' || size <= 0) {
       response.err = CustomError(ERROR.ErrInsufficientQuantity)
       return response
@@ -134,6 +140,11 @@ export class OrderBook {
       partialQuantityProcessed: null,
       quantityLeft: null,
       err: null,
+    }
+
+    if (side !== Side.SELL && side !== Side.BUY) {
+      response.err = CustomError(ERROR.ErrInvalidSide)
+      return response
     }
 
     const order = this.orders[orderID]

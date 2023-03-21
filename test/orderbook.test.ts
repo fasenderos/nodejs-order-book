@@ -79,6 +79,10 @@ describe('OrderBook', () => {
     const process4 = ob.limit(Side.SELL, `fake-70`, 0, 40)
     expect(process4.err?.message).toBe(ERROR.ErrInvalidQuantity)
 
+    // @ts-ignore
+    const process5 = ob.limit('unsupported-side', `order-70`, 70, 100)
+    expect(process5.err?.message).toBe(ERROR.ErrInvalidSide)
+
     const removed = ob.cancel('order-b100')
     expect(removed).toBeUndefined()
 
@@ -153,6 +157,10 @@ describe('OrderBook', () => {
     // @ts-ignore
     const process5 = ob.market(Side.SELL)
     expect(process5.err?.message).toBe(ERROR.ErrInsufficientQuantity)
+
+    // @ts-ignore
+    const process6 = ob.market('unsupported-side', 100)
+    expect(process6.err?.message).toBe(ERROR.ErrInvalidSide)
   })
 
   test('createOrder error', () => {
