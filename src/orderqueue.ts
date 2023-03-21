@@ -56,18 +56,27 @@ export class OrderQueue {
     this._volume -= oldOrder.size
     this._volume += newOrder.size
     // Remove old order from head
-    this.orders.removeOne(0)
-    // Add new order to head // TODO head?? or tail???
-    this.orders.unshift(newOrder)
+    this.orders.shift()
     delete this.ordersMap[oldOrder.id]
+    // Add new order to head
+    this.orders.unshift(newOrder)
     this.ordersMap[newOrder.id] = 0
   }
 
   // removes order from the queue
   remove = (order: Order) => {
     this._volume -= order.size
-    this.orders.removeOne(this.ordersMap[order.id])
+    const deletedOrderIndex = this.ordersMap[order.id]
+    this.orders.removeOne(deletedOrderIndex)
     delete this.ordersMap[order.id]
+    // Update all orders indexes where index is greater than the deleted one
+    for (const orderId in this.ordersMap) {
+      if (Object.prototype.hasOwnProperty.call(this.ordersMap, orderId)) {
+        if (this.ordersMap[orderId] > deletedOrderIndex) {
+          this.ordersMap[orderId] -= 1
+        }
+      }
+    }
   }
 
   updateOrderSize = (order: Order, newSize: number) => {

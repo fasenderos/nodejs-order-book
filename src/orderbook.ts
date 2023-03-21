@@ -147,8 +147,7 @@ export class OrderBook {
       return response
     }
 
-    const order = this.orders[orderID]
-    if (order) {
+    if (this.orders[orderID]) {
       response.err = CustomError(ERROR.ErrOrderExists)
       return response
     }
@@ -255,7 +254,7 @@ export class OrderBook {
               headOrder.price,
               headOrder.time
             )
-
+            this.orders[headOrder.id] = response.partial
             response.partialQuantityProcessed = response.quantityLeft
             orderQueue.update(headOrder, response.partial)
             response.quantityLeft = 0
