@@ -64,7 +64,7 @@
     "ts-jest": "28.0.8",
     "ts-loader": "9.4.2",
     "typescript": "5.0.2",
-    "webpack": "5.76.2",
+    "webpack": "5.76.3",
     "webpack-cli": "5.0.1"
   },
   "publishConfig": {
