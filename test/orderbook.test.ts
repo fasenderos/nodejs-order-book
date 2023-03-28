@@ -24,7 +24,7 @@ describe('OrderBook', () => {
         ob.limit(Side.BUY, `buy-${index}`, size, index)
       expect(done.length).toBe(0)
       expect(partial).toBeNull()
-      expect(partialQuantityProcessed).toBeNull()
+      expect(partialQuantityProcessed).toBe(0)
       expect(err).toBeNull()
     }
 
@@ -33,7 +33,7 @@ describe('OrderBook', () => {
         ob.limit(Side.SELL, `sell-${index}`, size, index)
       expect(done.length).toBe(0)
       expect(partial).toBeNull()
-      expect(partialQuantityProcessed).toBeNull()
+      expect(partialQuantityProcessed).toBe(0)
       expect(err).toBeNull()
     }
 
@@ -97,7 +97,7 @@ describe('OrderBook', () => {
     expect(process6.err).toBeNull()
     expect(process6.done.length).toBe(7)
     expect(process6.partial).toBeNull()
-    expect(process6.partialQuantityProcessed).toBeNull()
+    expect(process6.partialQuantityProcessed).toBe(0)
 
     // @ts-ignore
     const process7 = ob.limit(Side.SELL, `fake-wrong-size`, '0', 40)
@@ -147,7 +147,7 @@ describe('OrderBook', () => {
     expect(process3.done.length).toBe(5)
     expect(process3.err).toBeNull()
     expect(process3.partial).toBeNull()
-    expect(process3.partialQuantityProcessed).toBeNull()
+    expect(process3.partialQuantityProcessed).toBe(0)
     expect(process3.quantityLeft).toBe(2)
 
     // @ts-ignore

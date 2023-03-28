@@ -7,8 +7,8 @@ import { Side } from './side'
 interface ProcessOrder {
   done: Order[]
   partial: Order | null
-  partialQuantityProcessed: number | null
-  quantityLeft: number | null
+  partialQuantityProcessed: number
+  quantityLeft: number
   err: Error | null
 }
 
@@ -82,8 +82,8 @@ export class OrderBook {
     const response: ProcessOrder = {
       done: [],
       partial: null,
-      partialQuantityProcessed: null,
-      quantityLeft: null,
+      partialQuantityProcessed: 0,
+      quantityLeft: size,
       err: null,
     }
 
@@ -148,8 +148,8 @@ export class OrderBook {
     const response: ProcessOrder = {
       done: [],
       partial: null,
-      partialQuantityProcessed: null,
-      quantityLeft: null,
+      partialQuantityProcessed: 0,
+      quantityLeft: size,
       err: null,
     }
 
@@ -216,6 +216,7 @@ export class OrderBook {
       response.partial = partial
       response.partialQuantityProcessed = partialQuantityProcessed
       quantityToTrade = quantityLeft || 0
+      response.quantityLeft = quantityToTrade
       bestPrice = iter()
     }
 
@@ -246,6 +247,12 @@ export class OrderBook {
         new Order(orderID, side, size, totalPrice / totalQuantity, Date.now())
       )
     }
+
+    // If IOC order was not matched completely remove from the order book
+    if (timeInForce === TimeInForce.IOC && response.quantityLeft > 0) {
+      this.cancel(orderID)
+    }
+
     return response
   }
 
@@ -261,7 +268,7 @@ export class OrderBook {
     const response: ProcessOrder = {
       done: [],
       partial: null,
-      partialQuantityProcessed: null,
+      partialQuantityProcessed: 0,
       quantityLeft: quantityToTrade,
       err: null,
     }
