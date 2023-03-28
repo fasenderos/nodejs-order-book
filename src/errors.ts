@@ -7,6 +7,7 @@ export enum ERROR {
   ErrInvalidSide = "orderbook: given neither 'bid' nor 'ask'",
   ErrOrderExists = 'orderbook: order already exists',
   ErrInvalidOrderType = "orderbook: supperted order type are 'limit' and 'market'",
+  ErrInvalidTimeInForce = "orderbook: supperted time in force are 'GTC', 'IOC' and 'FOK'",
 }
 
 export const CustomError = (error?: ERROR | string): Error => {
@@ -25,6 +26,8 @@ export const CustomError = (error?: ERROR | string): Error => {
       return new Error(ERROR.ErrInvalidSide)
     case ERROR.ErrInvalidOrderType:
       return new Error(ERROR.ErrInvalidOrderType)
+    case ERROR.ErrInvalidTimeInForce:
+      return new Error(ERROR.ErrInvalidTimeInForce)
     default:
       return new Error(`${ERROR.Default}${error ? ': ' + error : ''}`)
   }
