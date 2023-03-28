@@ -25,9 +25,9 @@ describe('OrderSide', () => {
     expect(os.orders()[0]).toMatchObject(order1)
     expect(os.orders()[1]).toMatchObject(order2)
 
-    expect(os.lessThan(21)?.price()).toBe(20)
-    expect(os.lessThan(19)?.price()).toBe(10)
-    expect(os.lessThan(9)).toBeUndefined()
+    expect(os.lowerThan(21)?.price()).toBe(20)
+    expect(os.lowerThan(19)?.price()).toBe(10)
+    expect(os.lowerThan(9)).toBeUndefined()
 
     expect(os.greaterThan(9)?.price()).toBe(10)
     expect(os.greaterThan(19)?.price()).toBe(20)

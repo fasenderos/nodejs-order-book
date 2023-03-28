@@ -4,25 +4,26 @@ import { Order, OrderUpdate } from './order'
 import { OrderQueue } from './orderqueue'
 
 export class OrderSide {
-  private priceTree: createRBTree.Tree<number, OrderQueue>
-  private prices: { [key: string]: OrderQueue } = {}
+  private _priceTree: createRBTree.Tree<number, OrderQueue>
+  private _prices: { [key: string]: OrderQueue } = {}
 
   private _volume = 0
-  private numOrders = 0
-  private depthSide = 0
+  private _total = 0
+  private _numOrders = 0
+  private _depthSide = 0
 
   constructor() {
-    this.priceTree = createRBTree()
+    this._priceTree = createRBTree<number, OrderQueue>()
   }
 
   // returns amount of orders
   len = (): number => {
-    return this.numOrders
+    return this._numOrders
   }
 
   // returns depth of market
   depth = (): number => {
-    return this.depthSide
+    return this._depthSide
   }
 
   // returns total amount of quantity in side
@@ -30,35 +31,47 @@ export class OrderSide {
     return this._volume
   }
 
+  // returns the total (size * price of each price level) in side
+  total = (): number => {
+    return this._total
+  }
+
+  // returns the price tree in side
+  priceTree = (): createRBTree.Tree<number, OrderQueue> => {
+    return this._priceTree
+  }
+
   // appends order to definite price level
   append = (order: Order): Order => {
     const price = order.price
     const strPrice = price.toString()
-    if (!this.prices[strPrice]) {
+    if (!this._prices[strPrice]) {
       const priceQueue = new OrderQueue(price)
-      this.prices[strPrice] = priceQueue
-      this.priceTree = this.priceTree.insert(price, priceQueue)
-      this.depthSide += 1
+      this._prices[strPrice] = priceQueue
+      this._priceTree = this._priceTree.insert(price, priceQueue)
+      this._depthSide += 1
     }
-    this.numOrders += 1
+    this._numOrders += 1
     this._volume += order.size
-    return this.prices[strPrice].append(order)
+    this._total += order.size * order.price
+    return this._prices[strPrice].append(order)
   }
 
   // removes order from definite price level
   remove = (order: Order): Order => {
     const price = order.price
     const strPrice = price.toString()
-    if (!this.prices[strPrice]) throw CustomError(ERROR.ErrInvalidPriceLevel)
-    this.prices[strPrice].remove(order)
-    if (this.prices[strPrice].len() === 0) {
-      delete this.prices[strPrice]
-      this.priceTree = this.priceTree.remove(price)
-      this.depthSide -= 1
+    if (!this._prices[strPrice]) throw CustomError(ERROR.ErrInvalidPriceLevel)
+    this._prices[strPrice].remove(order)
+    if (this._prices[strPrice].len() === 0) {
+      delete this._prices[strPrice]
+      this._priceTree = this._priceTree.remove(price)
+      this._depthSide -= 1
     }
 
-    this.numOrders -= 1
+    this._numOrders -= 1
     this._volume -= order.size
+    this._total -= order.size * order.price
     return order
   }
 
@@ -84,45 +97,47 @@ export class OrderSide {
       // Quantity changed. Price is the same.
       const strPrice = oldOrder.price.toString()
       this._volume += orderUpdate.size - oldOrder.size
-      this.prices[strPrice].updateOrderSize(oldOrder, orderUpdate.size)
+      this._total +=
+        orderUpdate.size * orderUpdate.price - oldOrder.size * oldOrder.price
+      this._prices[strPrice].updateOrderSize(oldOrder, orderUpdate.size)
       return oldOrder
     }
   }
 
   // returns maximal level of price
   maxPriceQueue = (): OrderQueue | undefined => {
-    if (this.depthSide > 0) {
-      const max = this.priceTree.end
+    if (this._depthSide > 0) {
+      const max = this._priceTree.end
       return max.value
     }
   }
 
   // returns maximal level of price
   minPriceQueue = (): OrderQueue | undefined => {
-    if (this.depthSide > 0) {
-      const min = this.priceTree.begin
+    if (this._depthSide > 0) {
+      const min = this._priceTree.begin
       return min.value
     }
   }
 
   // returns nearest OrderQueue with price less than given
-  lessThan = (price: number): OrderQueue | undefined => {
-    const node = this.priceTree.lt(price)
+  lowerThan = (price: number): OrderQueue | undefined => {
+    const node = this._priceTree.lt(price)
     return node.value
   }
 
   // returns nearest OrderQueue with price greater than given
   greaterThan = (price: number): OrderQueue | undefined => {
-    const node = this.priceTree.gt(price)
+    const node = this._priceTree.gt(price)
     return node.value
   }
 
   // returns all orders
   orders = (): Order[] => {
     let orders: Order[] = []
-    for (const price in this.prices) {
-      if (Object.prototype.hasOwnProperty.call(this.prices, price)) {
-        const allOrders = this.prices[price].toArray()
+    for (const price in this._prices) {
+      if (Object.prototype.hasOwnProperty.call(this._prices, price)) {
+        const allOrders = this._prices[price].toArray()
         orders = orders.concat(allOrders)
       }
     }
@@ -134,7 +149,7 @@ export class OrderSide {
     let level = this.maxPriceQueue()
     while (level) {
       s += `\n${level.price()} -> ${level.volume()}`
-      level = this.lessThan(level.price())
+      level = this.lowerThan(level.price())
     }
     return s
   }
