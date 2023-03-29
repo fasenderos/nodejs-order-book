@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/fasenderos/hft-limit-order-book/compare/v2.0.2...v2.1.0) (2023-03-29)
+
+
+### Features
+
+* add fill or kill time in force ([a146cfe](https://github.com/fasenderos/hft-limit-order-book/commits/a146cfecee71d236111dafc792dbe0ac07fb841f))
+* add immediate or cancel time in force ([aa671c6](https://github.com/fasenderos/hft-limit-order-book/commits/aa671c616d08a00f4c55a55c3f8e0fe2590281e2))
+
 ### [2.0.2](https://github.com/fasenderos/hft-limit-order-book/compare/v2.0.1...v2.0.2) (2023-03-21)
 
 
