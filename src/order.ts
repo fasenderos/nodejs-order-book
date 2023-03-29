@@ -11,6 +11,12 @@ export enum OrderType {
   MARKET = 'market',
 }
 
+export enum TimeInForce {
+  GTC = 'GTC',
+  IOC = 'IOC',
+  FOK = 'FOK',
+}
+
 export class Order {
   private _id: string
   private _side: Side

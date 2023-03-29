@@ -1,5 +1,5 @@
 import { ERROR, CustomError } from './errors'
-import { Order, OrderType, OrderUpdate } from './order'
+import { Order, OrderType, OrderUpdate, TimeInForce } from './order'
 import { OrderQueue } from './orderqueue'
 import { OrderSide } from './orderside'
 import { Side } from './side'
@@ -7,10 +7,12 @@ import { Side } from './side'
 interface ProcessOrder {
   done: Order[]
   partial: Order | null
-  partialQuantityProcessed: number | null
-  quantityLeft: number | null
+  partialQuantityProcessed: number
+  quantityLeft: number
   err: Error | null
 }
+
+const validTimeInForce = Object.values(TimeInForce)
 
 export class OrderBook {
   private orders: { [key: string]: Order } = {}
@@ -44,13 +46,20 @@ export class OrderBook {
     size: number,
     // Specific for limit order type
     price?: number,
-    orderID?: string
+    orderID?: string,
+    timeInForce: TimeInForce = TimeInForce.GTC
   ): ProcessOrder => {
     switch (type) {
       case OrderType.MARKET:
         return this.market(side, size)
       case OrderType.LIMIT:
-        return this.limit(side, orderID as string, size, price as number)
+        return this.limit(
+          side,
+          orderID as string,
+          size,
+          price as number,
+          timeInForce
+        )
       default:
         return { err: CustomError(ERROR.ErrInvalidOrderType) } as ProcessOrder
     }
@@ -73,8 +82,8 @@ export class OrderBook {
     const response: ProcessOrder = {
       done: [],
       partial: null,
-      partialQuantityProcessed: null,
-      quantityLeft: null,
+      partialQuantityProcessed: 0,
+      quantityLeft: size,
       err: null,
     }
 
@@ -118,6 +127,7 @@ export class OrderBook {
   //      orderID  - unique order ID in depth
   //      quantity - how much quantity you want to sell or buy
   //      price    - no more expensive (or cheaper) this price
+  //      timeInForce - specify how long an order will remain active or open before it’s executed or it expires
   //      * to create new decimal number you should use decimal.New() func
   //        read more at https://github.com/shopspring/decimal
   // Return:
@@ -132,13 +142,14 @@ export class OrderBook {
     side: Side,
     orderID: string,
     size: number,
-    price: number
+    price: number,
+    timeInForce: TimeInForce = TimeInForce.GTC
   ): ProcessOrder => {
     const response: ProcessOrder = {
       done: [],
       partial: null,
-      partialQuantityProcessed: null,
-      quantityLeft: null,
+      partialQuantityProcessed: 0,
+      quantityLeft: size,
       err: null,
     }
 
@@ -162,6 +173,11 @@ export class OrderBook {
       return response
     }
 
+    if (!validTimeInForce.includes(timeInForce)) {
+      response.err = CustomError(ERROR.ErrInvalidTimeInForce)
+      return response
+    }
+
     let quantityToTrade = size
     let sideToProcess: OrderSide
     let sideToAdd: OrderSide
@@ -176,8 +192,16 @@ export class OrderBook {
     } else {
       sideToAdd = this.asks
       sideToProcess = this.bids
-      comparator = this.lessThanOrEqual
+      comparator = this.lowerThanOrEqual
       iter = this.bids.maxPriceQueue
+    }
+
+    if (timeInForce === TimeInForce.FOK) {
+      const fillable = this.canFillOrder(sideToProcess, side, size, price)
+      if (!fillable) {
+        response.err = CustomError(ERROR.ErrLimitFOKNotFillable)
+        return response
+      }
     }
 
     let bestPrice = iter()
@@ -193,6 +217,7 @@ export class OrderBook {
       response.partial = partial
       response.partialQuantityProcessed = partialQuantityProcessed
       quantityToTrade = quantityLeft || 0
+      response.quantityLeft = quantityToTrade
       bestPrice = iter()
     }
 
@@ -223,6 +248,12 @@ export class OrderBook {
         new Order(orderID, side, size, totalPrice / totalQuantity, Date.now())
       )
     }
+
+    // If IOC order was not matched completely remove from the order book
+    if (timeInForce === TimeInForce.IOC && response.quantityLeft > 0) {
+      this.cancel(orderID)
+    }
+
     return response
   }
 
@@ -230,7 +261,7 @@ export class OrderBook {
     return a >= b
   }
 
-  lessThanOrEqual = (a: number, b: number): boolean => {
+  lowerThanOrEqual = (a: number, b: number): boolean => {
     return a <= b
   }
 
@@ -238,7 +269,7 @@ export class OrderBook {
     const response: ProcessOrder = {
       done: [],
       partial: null,
-      partialQuantityProcessed: null,
+      partialQuantityProcessed: 0,
       quantityLeft: quantityToTrade,
       err: null,
     }
@@ -282,14 +313,14 @@ export class OrderBook {
     while (level) {
       const levelPrice = level.price()
       asks.push([levelPrice, level.volume()])
-      level = this.asks.lessThan(levelPrice)
+      level = this.asks.lowerThan(levelPrice)
     }
 
     level = this.bids.maxPriceQueue()
     while (level) {
       const levelPrice = level.price()
       bids.push([levelPrice, level.volume()])
-      level = this.bids.lessThan(levelPrice)
+      level = this.bids.lowerThan(levelPrice)
     }
     return [asks, bids]
   }
@@ -322,6 +353,41 @@ export class OrderBook {
     return this.asks.remove(order)
   }
 
+  canFillOrder = (
+    orderSide: OrderSide,
+    side: Side,
+    size: number,
+    price: number
+  ) => {
+    return side === Side.BUY
+      ? this.buyOrderCanBeFilled(orderSide, size, price)
+      : this.sellOrderCanBeFilled(orderSide, size, price)
+  }
+
+  buyOrderCanBeFilled(orderSide: OrderSide, size: number, price: number) {
+    let cummulativeSize = 0
+    orderSide.priceTree().forEach((_key, priceLevel) => {
+      if (price >= priceLevel.price() && cummulativeSize < size) {
+        cummulativeSize += priceLevel.volume()
+      } else {
+        return true // break the loop
+      }
+    })
+    return cummulativeSize >= size
+  }
+
+  sellOrderCanBeFilled(orderSide: OrderSide, size: number, price: number) {
+    let cummulativeSize = 0
+    orderSide.priceTree().forEach((_key, priceLevel) => {
+      if (price <= priceLevel.price() && cummulativeSize < size) {
+        cummulativeSize += priceLevel.volume()
+      } else {
+        return true // break the loop
+      }
+    })
+    return cummulativeSize >= size
+  }
+
   // Returns total market price for requested quantity
   // if err is not nil price returns total price of all levels in side
   calculateMarketPrice = (
@@ -341,7 +407,7 @@ export class OrderBook {
       iter = this.asks.greaterThan
     } else {
       level = this.bids.maxPriceQueue()
-      iter = this.bids.lessThan
+      iter = this.bids.lowerThan
     }
 
     while (size > 0 && level) {

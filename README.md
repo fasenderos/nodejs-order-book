@@ -19,6 +19,7 @@ Ultra-fast matching engine written in Javascript
 
 - Standard price-time priority
 - Supports both market and limit orders
+- Supports time in force GTC, FOK and IOC
 - Supports order cancelling
 - Supports order price and/or size updating
 - **High performance (above 300k trades per second)**

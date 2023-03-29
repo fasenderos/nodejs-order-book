@@ -4,23 +4,23 @@ import { Order } from './order'
 export class OrderQueue {
   private _price: number
   private _volume: number
-  private orders: Denque<Order>
+  private _orders: Denque<Order>
   // { orderID: index } index in denque
-  private ordersMap: { [key: string]: number } = {}
+  private _ordersMap: { [key: string]: number } = {}
 
   constructor(price: number) {
     this._price = price
     this._volume = 0
-    this.orders = new Denque<Order>()
+    this._orders = new Denque<Order>()
   }
 
   // returns the number of orders in queue
   len = (): number => {
-    return this.orders.length
+    return this._orders.length
   }
 
   toArray = (): Order[] => {
-    return this.orders.toArray()
+    return this._orders.toArray()
   }
 
   // returns price level of the queue
@@ -35,19 +35,19 @@ export class OrderQueue {
 
   // returns top order in queue
   head = (): Order | undefined => {
-    return this.orders.peekFront()
+    return this._orders.peekFront()
   }
 
   // returns bottom order in queue
   tail = (): Order | undefined => {
-    return this.orders.peekBack()
+    return this._orders.peekBack()
   }
 
   // adds order to tail of the queue
   append = (order: Order): Order => {
     this._volume += order.size
-    this.orders.push(order)
-    this.ordersMap[order.id] = this.orders.length - 1
+    this._orders.push(order)
+    this._ordersMap[order.id] = this._orders.length - 1
     return order
   }
 
@@ -56,24 +56,24 @@ export class OrderQueue {
     this._volume -= oldOrder.size
     this._volume += newOrder.size
     // Remove old order from head
-    this.orders.shift()
-    delete this.ordersMap[oldOrder.id]
+    this._orders.shift()
+    delete this._ordersMap[oldOrder.id]
     // Add new order to head
-    this.orders.unshift(newOrder)
-    this.ordersMap[newOrder.id] = 0
+    this._orders.unshift(newOrder)
+    this._ordersMap[newOrder.id] = 0
   }
 
   // removes order from the queue
   remove = (order: Order) => {
     this._volume -= order.size
-    const deletedOrderIndex = this.ordersMap[order.id]
-    this.orders.removeOne(deletedOrderIndex)
-    delete this.ordersMap[order.id]
+    const deletedOrderIndex = this._ordersMap[order.id]
+    this._orders.removeOne(deletedOrderIndex)
+    delete this._ordersMap[order.id]
     // Update all orders indexes where index is greater than the deleted one
-    for (const orderId in this.ordersMap) {
-      if (Object.prototype.hasOwnProperty.call(this.ordersMap, orderId)) {
-        if (this.ordersMap[orderId] > deletedOrderIndex) {
-          this.ordersMap[orderId] -= 1
+    for (const orderId in this._ordersMap) {
+      if (Object.prototype.hasOwnProperty.call(this._ordersMap, orderId)) {
+        if (this._ordersMap[orderId] > deletedOrderIndex) {
+          this._ordersMap[orderId] -= 1
         }
       }
     }

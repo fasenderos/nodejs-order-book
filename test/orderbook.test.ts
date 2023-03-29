@@ -1,4 +1,4 @@
-import { Order, OrderType, OrderUpdate } from '../src/order'
+import { Order, OrderType, OrderUpdate, TimeInForce } from '../src/order'
 import { Side } from '../src/side'
 import { OrderBook } from '../src/orderbook'
 import { ERROR } from '../src/errors'
@@ -24,7 +24,7 @@ describe('OrderBook', () => {
         ob.limit(Side.BUY, `buy-${index}`, size, index)
       expect(done.length).toBe(0)
       expect(partial).toBeNull()
-      expect(partialQuantityProcessed).toBeNull()
+      expect(partialQuantityProcessed).toBe(0)
       expect(err).toBeNull()
     }
 
@@ -33,7 +33,7 @@ describe('OrderBook', () => {
         ob.limit(Side.SELL, `sell-${index}`, size, index)
       expect(done.length).toBe(0)
       expect(partial).toBeNull()
-      expect(partialQuantityProcessed).toBeNull()
+      expect(partialQuantityProcessed).toBe(0)
       expect(err).toBeNull()
     }
 
@@ -97,7 +97,7 @@ describe('OrderBook', () => {
     expect(process6.err).toBeNull()
     expect(process6.done.length).toBe(7)
     expect(process6.partial).toBeNull()
-    expect(process6.partialQuantityProcessed).toBeNull()
+    expect(process6.partialQuantityProcessed).toBe(0)
 
     // @ts-ignore
     const process7 = ob.limit(Side.SELL, `fake-wrong-size`, '0', 40)
@@ -124,6 +124,35 @@ describe('OrderBook', () => {
     // @ts-ignore
     const process10 = ob.limit(Side.SELL, `fake-wrong-price`, 10)
     expect(process10.err?.message).toBe(ERROR.ErrInvalidPrice)
+
+    // @ts-ignore
+    const process11 = ob.limit(Side.SELL, `unsupported-tif`, 10, 10, 'FAKE')
+    expect(process11.err?.message).toBe(ERROR.ErrInvalidTimeInForce)
+  })
+
+  test('test limit FOK and IOC', () => {
+    const ob = new OrderBook()
+    addDepth(ob, '', 2)
+    const process1 = ob.limit(
+      Side.BUY,
+      'order-fok-b100',
+      3,
+      100,
+      TimeInForce.FOK
+    )
+    expect(process1.err?.message).toBe(ERROR.ErrLimitFOKNotFillable)
+
+    const process2 = ob.limit(
+      Side.SELL,
+      'order-fok-s90',
+      3,
+      90,
+      TimeInForce.FOK
+    )
+    expect(process2.err?.message).toBe(ERROR.ErrLimitFOKNotFillable)
+
+    ob.limit(Side.BUY, 'order-ioc-b100', 3, 100, TimeInForce.IOC)
+    expect(ob.order('order-ioc-b100')).toBeUndefined()
   })
 
   test('test market', () => {
@@ -147,7 +176,7 @@ describe('OrderBook', () => {
     expect(process3.done.length).toBe(5)
     expect(process3.err).toBeNull()
     expect(process3.partial).toBeNull()
-    expect(process3.partialQuantityProcessed).toBeNull()
+    expect(process3.partialQuantityProcessed).toBe(0)
     expect(process3.quantityLeft).toBe(2)
 
     // @ts-ignore
