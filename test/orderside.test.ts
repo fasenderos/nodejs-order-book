@@ -16,12 +16,17 @@ describe('OrderSide', () => {
 
     expect(os.maxPriceQueue()).toBe(os.minPriceQueue())
     expect(os.volume()).toBe(5)
+    expect(os.total()).toBe(order1.price * order1.size)
+    expect(os.priceTree().length).toBe(1)
 
     os.append(order2)
-
     expect(os.depth()).toBe(2)
     expect(os.volume()).toBe(10)
+    expect(os.total()).toBe(
+      order1.price * order1.size + order2.price * order2.size
+    )
     expect(os.len()).toBe(2)
+    expect(os.priceTree().length).toBe(2)
     expect(os.orders()[0]).toMatchObject(order1)
     expect(os.orders()[1]).toMatchObject(order2)
 

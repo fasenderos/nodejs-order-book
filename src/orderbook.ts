@@ -199,6 +199,7 @@ export class OrderBook {
     if (timeInForce === TimeInForce.FOK) {
       const fillable = this.canFillOrder(sideToProcess, side, size, price)
       if (!fillable) {
+        response.err = CustomError(ERROR.ErrLimitFOKNotFillable)
         return response
       }
     }
@@ -365,7 +366,7 @@ export class OrderBook {
 
   buyOrderCanBeFilled(orderSide: OrderSide, size: number, price: number) {
     let cummulativeSize = 0
-    orderSide.priceTree().forEach((key, priceLevel) => {
+    orderSide.priceTree().forEach((_key, priceLevel) => {
       if (price >= priceLevel.price() && cummulativeSize < size) {
         cummulativeSize += priceLevel.volume()
       } else {
@@ -377,7 +378,7 @@ export class OrderBook {
 
   sellOrderCanBeFilled(orderSide: OrderSide, size: number, price: number) {
     let cummulativeSize = 0
-    orderSide.priceTree().forEach((key, priceLevel) => {
+    orderSide.priceTree().forEach((_key, priceLevel) => {
       if (price <= priceLevel.price() && cummulativeSize < size) {
         cummulativeSize += priceLevel.volume()
       } else {
