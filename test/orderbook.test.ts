@@ -43,9 +43,9 @@ describe('OrderBook', () => {
     const depth = ob.depth()
 
     depth.forEach((side, index) => {
-      side.forEach((level, subindex) => {
+      side.forEach((level, subIndex) => {
         expect(level[1]).toBe(2)
-        let price = index === 0 ? 140 - 10 * subindex : 90 - 10 * subindex
+        let price = index === 0 ? 140 - 10 * subIndex : 90 - 10 * subIndex
         expect(level[0]).toBe(price)
       })
     })
@@ -259,8 +259,8 @@ describe('OrderBook', () => {
       }
     }
 
-    // Test modify an unexisting order
-    const resp = ob.modify('unexisting-order', orderUpdatePrice1)
+    // Test modify a non-existent order
+    const resp = ob.modify('non-existent-order', orderUpdatePrice1)
     expect(resp).toBeUndefined()
   })
 

@@ -33,9 +33,11 @@ export class OrderBook {
    *  @param {number} size
    *         REQUIRED. How much you want to sell or buy
    *  @param {number} [price]
-   *         OPTIONAL. The price at which the order is to be fullfilled (only for limit order)
+   *         OPTIONAL. The price at which the order is to be fulfilled (only for limit order)
    *  @param {string} [orderID]
    *         OPTIONAL. Unique order ID in depth (only for limit order)
+   *  @param {string} [timeInForce]
+   *         OPTIONAL. Time-in-force type (GTK, FOK, IOC)
    *  @returns {ProcessOrder}
    *           An object with the result of the process or an error
    */
@@ -73,11 +75,11 @@ export class OrderBook {
   //        read more at https://github.com/shopspring/decimal
   // Return:
   //      error        - not nil if price is less or equal 0
-  //      done         - not nil if your market order produces ends of anoter orders, this order will add to
+  //      done         - not nil if your market order produces ends of another orders, this order will add to
   //                     the "done" slice
   //      partial      - not nil if your order has done but top order is not fully done
-  //      partialQuantityProcessed - if partial order is not nil this result contains processed quatity from partial order
-  //      quantityLeft - more than zero if it is not enought orders to process all quantity
+  //      partialQuantityProcessed - if partial is not nil, property contains processed quantity from partial order
+  //      quantityLeft - more than zero if it is not enough orders to process all quantity
   market = (side: Side, size: number): ProcessOrder => {
     const response: ProcessOrder = {
       done: [],
@@ -127,17 +129,17 @@ export class OrderBook {
   //      orderID  - unique order ID in depth
   //      quantity - how much quantity you want to sell or buy
   //      price    - no more expensive (or cheaper) this price
-  //      timeInForce - specify how long an order will remain active or open before it’s executed or it expires
+  //      timeInForce - specify how long the order will remain active or open before it is executed or expires
   //      * to create new decimal number you should use decimal.New() func
   //        read more at https://github.com/shopspring/decimal
   // Return:
   //      error   - not nil if quantity (or price) is less or equal 0. Or if order with given ID is exists
-  //      done    - not nil if your order produces ends of anoter order, this order will add to
+  //      done    - not nil if your order produces ends of another order, this order will add to
   //                the "done" slice. If your order have done too, it will be places to this array too
   //      partial - not nil if your order has done but top order is not fully done. Or if your order is
   //                partial done and placed to the orderbook without full quantity - partial will contain
-  //                your order with quantity to left
-  //      partialQuantityProcessed - if partial order is not nil this result contains processed quatity from partial order
+  //                your order with remaining quantity
+  //      partialQuantityProcessed - if partial order isn't nil, property contains processed quantity from partial order
   limit = (
     side: Side,
     orderID: string,
@@ -365,27 +367,27 @@ export class OrderBook {
   }
 
   buyOrderCanBeFilled(orderSide: OrderSide, size: number, price: number) {
-    let cummulativeSize = 0
+    let cumulativeSize = 0
     orderSide.priceTree().forEach((_key, priceLevel) => {
-      if (price >= priceLevel.price() && cummulativeSize < size) {
-        cummulativeSize += priceLevel.volume()
+      if (price >= priceLevel.price() && cumulativeSize < size) {
+        cumulativeSize += priceLevel.volume()
       } else {
         return true // break the loop
       }
     })
-    return cummulativeSize >= size
+    return cumulativeSize >= size
   }
 
   sellOrderCanBeFilled(orderSide: OrderSide, size: number, price: number) {
-    let cummulativeSize = 0
+    let cumulativeSize = 0
     orderSide.priceTree().forEach((_key, priceLevel) => {
-      if (price <= priceLevel.price() && cummulativeSize < size) {
-        cummulativeSize += priceLevel.volume()
+      if (price <= priceLevel.price() && cumulativeSize < size) {
+        cumulativeSize += priceLevel.volume()
       } else {
         return true // break the loop
       }
     })
-    return cummulativeSize >= size
+    return cumulativeSize >= size
   }
 
   // Returns total market price for requested quantity

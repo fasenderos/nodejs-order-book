@@ -280,7 +280,7 @@ npm run test:cov
 
 ### Benchmarking
 
-Before running benchmark, make sure to have builded the source code with `npm run build` first
+Before running benchmark, make sure to have built the source code with `npm run build` first
 
 ```sh
 npm run bench

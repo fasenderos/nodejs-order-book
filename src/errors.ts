@@ -1,12 +1,12 @@
 export enum ERROR {
   Default = 'Something wrong',
   ErrInsufficientQuantity = 'orderbook: insufficient quantity to calculate price',
-  ErrInvalidOrderType = "orderbook: supperted order type are 'limit' and 'market'",
+  ErrInvalidOrderType = "orderbook: supported order type are 'limit' and 'market'",
   ErrInvalidPrice = 'orderbook: invalid order price',
   ErrInvalidPriceLevel = 'orderbook: invalid order price level',
   ErrInvalidQuantity = 'orderbook: invalid order quantity',
   ErrInvalidSide = "orderbook: given neither 'bid' nor 'ask'",
-  ErrInvalidTimeInForce = "orderbook: supperted time in force are 'GTC', 'IOC' and 'FOK'",
+  ErrInvalidTimeInForce = "orderbook: supported time in force are 'GTC', 'IOC' and 'FOK'",
   ErrLimitFOKNotFillable = 'orderbook: limit FOK order not fillable',
   ErrOrderExists = 'orderbook: order already exists',
 }

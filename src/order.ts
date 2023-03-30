@@ -63,7 +63,7 @@ export class Order {
   set time(time: number) {
     this._time = time
   }
-  // returns string rappresentation of the order
+  // returns string representation of the order
   toString = (): string => {
     return `${this._id}:
     side: ${this._side}
