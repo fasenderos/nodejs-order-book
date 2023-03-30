@@ -49,7 +49,7 @@ describe('OrderSide', () => {
     expect(os.orders()[1]).toMatchObject(order2)
     expect(os.toString()).toBe(`\n20 -> 5\n10 -> 10`)
 
-    // When price is updated a new order will be created so we can't match object, but the properties
+    // When price is updated a new order will be created, so we can't match entire object, only properties
     // Update price of order1 < price order2
     let updatedOrder = os.update(order1, {
       side: order1.side,
@@ -67,7 +67,7 @@ describe('OrderSide', () => {
 
     // Test for error when price level not exists
     try {
-      // order1 has ben replaced whit updateOrder, so trying to update order1 will throw an error of type ErrInvalidPriceLevel
+      // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type ErrInvalidPriceLevel
       os.update(order1, {
         side: order1.side,
         size: 10,
