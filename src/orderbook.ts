@@ -367,6 +367,10 @@ export class OrderBook {
   }
 
   buyOrderCanBeFilled(orderSide: OrderSide, size: number, price: number) {
+    if (orderSide.volume() < size) {
+      return false
+    }
+
     let cumulativeSize = 0
     orderSide.priceTree().forEach((_key, priceLevel) => {
       if (price >= priceLevel.price() && cumulativeSize < size) {
@@ -379,6 +383,10 @@ export class OrderBook {
   }
 
   sellOrderCanBeFilled(orderSide: OrderSide, size: number, price: number) {
+    if (orderSide.volume() < size) {
+      return false
+    }
+
     let cumulativeSize = 0
     orderSide.priceTree().forEach((_key, priceLevel) => {
       if (price <= priceLevel.price() && cumulativeSize < size) {
