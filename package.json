@@ -56,7 +56,7 @@
     "gaussian": "1.3.0",
     "husky": "8.0.3",
     "jest": "28.1.3",
-    "lint-staged": "13.2.1",
+    "lint-staged": "13.2.2",
     "nanobench": "3.0.0",
     "pinst": "3.0.0",
     "prettier": "2.8.8",
