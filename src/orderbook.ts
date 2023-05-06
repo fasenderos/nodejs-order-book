@@ -67,19 +67,17 @@ export class OrderBook {
     }
   }
 
-  // Places new market order and gets definite quantity from the order book with market price
+  // Places new market order to the OrderBook.
   // Arguments:
-  //      side     - what do you want to do (ob.Sell or ob.Buy)
+  //      side     - sell or buy
   //      quantity - how much quantity you want to sell or buy
-  //      * to create new decimal number you should use decimal.New() func
-  //        read more at https://github.com/shopspring/decimal
   // Return:
-  //      error        - not nil if price is less or equal 0
-  //      done         - not nil if your market order produces ends of another orders, this order will add to
+  //      error        - not null if quantity is less or equal 0
+  //      done         - not null if the market order produces ends of another order, this order will add to
   //                     the "done" slice
-  //      partial      - not nil if your order has done but top order is not fully done
-  //      partialQuantityProcessed - if partial is not nil, property contains processed quantity from partial order
-  //      quantityLeft - more than zero if it is not enough orders to process all quantity
+  //      partial      - not null if your order has done but top order is not fully done
+  //      partialQuantityProcessed - if partial order is not null this result contains processed quantity from partial order
+  //      quantityLeft - more than zero if there are not enought orders to process all quantity
   market = (side: Side, size: number): ProcessOrder => {
     const response: ProcessOrder = {
       done: [],
@@ -125,21 +123,18 @@ export class OrderBook {
 
   // Places new limit order to the OrderBook
   // Arguments:
-  //      side     - what do you want to do (ob.Sell or ob.Buy)
-  //      orderID  - unique order ID in depth
+  //      side     - sell or buy
+  //      orderID  - unique order ID
   //      quantity - how much quantity you want to sell or buy
-  //      price    - no more expensive (or cheaper) this price
-  //      timeInForce - specify how long the order will remain active or open before it is executed or expires
-  //      * to create new decimal number you should use decimal.New() func
-  //        read more at https://github.com/shopspring/decimal
+  //      price    - no more expensive (or cheaper) than this price
   // Return:
-  //      error   - not nil if quantity (or price) is less or equal 0. Or if order with given ID is exists
-  //      done    - not nil if your order produces ends of another order, this order will add to
-  //                the "done" slice. If your order have done too, it will be places to this array too
-  //      partial - not nil if your order has done but top order is not fully done. Or if your order is
-  //                partial done and placed to the orderbook without full quantity - partial will contain
-  //                your order with remaining quantity
-  //      partialQuantityProcessed - if partial order isn't nil, property contains processed quantity from partial order
+  //      error   - not null if quantity or price is less or equal 0. Or if an order with the given ID already exists
+  //      done    - not null if the limit order produces ends of another order, this order will add to
+  //                the "done" slice. If your order have done too, it will be placed to this array too
+  //      partial - not null if your order has done but top order is not fully done. Or if your order is
+  //                partially done and placed to the orderbook without full quantity - partial will contain
+  //                your order with quantity left
+  //      partialQuantityProcessed - if partial order is not null this result contains processed quantity from partial order
   limit = (
     side: Side,
     orderID: string,
@@ -224,7 +219,14 @@ export class OrderBook {
     }
 
     if (quantityToTrade > 0) {
-      const order = new Order(orderID, side, quantityToTrade, price, Date.now())
+      const order = new Order(
+        orderID,
+        side,
+        quantityToTrade,
+        price,
+        Date.now(),
+        true
+      )
       if (response.done.length > 0) {
         response.partialQuantityProcessed = size - quantityToTrade
         response.partial = order
@@ -285,7 +287,8 @@ export class OrderBook {
               headOrder.side,
               headOrder.size - response.quantityLeft,
               headOrder.price,
-              headOrder.time
+              headOrder.time,
+              true
             )
             this.orders[headOrder.id] = response.partial
             response.partialQuantityProcessed = response.quantityLeft
@@ -399,7 +402,7 @@ export class OrderBook {
   }
 
   // Returns total market price for requested quantity
-  // if err is not nil price returns total price of all levels in side
+  // if err is not null price returns total price of all levels in side
   calculateMarketPrice = (
     side: Side,
     size: number

@@ -86,7 +86,9 @@ export class OrderSide {
         oldOrder.id,
         oldOrder.side,
         orderUpdate.size || oldOrder.size,
-        orderUpdate.price
+        orderUpdate.price,
+        Date.now(),
+        oldOrder.isMaker
       )
       this.append(newOrder)
       return newOrder

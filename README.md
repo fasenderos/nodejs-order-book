@@ -156,7 +156,6 @@ partial - 1 order with price 110
 //      partial      - not null if your order has done but top order is not fully done
 //      partialQuantityProcessed - if partial order is not null this result contains processed quantity from partial order
 //      quantityLeft - more than zero if there are not enought orders to process all quantity
-
 market(side: 'buy' | 'sell', size: number);
 ```
 

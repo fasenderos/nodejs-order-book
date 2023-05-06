@@ -23,18 +23,21 @@ export class Order {
   private _size: number
   private _price: number
   private _time: number
+  private _isMaker: boolean
   constructor(
     orderId: string,
     side: Side,
     size: number,
     price: number,
-    time?: number
+    time?: number,
+    isMaker?: boolean
   ) {
     this._id = orderId
     this._side = side
     this._price = price
     this._size = size
     this._time = time || Date.now()
+    this._isMaker = isMaker || false
   }
 
   // returns orderId of the order
@@ -63,13 +66,17 @@ export class Order {
   set time(time: number) {
     this._time = time
   }
+  get isMaker(): boolean {
+    return this._isMaker
+  }
   // returns string representation of the order
   toString = (): string => {
     return `${this._id}:
     side: ${this._side}
     size: ${this._side}
     price: ${this._price}
-    time: ${this._time}`
+    time: ${this._time}
+    isMaker: ${this.isMaker}`
   }
   // returns JSON string of the order
   toJSON = (): string => {
@@ -79,6 +86,7 @@ export class Order {
       size: this._size,
       price: this._price,
       time: this._time,
+      isMaker: this.isMaker,
     })
   }
   // returns an object with each property name and value
@@ -89,6 +97,7 @@ export class Order {
       size: this._size,
       price: this._price,
       time: this._time,
+      isMaker: this.isMaker,
     }
   }
 }

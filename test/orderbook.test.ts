@@ -62,6 +62,7 @@ describe('OrderBook', () => {
     expect(process1.err).toBeNull()
     expect(process1.done[0].id).toBe('order-b100')
     expect(process1.partial?.id).toBe('sell-100')
+    expect(process1.partial?.isMaker).toBe(true)
     expect(process1.partialQuantityProcessed).toBe(1)
 
     const process2 =
@@ -71,6 +72,7 @@ describe('OrderBook', () => {
     expect(process2.err).toBeNull()
     expect(process2.done.length).toBe(5)
     expect(process2.partial?.id).toBe('order-b150')
+    expect(process2.partial?.isMaker).toBe(true)
     expect(process2.partialQuantityProcessed).toBe(9)
 
     const process3 = ob.limit(Side.SELL, `buy-70`, 11, 40)
