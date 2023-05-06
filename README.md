@@ -85,21 +85,18 @@ createOrder('market', side: 'buy' | 'sell', size: number);
 ```js
 // Places new limit order to the OrderBook
 // Arguments:
-//      side     - what do you want to do (ob.Sell or ob.Buy)
-//      orderID  - unique order ID in depth
+//      side     - sell or buy
+//      orderID  - unique order ID
 //      quantity - how much quantity you want to sell or buy
-//      price    - no more expensive (or cheaper) this price
-//      * to create new decimal number you should use decimal.New() func
-//        read more at https://github.com/shopspring/decimal
+//      price    - no more expensive (or cheaper) than this price
 // Return:
-//      error   - not nil if quantity (or price) is less or equal 0. Or if order with given ID is exists
-//      done    - not nil if your order produces ends of anoter order, this order will add to
-//                the "done" slice. If your order have done too, it will be places to this array too
-//      partial - not nil if your order has done but top order is not fully done. Or if your order is
-//                partial done and placed to the orderbook without full quantity - partial will contain
-//                your order with quantity to left
-//      partialQuantityProcessed - if partial order is not nil this result contains processed quatity from partial order
-
+//      error   - not null if quantity or price is less or equal 0. Or if an order with the given ID already exists
+//      done    - not null if the limit order produces ends of another order, this order will add to
+//                the "done" slice. If your order have done too, it will be placed to this array too
+//      partial - not null if your order has done but top order is not fully done. Or if your order is
+//                partially done and placed to the orderbook without full quantity - partial will contain
+//                your order with quantity left
+//      partialQuantityProcessed - if partial order is not null this result contains processed quantity from partial order
 limit(side: 'buy' | 'sell', orderID: string, size: number, price: number);
 ```
 
@@ -114,8 +111,8 @@ asks: 110 -> 5      110 -> 5
 bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
 
-done    - nil
-partial - nil
+done    - null
+partial - null
 ```
 
 ```
@@ -148,19 +145,17 @@ partial - 1 order with price 110
 ### Create Market Order
 
 ```js
-// Places new market order to the OrderBook. Immediately gets definite quantity from the order book with market price
+// Places new market order to the OrderBook.
 // Arguments:
-//      side     - what do you want to do (ob.Sell or ob.Buy)
+//      side     - sell or buy
 //      quantity - how much quantity you want to sell or buy
-//      * to create new decimal number you should use decimal.New() func
-//        read more at https://github.com/shopspring/decimal
 // Return:
-//      error        - not nil if price is less or equal 0
-//      done         - not nil if your market order produces ends of anoter orders, this order will add to
+//      error        - not null if quantity is less or equal 0
+//      done         - not null if the market order produces ends of another order, this order will add to
 //                     the "done" slice
-//      partial      - not nil if your order has done but top order is not fully done
-//      partialQuantityProcessed - if partial order is not nil this result contains processed quatity from partial order
-//      quantityLeft - more than zero if it is not enought orders to process all quantity
+//      partial      - not null if your order has done but top order is not fully done
+//      partialQuantityProcessed - if partial order is not null this result contains processed quantity from partial order
+//      quantityLeft - more than zero if there are not enought orders to process all quantity
 
 market(side: 'buy' | 'sell', size: number);
 ```
@@ -191,7 +186,7 @@ bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
 
 done         - 2 (or more orders)
-partial      - nil
+partial      - null
 quantityLeft - 4
 ```
 
