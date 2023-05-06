@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/fasenderos/hft-limit-order-book/compare/v2.1.0...v2.2.0) (2023-05-06)
+
+
+### Features
+
+* add isMaker flag on response [#172](https://github.com/fasenderos/hft-limit-order-book/issues/172) ([82d811b](https://github.com/fasenderos/hft-limit-order-book/commits/82d811b45ce426c8179a3ca8fbf8f49205c6b0a2))
+
 ## [2.1.0](https://github.com/fasenderos/hft-limit-order-book/compare/v2.0.2...v2.1.0) (2023-03-29)
 
 
