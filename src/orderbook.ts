@@ -469,13 +469,20 @@ export class OrderBook {
     }
 
     let cumulativeSize = 0
-    orderSide.priceTree().forEach((_key, priceLevel) => {
-      if (price <= priceLevel.price() && cumulativeSize < size) {
-        cumulativeSize += priceLevel.volume()
-      } else {
-        return true // break the loop
-      }
-    })
+    let iterator = orderSide.priceTree().end
+    let continueLoop = true
+    while (continueLoop) {
+      if (iterator?.node) {
+        if (price <= iterator.node.key) {
+          cumulativeSize += iterator.node.value.volume()
+          if (cumulativeSize < size && iterator.hasPrev) {
+            iterator = orderSide.priceTree().at(iterator.index - 1)
+          } else {
+            continueLoop = false
+          }
+        } else continueLoop = false
+      } else continueLoop = false
+    }
     return cumulativeSize >= size
   }
 }

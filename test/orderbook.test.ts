@@ -153,8 +153,57 @@ describe('OrderBook', () => {
     )
     expect(process2.err?.message).toBe(ERROR.ErrLimitFOKNotFillable)
 
+    const process3 = ob.limit(
+      Side.BUY,
+      'buy-order-size-greather-than-order-side-volume',
+      30,
+      100,
+      TimeInForce.FOK
+    )
+    expect(process3.err?.message).toBe(ERROR.ErrLimitFOKNotFillable)
+
+    const process4 = ob.limit(
+      Side.SELL,
+      'sell-order-size-greather-than-order-side-volume',
+      30,
+      90,
+      TimeInForce.FOK
+    )
+    expect(process4.err?.message).toBe(ERROR.ErrLimitFOKNotFillable)
+
     ob.limit(Side.BUY, 'order-ioc-b100', 3, 100, TimeInForce.IOC)
     expect(ob.order('order-ioc-b100')).toBeUndefined()
+
+    const processIOC = ob.limit(
+      Side.SELL,
+      'order-ioc-s90',
+      3,
+      90,
+      TimeInForce.IOC
+    )
+    expect(ob.order('order-ioc-s90')).toBeUndefined()
+    expect(processIOC.partial?.id).toBe('order-ioc-s90')
+
+    const processFOKBuy = ob.limit(
+      Side.BUY,
+      'order-fok-b110',
+      2,
+      120,
+      TimeInForce.FOK
+    )
+
+    expect(processFOKBuy.err).toBeNull()
+    expect(processFOKBuy.quantityLeft).toBe(0)
+
+    const processFOKSell = ob.limit(
+      Side.SELL,
+      'order-fok-s80',
+      4,
+      70,
+      TimeInForce.FOK
+    )
+    expect(processFOKSell.err).toBeNull()
+    expect(processFOKSell.quantityLeft).toBe(0)
   })
 
   test('test market', () => {
