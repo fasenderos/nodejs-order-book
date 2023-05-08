@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.1](https://github.com/fasenderos/hft-limit-order-book/compare/v2.2.0...v2.2.1) (2023-05-08)
+
+
+### Bug Fixes
+
+* check if sell FOK order can be filled ([2814b3e](https://github.com/fasenderos/hft-limit-order-book/commits/2814b3eff4dea8fe8e4bd76107aec78f27993dad))
+
 ## [2.2.0](https://github.com/fasenderos/hft-limit-order-book/compare/v2.1.0...v2.2.0) (2023-05-06)
 
 
