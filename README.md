@@ -83,20 +83,16 @@ createOrder('market', side: 'buy' | 'sell', size: number);
 ### Create Limit Order
 
 ```js
-// Places new limit order to the OrderBook
-// Arguments:
-//      side     - sell or buy
-//      orderID  - unique order ID
-//      quantity - how much quantity you want to sell or buy
-//      price    - no more expensive (or cheaper) than this price
-// Return:
-//      error   - not null if quantity or price is less or equal 0. Or if an order with the given ID already exists
-//      done    - not null if the limit order produces ends of another order, this order will add to
-//                the "done" slice. If your order have done too, it will be placed to this array too
-//      partial - not null if your order has done but top order is not fully done. Or if your order is
-//                partially done and placed to the orderbook without full quantity - partial will contain
-//                your order with quantity left
-//      partialQuantityProcessed - if partial order is not null this result contains processed quantity from partial order
+/**
+ * Create a limit order
+ *
+ * @param side - `sell` or `buy`
+ * @param orderID - Unique order ID
+ * @param size - How much of currency you want to trade in units of base currency
+ * @param price - The price at which the order is to be fullfilled, in units of the quote currency
+ * @param timeInForce - Time-in-force type supported are: GTK, FOK, IOC
+ * @returns An object with the result of the processed order or an error
+ */
 limit(side: 'buy' | 'sell', orderID: string, size: number, price: number);
 ```
 
@@ -145,17 +141,13 @@ partial - 1 order with price 110
 ### Create Market Order
 
 ```js
-// Places new market order to the OrderBook.
-// Arguments:
-//      side     - sell or buy
-//      quantity - how much quantity you want to sell or buy
-// Return:
-//      error        - not null if quantity is less or equal 0
-//      done         - not null if the market order produces ends of another order, this order will add to
-//                     the "done" slice
-//      partial      - not null if your order has done but top order is not fully done
-//      partialQuantityProcessed - if partial order is not null this result contains processed quantity from partial order
-//      quantityLeft - more than zero if there are not enought orders to process all quantity
+/**
+ * Create a market order
+ *
+ * @param side - `sell` or `buy`
+ * @param size - How much of currency you want to trade in units of base currency
+ * @returns An object with the result of the processed order or an error
+ */
 market(side: 'buy' | 'sell', size: number);
 ```
 
@@ -192,7 +184,13 @@ quantityLeft - 4
 ### Modify an existing order
 
 ```js
-// Modify an existing order with given ID
+/**
+ * Modify an existing order with given ID
+ *
+ * @param orderID - The ID of the order to be modified
+ * @param orderUpdate - An object with the modified size and/or price of an order. To be note that the `side` can't be modified. The shape of the object is `{side, size, price}`.
+ * @returns The modified order if exists or `undefined`
+ */
 modify(orderID: string, { side: 'buy' | 'sell', size: number, price: number });
 ```
 
@@ -230,7 +228,12 @@ bids: 90  -> 5      90  -> 5
 ### Cancel Order
 
 ```js
-// Removes order with given ID from the order book
+/**
+ * Remove an existing order with given ID from the order book
+ *
+ * @param orderID - The ID of the order to be removed
+ * @returns The removed order if exists or `undefined`
+ */
 cancel(orderID: string);
 ```
 

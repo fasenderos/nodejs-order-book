@@ -4,7 +4,16 @@ import { OrderQueue } from './orderqueue'
 import { OrderSide } from './orderside'
 import { Side } from './side'
 
-interface ProcessOrder {
+/**
+ * This interface represents the result of a processed order or an error
+ *
+ * @param done - An array of orders fully filled by the processed order
+ * @param partial - A partially executed order. It can be null when the processed order
+ * @param partialQuantityProcessed - if `partial` is not null, this field represents the processed quantity of the partial order
+ * @param quantityLeft - more than zero if there are not enought orders to process all quantity
+ * @param err - Not null if size or price are less or equal zero, or the provided orderId already exists, or something else went wrong.
+ */
+interface IProcessOrder {
   done: Order[]
   partial: Order | null
   partialQuantityProcessed: number
@@ -24,24 +33,18 @@ export class OrderBook {
   }
 
   /**
-   *  Add an order to the order book
+   *  Create a trade order
+   *  @see {@link IProcessOrder} for the returned data structure
    *
-   *  @param {OrderType} type
-   *         REQUIRED. A string literal type of order that can be `limit` or `market`
-   *  @param {Side} side
-   *         REQUIRED. A string literal for the direction of your order `sell` or `buy`
-   *  @param {number} size
-   *         REQUIRED. How much you want to sell or buy
-   *  @param {number} [price]
-   *         OPTIONAL. The price at which the order is to be fulfilled (only for limit order)
-   *  @param {string} [orderID]
-   *         OPTIONAL. Unique order ID in depth (only for limit order)
-   *  @param {string} [timeInForce]
-   *         OPTIONAL. Time-in-force type (GTK, FOK, IOC)
-   *  @returns {ProcessOrder}
-   *           An object with the result of the process or an error
+   *  @param type - `limit` or `market`
+   *  @param side - `sell` or `buy`
+   *  @param size - How much of currency you want to trade in units of base currency
+   *  @param price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
+   *  @param orderID - Unique order ID. Param only for limit order
+   *  @param timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
+   *  @returns An object with the result of the processed order or an error.
    */
-  createOrder = (
+  public createOrder = (
     // Common for all order types
     type: OrderType,
     side: Side,
@@ -50,7 +53,7 @@ export class OrderBook {
     price?: number,
     orderID?: string,
     timeInForce: TimeInForce = TimeInForce.GTC
-  ): ProcessOrder => {
+  ): IProcessOrder => {
     switch (type) {
       case OrderType.MARKET:
         return this.market(side, size)
@@ -63,23 +66,26 @@ export class OrderBook {
           timeInForce
         )
       default:
-        return { err: CustomError(ERROR.ErrInvalidOrderType) } as ProcessOrder
+        return {
+          done: [],
+          partial: null,
+          partialQuantityProcessed: 0,
+          quantityLeft: size,
+          err: CustomError(ERROR.ErrInvalidOrderType),
+        }
     }
   }
 
-  // Places new market order to the OrderBook.
-  // Arguments:
-  //      side     - sell or buy
-  //      quantity - how much quantity you want to sell or buy
-  // Return:
-  //      error        - not null if quantity is less or equal 0
-  //      done         - not null if the market order produces ends of another order, this order will add to
-  //                     the "done" slice
-  //      partial      - not null if your order has done but top order is not fully done
-  //      partialQuantityProcessed - if partial order is not null this result contains processed quantity from partial order
-  //      quantityLeft - more than zero if there are not enought orders to process all quantity
-  market = (side: Side, size: number): ProcessOrder => {
-    const response: ProcessOrder = {
+  /**
+   * Create a market order
+   *  @see {@link IProcessOrder} for the returned data structure
+   *
+   * @param side - `sell` or `buy`
+   * @param size - How much of currency you want to trade in units of base currency
+   * @returns An object with the result of the processed order or an error
+   */
+  public market = (side: Side, size: number): IProcessOrder => {
+    const response: IProcessOrder = {
       done: [],
       partial: null,
       partialQuantityProcessed: 0,
@@ -121,28 +127,25 @@ export class OrderBook {
     return response
   }
 
-  // Places new limit order to the OrderBook
-  // Arguments:
-  //      side     - sell or buy
-  //      orderID  - unique order ID
-  //      quantity - how much quantity you want to sell or buy
-  //      price    - no more expensive (or cheaper) than this price
-  // Return:
-  //      error   - not null if quantity or price is less or equal 0. Or if an order with the given ID already exists
-  //      done    - not null if the limit order produces ends of another order, this order will add to
-  //                the "done" slice. If your order have done too, it will be placed to this array too
-  //      partial - not null if your order has done but top order is not fully done. Or if your order is
-  //                partially done and placed to the orderbook without full quantity - partial will contain
-  //                your order with quantity left
-  //      partialQuantityProcessed - if partial order is not null this result contains processed quantity from partial order
-  limit = (
+  /**
+   * Create a limit order
+   *  @see {@link IProcessOrder} for the returned data structure
+   *
+   * @param side - `sell` or `buy`
+   * @param orderID - Unique order ID
+   * @param size - How much of currency you want to trade in units of base currency
+   * @param price - The price at which the order is to be fullfilled, in units of the quote currency
+   * @param timeInForce - Time-in-force type supported are: GTK, FOK, IOC
+   * @returns An object with the result of the processed order or an error
+   */
+  public limit = (
     side: Side,
     orderID: string,
     size: number,
     price: number,
     timeInForce: TimeInForce = TimeInForce.GTC
-  ): ProcessOrder => {
-    const response: ProcessOrder = {
+  ): IProcessOrder => {
+    const response: IProcessOrder = {
       done: [],
       partial: null,
       partialQuantityProcessed: 0,
@@ -261,77 +264,14 @@ export class OrderBook {
     return response
   }
 
-  greaterThanOrEqual = (a: number, b: number): boolean => {
-    return a >= b
-  }
-
-  lowerThanOrEqual = (a: number, b: number): boolean => {
-    return a <= b
-  }
-
-  processQueue = (orderQueue: OrderQueue, quantityToTrade: number) => {
-    const response: ProcessOrder = {
-      done: [],
-      partial: null,
-      partialQuantityProcessed: 0,
-      quantityLeft: quantityToTrade,
-      err: null,
-    }
-    if (response.quantityLeft) {
-      while (orderQueue.len() > 0 && response.quantityLeft > 0) {
-        const headOrder = orderQueue.head()
-        if (headOrder) {
-          if (response.quantityLeft < headOrder.size) {
-            response.partial = new Order(
-              headOrder.id,
-              headOrder.side,
-              headOrder.size - response.quantityLeft,
-              headOrder.price,
-              headOrder.time,
-              true
-            )
-            this.orders[headOrder.id] = response.partial
-            response.partialQuantityProcessed = response.quantityLeft
-            orderQueue.update(headOrder, response.partial)
-            response.quantityLeft = 0
-          } else {
-            response.quantityLeft = response.quantityLeft - headOrder.size
-            const canceledOrder = this.cancel(headOrder.id)
-            if (canceledOrder) response.done.push(canceledOrder)
-          }
-        }
-      }
-    }
-    return response
-  }
-
-  // Returns order by id
-  order = (orderID: string): Order | undefined => {
-    return this.orders[orderID]
-  }
-
-  // Returns price levels and volume at price level
-  depth = () => {
-    let level = this.asks.maxPriceQueue()
-    const asks = []
-    const bids = []
-    while (level) {
-      const levelPrice = level.price()
-      asks.push([levelPrice, level.volume()])
-      level = this.asks.lowerThan(levelPrice)
-    }
-
-    level = this.bids.maxPriceQueue()
-    while (level) {
-      const levelPrice = level.price()
-      bids.push([levelPrice, level.volume()])
-      level = this.bids.lowerThan(levelPrice)
-    }
-    return [asks, bids]
-  }
-
-  // Modify an existing order with given ID
-  modify = (
+  /**
+   * Modify an existing order with given ID
+   *
+   * @param orderID - The ID of the order to be modified
+   * @param orderUpdate - An object with the modified size and/or price of an order. To be note that the `side` can't be modified. The shape of the object is `{side, size, price}`.
+   * @returns The modified order if exists or `undefined`
+   */
+  public modify = (
     orderID: string,
     orderUpdate: OrderUpdate
   ): Order | undefined | void => {
@@ -347,8 +287,13 @@ export class OrderBook {
     }
   }
 
-  // Removes order with given ID from the order book
-  cancel = (orderID: string): Order | undefined => {
+  /**
+   * Remove an existing order with given ID from the order book
+   *
+   * @param orderID - The ID of the order to be removed
+   * @returns The removed order if exists or `undefined`
+   */
+  public cancel = (orderID: string): Order | undefined => {
     const order = this.orders[orderID]
     if (!order) return
     delete this.orders[orderID]
@@ -358,52 +303,48 @@ export class OrderBook {
     return this.asks.remove(order)
   }
 
-  canFillOrder = (
-    orderSide: OrderSide,
-    side: Side,
-    size: number,
-    price: number
-  ) => {
-    return side === Side.BUY
-      ? this.buyOrderCanBeFilled(orderSide, size, price)
-      : this.sellOrderCanBeFilled(orderSide, size, price)
+  /**
+   * Get an existing order with the given ID
+   *
+   * @param orderID - The ID of the order to be returned
+   * @returns The order if exists or `undefined`
+   */
+  public order = (orderID: string): Order | undefined => {
+    return this.orders[orderID]
   }
 
-  buyOrderCanBeFilled(orderSide: OrderSide, size: number, price: number) {
-    if (orderSide.volume() < size) {
-      return false
+  // Returns price levels and volume at price level
+  public depth = (): [[number, number][], [number, number][]] => {
+    const asks: [number, number][] = []
+    const bids: [number, number][] = []
+
+    let level = this.asks.maxPriceQueue()
+    while (level) {
+      const levelPrice = level.price()
+      asks.push([levelPrice, level.volume()])
+      level = this.asks.lowerThan(levelPrice)
     }
 
-    let cumulativeSize = 0
-    orderSide.priceTree().forEach((_key, priceLevel) => {
-      if (price >= priceLevel.price() && cumulativeSize < size) {
-        cumulativeSize += priceLevel.volume()
-      } else {
-        return true // break the loop
-      }
-    })
-    return cumulativeSize >= size
+    level = this.bids.maxPriceQueue()
+    while (level) {
+      const levelPrice = level.price()
+      bids.push([levelPrice, level.volume()])
+      level = this.bids.lowerThan(levelPrice)
+    }
+    return [asks, bids]
   }
 
-  sellOrderCanBeFilled(orderSide: OrderSide, size: number, price: number) {
-    if (orderSide.volume() < size) {
-      return false
-    }
-
-    let cumulativeSize = 0
-    orderSide.priceTree().forEach((_key, priceLevel) => {
-      if (price <= priceLevel.price() && cumulativeSize < size) {
-        cumulativeSize += priceLevel.volume()
-      } else {
-        return true // break the loop
-      }
-    })
-    return cumulativeSize >= size
+  public toString = (): string => {
+    return (
+      this.asks.toString() +
+      '\r\n------------------------------------' +
+      this.bids.toString()
+    )
   }
 
   // Returns total market price for requested quantity
   // if err is not null price returns total price of all levels in side
-  calculateMarketPrice = (
+  public calculateMarketPrice = (
     side: Side,
     size: number
   ): {
@@ -443,11 +384,98 @@ export class OrderBook {
     return { price, err }
   }
 
-  toString(): string {
-    return (
-      this.asks.toString() +
-      '\r\n------------------------------------' +
-      this.bids.toString()
-    )
+  private greaterThanOrEqual = (a: number, b: number): boolean => {
+    return a >= b
+  }
+
+  private lowerThanOrEqual = (a: number, b: number): boolean => {
+    return a <= b
+  }
+
+  private processQueue = (orderQueue: OrderQueue, quantityToTrade: number) => {
+    const response: IProcessOrder = {
+      done: [],
+      partial: null,
+      partialQuantityProcessed: 0,
+      quantityLeft: quantityToTrade,
+      err: null,
+    }
+    if (response.quantityLeft) {
+      while (orderQueue.len() > 0 && response.quantityLeft > 0) {
+        const headOrder = orderQueue.head()
+        if (headOrder) {
+          if (response.quantityLeft < headOrder.size) {
+            response.partial = new Order(
+              headOrder.id,
+              headOrder.side,
+              headOrder.size - response.quantityLeft,
+              headOrder.price,
+              headOrder.time,
+              true
+            )
+            this.orders[headOrder.id] = response.partial
+            response.partialQuantityProcessed = response.quantityLeft
+            orderQueue.update(headOrder, response.partial)
+            response.quantityLeft = 0
+          } else {
+            response.quantityLeft = response.quantityLeft - headOrder.size
+            const canceledOrder = this.cancel(headOrder.id)
+            if (canceledOrder) response.done.push(canceledOrder)
+          }
+        }
+      }
+    }
+    return response
+  }
+
+  private canFillOrder = (
+    orderSide: OrderSide,
+    side: Side,
+    size: number,
+    price: number
+  ): boolean => {
+    return side === Side.BUY
+      ? this.buyOrderCanBeFilled(orderSide, size, price)
+      : this.sellOrderCanBeFilled(orderSide, size, price)
+  }
+
+  private buyOrderCanBeFilled = (
+    orderSide: OrderSide,
+    size: number,
+    price: number
+  ): boolean => {
+    if (orderSide.volume() < size) {
+      return false
+    }
+
+    let cumulativeSize = 0
+    orderSide.priceTree().forEach((_key, priceLevel) => {
+      if (price >= priceLevel.price() && cumulativeSize < size) {
+        cumulativeSize += priceLevel.volume()
+      } else {
+        return true // break the loop
+      }
+    })
+    return cumulativeSize >= size
+  }
+
+  private sellOrderCanBeFilled = (
+    orderSide: OrderSide,
+    size: number,
+    price: number
+  ): boolean => {
+    if (orderSide.volume() < size) {
+      return false
+    }
+
+    let cumulativeSize = 0
+    orderSide.priceTree().forEach((_key, priceLevel) => {
+      if (price <= priceLevel.price() && cumulativeSize < size) {
+        cumulativeSize += priceLevel.volume()
+      } else {
+        return true // break the loop
+      }
+    })
+    return cumulativeSize >= size
   }
 }
