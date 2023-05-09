@@ -28,8 +28,8 @@ export class OrderBook {
   private bids: OrderSide
   private asks: OrderSide
   constructor() {
-    this.bids = new OrderSide()
-    this.asks = new OrderSide()
+    this.bids = new OrderSide(Side.BUY)
+    this.asks = new OrderSide(Side.SELL)
   }
 
   /**
@@ -317,20 +317,12 @@ export class OrderBook {
   public depth = (): [[number, number][], [number, number][]] => {
     const asks: [number, number][] = []
     const bids: [number, number][] = []
-
-    let level = this.asks.maxPriceQueue()
-    while (level) {
-      const levelPrice = level.price()
+    this.asks.priceTree().forEach((levelPrice, level) => {
       asks.push([levelPrice, level.volume()])
-      level = this.asks.lowerThan(levelPrice)
-    }
-
-    level = this.bids.maxPriceQueue()
-    while (level) {
-      const levelPrice = level.price()
+    })
+    this.bids.priceTree().forEach((levelPrice, level) => {
       bids.push([levelPrice, level.volume()])
-      level = this.bids.lowerThan(levelPrice)
-    }
+    })
     return [asks, bids]
   }
 
@@ -469,20 +461,13 @@ export class OrderBook {
     }
 
     let cumulativeSize = 0
-    let iterator = orderSide.priceTree().end
-    let continueLoop = true
-    while (continueLoop) {
-      if (iterator?.node) {
-        if (price <= iterator.node.key) {
-          cumulativeSize += iterator.node.value.volume()
-          if (cumulativeSize < size && iterator.hasPrev) {
-            iterator = orderSide.priceTree().at(iterator.index - 1)
-          } else {
-            continueLoop = false
-          }
-        } else continueLoop = false
-      } else continueLoop = false
-    }
+    orderSide.priceTree().forEach((_key, priceLevel) => {
+      if (price <= priceLevel.price() && cumulativeSize < size) {
+        cumulativeSize += priceLevel.volume()
+      } else {
+        return true // break the loop
+      }
+    })
     return cumulativeSize >= size
   }
 }

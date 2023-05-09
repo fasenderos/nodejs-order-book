@@ -2,18 +2,24 @@ import createRBTree from 'functional-red-black-tree'
 import { CustomError, ERROR } from './errors'
 import { Order, OrderUpdate } from './order'
 import { OrderQueue } from './orderqueue'
+import { Side } from './side'
 
 export class OrderSide {
   private _priceTree: createRBTree.Tree<number, OrderQueue>
   private _prices: { [key: string]: OrderQueue } = {}
-
   private _volume = 0
   private _total = 0
   private _numOrders = 0
   private _depthSide = 0
+  private _side: Side = Side.SELL
 
-  constructor() {
-    this._priceTree = createRBTree<number, OrderQueue>()
+  constructor(side: Side) {
+    const compare =
+      side === Side.SELL
+        ? (a: number, b: number) => a - b
+        : (a: number, b: number) => b - a
+    this._priceTree = createRBTree<number, OrderQueue>(compare)
+    this._side = side
   }
 
   // returns amount of orders
@@ -106,31 +112,39 @@ export class OrderSide {
     }
   }
 
-  // returns maximal level of price
+  // returns max level of price
   maxPriceQueue = (): OrderQueue | undefined => {
     if (this._depthSide > 0) {
-      const max = this._priceTree.end
+      const max =
+        this._side === Side.SELL ? this._priceTree.end : this._priceTree.begin
       return max.value
     }
   }
 
-  // returns maximal level of price
+  // returns min level of price
   minPriceQueue = (): OrderQueue | undefined => {
     if (this._depthSide > 0) {
-      const min = this._priceTree.begin
+      const min =
+        this._side === Side.SELL ? this._priceTree.begin : this._priceTree.end
       return min.value
     }
   }
 
   // returns nearest OrderQueue with price less than given
   lowerThan = (price: number): OrderQueue | undefined => {
-    const node = this._priceTree.lt(price)
+    const node =
+      this._side === Side.SELL
+        ? this._priceTree.lt(price)
+        : this._priceTree.gt(price)
     return node.value
   }
 
   // returns nearest OrderQueue with price greater than given
   greaterThan = (price: number): OrderQueue | undefined => {
-    const node = this._priceTree.gt(price)
+    const node =
+      this._side === Side.SELL
+        ? this._priceTree.gt(price)
+        : this._priceTree.lt(price)
     return node.value
   }
 

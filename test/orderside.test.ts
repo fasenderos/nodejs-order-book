@@ -5,7 +5,7 @@ import { ERROR } from '../src/errors'
 
 describe('OrderSide', () => {
   test('it should append/update/remove orders from queue', () => {
-    const os = new OrderSide()
+    const os = new OrderSide(Side.SELL)
     const order1 = new Order('order1', Side.SELL, 5, 10)
     const order2 = new Order('order2', Side.SELL, 5, 20)
 

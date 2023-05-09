@@ -7,15 +7,21 @@ const addDepth = (ob: OrderBook, prefix: string, quantity: number) => {
   for (let index = 50; index < 100; index += 10) {
     ob.limit(Side.BUY, `${prefix}buy-${index}`, quantity, index)
   }
-
   for (let index = 100; index < 150; index += 10) {
     ob.limit(Side.SELL, `${prefix}sell-${index}`, quantity, index)
   }
-
   return
 }
 
 describe('OrderBook', () => {
+  // First test the addDepth function used by all the other test
+  test('test addDepth testing function', () => {
+    const ob = new OrderBook()
+    addDepth(ob, '', 10)
+    expect(ob.toString()).toBe(
+      `\n140 -> 10\n130 -> 10\n120 -> 10\n110 -> 10\n100 -> 10\r\n------------------------------------\n90 -> 10\n80 -> 10\n70 -> 10\n60 -> 10\n50 -> 10`
+    )
+  })
   test('test limit place', () => {
     const ob = new OrderBook()
     const size = 2
@@ -45,7 +51,7 @@ describe('OrderBook', () => {
     depth.forEach((side, index) => {
       side.forEach((level, subIndex) => {
         expect(level[1]).toBe(2)
-        let price = index === 0 ? 140 - 10 * subIndex : 90 - 10 * subIndex
+        let price = index === 0 ? 100 + 10 * subIndex : 90 - 10 * subIndex
         expect(level[0]).toBe(price)
       })
     })
@@ -197,7 +203,7 @@ describe('OrderBook', () => {
 
     const processFOKSell = ob.limit(
       Side.SELL,
-      'order-fok-s80',
+      'order-fok-sell-4-70',
       4,
       70,
       TimeInForce.FOK
@@ -341,12 +347,5 @@ describe('OrderBook', () => {
 
     expect(calc4.err?.message).toBe(ERROR.ErrInsufficientQuantity)
     expect(calc4.price).toBe(10500)
-  })
-  test('test priceCalculation', () => {
-    const ob = new OrderBook()
-    addDepth(ob, '', 10)
-    expect(ob.toString()).toBe(
-      `\n140 -> 10\n130 -> 10\n120 -> 10\n110 -> 10\n100 -> 10\r\n------------------------------------\n90 -> 10\n80 -> 10\n70 -> 10\n60 -> 10\n50 -> 10`
-    )
   })
 })
