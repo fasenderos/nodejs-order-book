@@ -135,7 +135,7 @@ export class OrderBook {
    * @param orderID - Unique order ID
    * @param size - How much of currency you want to trade in units of base currency
    * @param price - The price at which the order is to be fullfilled, in units of the quote currency
-   * @param timeInForce - Time-in-force type supported are: GTK, FOK, IOC
+   * @param timeInForce - Time-in-force type supported are: GTC, FOK, IOC
    * @returns An object with the result of the processed order or an error
    */
   public limit = (

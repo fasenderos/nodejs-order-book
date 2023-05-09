@@ -74,7 +74,7 @@ To add an order to the order book you can call the general `createOrder()` funct
 
 ```js
 // Create a limit order
-createOrder('limit', side: 'buy' | 'sell', size: number, price: number, orderID: string);
+createOrder('limit', side: 'buy' | 'sell', size: number, price: number, orderID: string, timeInForce?: 'GTC' | 'FOK' | 'IOC');
 
 // Create a market order
 createOrder('market', side: 'buy' | 'sell', size: number);
@@ -90,10 +90,10 @@ createOrder('market', side: 'buy' | 'sell', size: number);
  * @param orderID - Unique order ID
  * @param size - How much of currency you want to trade in units of base currency
  * @param price - The price at which the order is to be fullfilled, in units of the quote currency
- * @param timeInForce - Time-in-force type supported are: GTK, FOK, IOC
+ * @param timeInForce - Time-in-force type supported are: GTC, FOK, IOC
  * @returns An object with the result of the processed order or an error
  */
-limit(side: 'buy' | 'sell', orderID: string, size: number, price: number);
+limit(side: 'buy' | 'sell', orderID: string, size: number, price: number, timeInForce?: 'GTC' | 'FOK' | 'IOC');
 ```
 
 For example:
