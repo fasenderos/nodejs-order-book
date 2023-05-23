@@ -62,7 +62,7 @@
     "prettier": "2.8.8",
     "standard-version": "9.5.0",
     "ts-jest": "28.0.8",
-    "ts-loader": "9.4.2",
+    "ts-loader": "9.4.3",
     "typescript": "5.0.4",
     "webpack": "5.83.1",
     "webpack-cli": "5.1.1"
