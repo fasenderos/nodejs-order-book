@@ -34,9 +34,9 @@
     "release:major": "standard-version --release-as major && git push && git push --tags",
     "release:minor": "standard-version --release-as minor && git push && git push --tags",
     "release:patch": "standard-version --release-as patch && git push && git push --tags",
-    "test": "jest --no-cache --runInBand",
-    "test:dev": "jest --no-cache --runInBand --watch",
-    "test:cov": "jest --coverage --no-cache --runInBand",
+    "test": "tap --no-coverage",
+    "test:dev": "tap --watch",
+    "test:cov": "c8 tap --no-coverage",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -47,22 +47,23 @@
     "@commitlint/cli": "17.6.6",
     "@commitlint/config-conventional": "17.6.6",
     "@types/functional-red-black-tree": "1.0.2",
-    "@types/jest": "28.1.8",
+    "@types/tap": "^15.0.8",
     "@typescript-eslint/eslint-plugin": "5.61.0",
     "@typescript-eslint/parser": "5.62.0",
+    "c8": "^8.0.0",
     "eslint": "8.45.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-prettier": "5.0.0",
     "gaussian": "1.3.0",
     "husky": "8.0.3",
-    "jest": "28.1.3",
     "lint-staged": "13.2.3",
     "nanobench": "3.0.0",
     "pinst": "3.0.0",
     "prettier": "3.0.0",
     "standard-version": "9.5.0",
-    "ts-jest": "28.0.8",
+    "tap": "^16.3.7",
     "ts-loader": "9.4.4",
+    "ts-node": "^10.9.1",
     "typescript": "5.1.6",
     "webpack": "5.88.1",
     "webpack-cli": "5.1.4"
@@ -90,5 +91,13 @@
     "*.ts": [
       "prettier --write"
     ]
+  },
+  "tap": {
+    "node-arg": [
+      "--no-warnings",
+      "--loader",
+      "ts-node/esm"
+    ],
+    "ts": false
   }
 }
