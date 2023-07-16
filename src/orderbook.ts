@@ -121,7 +121,7 @@ export class OrderBook {
       response.done = response.done.concat(done)
       response.partial = partial
       response.partialQuantityProcessed = partialQuantityProcessed
-      size = quantityLeft ?? 0
+      size = quantityLeft
     }
     response.quantityLeft = size
     return response
@@ -158,7 +158,7 @@ export class OrderBook {
       return response
     }
 
-    if (this.orders[orderID] != null) {
+    if (this.orders[orderID] !== undefined) {
       response.err = CustomError(ERROR.ErrOrderExists)
       return response
     }
@@ -208,7 +208,7 @@ export class OrderBook {
     while (
       quantityToTrade > 0 &&
       sideToProcess.len() > 0 &&
-      (bestPrice != null) &&
+      bestPrice !== undefined &&
       comparator(price, bestPrice.price())
     ) {
       const { done, partial, partialQuantityProcessed, quantityLeft } =
@@ -216,7 +216,7 @@ export class OrderBook {
       response.done = response.done.concat(done)
       response.partial = partial
       response.partialQuantityProcessed = partialQuantityProcessed
-      quantityToTrade = quantityLeft ?? 0
+      quantityToTrade = quantityLeft
       response.quantityLeft = quantityToTrade
       bestPrice = iter()
     }
@@ -243,7 +243,7 @@ export class OrderBook {
         totalQuantity += order.size
         totalPrice += order.price * order.size
       })
-      if (response.partialQuantityProcessed > 0 && response.partial != null) {
+      if (response.partialQuantityProcessed > 0 && response.partial !== null) {
         totalQuantity += response.partialQuantityProcessed
         totalPrice +=
           response.partial.price * response.partialQuantityProcessed
@@ -355,7 +355,7 @@ export class OrderBook {
       iter = this.bids.lowerThan
     }
 
-    while (size > 0 && (level != null)) {
+    while (size > 0 && level !== undefined) {
       const levelVolume = level.volume()
       const levelPrice = level.price()
       if (this.greaterThanOrEqual(size, levelVolume)) {
@@ -397,7 +397,7 @@ export class OrderBook {
     if (response.quantityLeft > 0) {
       while (orderQueue.len() > 0 && response.quantityLeft > 0) {
         const headOrder = orderQueue.head()
-        if (headOrder != null) {
+        if (headOrder !== undefined) {
           if (response.quantityLeft < headOrder.size) {
             response.partial = new Order(
               headOrder.id,
@@ -414,7 +414,7 @@ export class OrderBook {
           } else {
             response.quantityLeft = response.quantityLeft - headOrder.size
             const canceledOrder = this.cancel(headOrder.id)
-            if (canceledOrder != null) response.done.push(canceledOrder)
+            if (canceledOrder !== undefined) response.done.push(canceledOrder)
           }
         }
       }
