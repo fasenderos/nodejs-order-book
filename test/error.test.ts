@@ -1,5 +1,5 @@
-import { CustomError, ERROR } from '../src/errors'
 import { test } from 'tap'
+import { CustomError, ERROR } from '../src/errors'
 
 void test('Test default CustomError', ({ equal, end }) => {
   const a = CustomError()

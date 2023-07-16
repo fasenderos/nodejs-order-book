@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js'
 import { ERROR, CustomError } from './errors'
 import { Order, OrderType, OrderUpdate, TimeInForce } from './order'
 import { OrderQueue } from './orderqueue'
@@ -225,7 +226,7 @@ export class OrderBook {
       const order = new Order(
         orderID,
         side,
-        quantityToTrade,
+        new BigNumber(quantityToTrade),
         price,
         Date.now(),
         true
@@ -240,8 +241,9 @@ export class OrderBook {
       let totalPrice = 0
 
       response.done.forEach((order: Order) => {
-        totalQuantity += order.size
-        totalPrice += order.price * order.size
+        const ordrSize: number = order.size.toNumber()
+        totalQuantity += ordrSize
+        totalPrice += order.price * ordrSize
       })
       if (response.partialQuantityProcessed > 0 && response.partial !== null) {
         totalQuantity += response.partialQuantityProcessed
@@ -250,7 +252,7 @@ export class OrderBook {
       }
 
       response.done.push(
-        new Order(orderID, side, size, totalPrice / totalQuantity, Date.now())
+        new Order(orderID, side, new BigNumber(size), totalPrice / totalQuantity, Date.now())
       )
     }
 
@@ -317,10 +319,10 @@ export class OrderBook {
     const asks: Array<[number, number]> = []
     const bids: Array<[number, number]> = []
     this.asks.priceTree().forEach((levelPrice, level) => {
-      asks.push([levelPrice, level.volume()])
+      asks.push([levelPrice, level.volume().toNumber()])
     })
     this.bids.priceTree().forEach((levelPrice, level) => {
-      bids.push([levelPrice, level.volume()])
+      bids.push([levelPrice, level.volume().toNumber()])
     })
     return [asks, bids]
   }
@@ -356,7 +358,7 @@ export class OrderBook {
     }
 
     while (size > 0 && level !== undefined) {
-      const levelVolume = level.volume()
+      const levelVolume = level.volume().toNumber()
       const levelPrice = level.price()
       if (this.greaterThanOrEqual(size, levelVolume)) {
         price += levelPrice * levelVolume
@@ -398,11 +400,12 @@ export class OrderBook {
       while (orderQueue.len() > 0 && response.quantityLeft > 0) {
         const headOrder = orderQueue.head()
         if (headOrder !== undefined) {
-          if (response.quantityLeft < headOrder.size) {
+          const headSize = headOrder.size.toNumber()
+          if (response.quantityLeft < headSize) {
             response.partial = new Order(
               headOrder.id,
               headOrder.side,
-              headOrder.size - response.quantityLeft,
+              new BigNumber(headSize - response.quantityLeft),
               headOrder.price,
               headOrder.time,
               true
@@ -412,7 +415,7 @@ export class OrderBook {
             orderQueue.update(headOrder, response.partial)
             response.quantityLeft = 0
           } else {
-            response.quantityLeft = response.quantityLeft - headOrder.size
+            response.quantityLeft = response.quantityLeft - headSize
             const canceledOrder = this.cancel(headOrder.id)
             if (canceledOrder !== undefined) response.done.push(canceledOrder)
           }
@@ -438,14 +441,16 @@ export class OrderBook {
     size: number,
     price: number
   ): boolean => {
-    if (orderSide.volume() < size) {
+    const insufficientSideVolume: boolean = orderSide.volume().lt(size)
+    if (insufficientSideVolume) {
       return false
     }
 
     let cumulativeSize = 0
     orderSide.priceTree().forEach((_key, priceLevel) => {
       if (price >= priceLevel.price() && cumulativeSize < size) {
-        cumulativeSize += priceLevel.volume()
+        const volume: number = priceLevel.volume().toNumber()
+        cumulativeSize += volume
       } else {
         return true // break the loop
       }
@@ -458,14 +463,16 @@ export class OrderBook {
     size: number,
     price: number
   ): boolean => {
-    if (orderSide.volume() < size) {
+    const insufficientSideVolume: boolean = orderSide.volume().lt(size)
+    if (insufficientSideVolume) {
       return false
     }
 
     let cumulativeSize = 0
     orderSide.priceTree().forEach((_key, priceLevel) => {
       if (price <= priceLevel.price() && cumulativeSize < size) {
-        cumulativeSize += priceLevel.volume()
+        const volume: number = priceLevel.volume().toNumber()
+        cumulativeSize += volume
       } else {
         return true // break the loop
       }
