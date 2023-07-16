@@ -25,9 +25,9 @@ const validTimeInForce = Object.values(TimeInForce)
 
 export class OrderBook {
   private orders: { [key: string]: Order } = {}
-  private bids: OrderSide
-  private asks: OrderSide
-  constructor() {
+  private readonly bids: OrderSide
+  private readonly asks: OrderSide
+  constructor () {
     this.bids = new OrderSide(Side.BUY)
     this.asks = new OrderSide(Side.SELL)
   }
@@ -71,7 +71,7 @@ export class OrderBook {
           partial: null,
           partialQuantityProcessed: 0,
           quantityLeft: size,
-          err: CustomError(ERROR.ErrInvalidOrderType),
+          err: CustomError(ERROR.ErrInvalidOrderType)
         }
     }
   }
@@ -90,7 +90,7 @@ export class OrderBook {
       partial: null,
       partialQuantityProcessed: 0,
       quantityLeft: size,
-      err: null,
+      err: null
     }
 
     if (side !== Side.SELL && side !== Side.BUY) {
@@ -98,7 +98,7 @@ export class OrderBook {
       return response
     }
 
-    if (!size || typeof size !== 'number' || size <= 0) {
+    if (typeof size !== 'number' || size <= 0) {
       response.err = CustomError(ERROR.ErrInsufficientQuantity)
       return response
     }
@@ -121,7 +121,7 @@ export class OrderBook {
       response.done = response.done.concat(done)
       response.partial = partial
       response.partialQuantityProcessed = partialQuantityProcessed
-      size = quantityLeft || 0
+      size = quantityLeft ?? 0
     }
     response.quantityLeft = size
     return response
@@ -150,7 +150,7 @@ export class OrderBook {
       partial: null,
       partialQuantityProcessed: 0,
       quantityLeft: size,
-      err: null,
+      err: null
     }
 
     if (side !== Side.SELL && side !== Side.BUY) {
@@ -158,17 +158,17 @@ export class OrderBook {
       return response
     }
 
-    if (this.orders[orderID]) {
+    if (this.orders[orderID] != null) {
       response.err = CustomError(ERROR.ErrOrderExists)
       return response
     }
 
-    if (!size || typeof size !== 'number' || size <= 0) {
+    if (typeof size !== 'number' || size <= 0) {
       response.err = CustomError(ERROR.ErrInvalidQuantity)
       return response
     }
 
-    if (!price || typeof price !== 'number' || price <= 0) {
+    if (typeof price !== 'number' || price <= 0) {
       response.err = CustomError(ERROR.ErrInvalidPrice)
       return response
     }
@@ -208,7 +208,7 @@ export class OrderBook {
     while (
       quantityToTrade > 0 &&
       sideToProcess.len() > 0 &&
-      bestPrice &&
+      (bestPrice != null) &&
       comparator(price, bestPrice.price())
     ) {
       const { done, partial, partialQuantityProcessed, quantityLeft } =
@@ -216,7 +216,7 @@ export class OrderBook {
       response.done = response.done.concat(done)
       response.partial = partial
       response.partialQuantityProcessed = partialQuantityProcessed
-      quantityToTrade = quantityLeft || 0
+      quantityToTrade = quantityLeft ?? 0
       response.quantityLeft = quantityToTrade
       bestPrice = iter()
     }
@@ -243,12 +243,10 @@ export class OrderBook {
         totalQuantity += order.size
         totalPrice += order.price * order.size
       })
-      if (response.partialQuantityProcessed && response.partial) {
-        if (response.partialQuantityProcessed > 0) {
-          totalQuantity += response.partialQuantityProcessed
-          totalPrice +=
-            response.partial.price * response.partialQuantityProcessed
-        }
+      if (response.partialQuantityProcessed > 0 && response.partial != null) {
+        totalQuantity += response.partialQuantityProcessed
+        totalPrice +=
+          response.partial.price * response.partialQuantityProcessed
       }
 
       response.done.push(
@@ -274,9 +272,9 @@ export class OrderBook {
   public modify = (
     orderID: string,
     orderUpdate: OrderUpdate
-  ): Order | undefined | void => {
+  ): Order | undefined => {
     const order = this.orders[orderID]
-    if (!order) return
+    if (order === undefined) return
     const side = orderUpdate.side
     if (side === Side.BUY) {
       return this.bids.update(order, orderUpdate)
@@ -295,7 +293,8 @@ export class OrderBook {
    */
   public cancel = (orderID: string): Order | undefined => {
     const order = this.orders[orderID]
-    if (!order) return
+    if (order === undefined) return
+    /* eslint-disable @typescript-eslint/no-dynamic-delete */
     delete this.orders[orderID]
     if (order.side === Side.BUY) {
       return this.bids.remove(order)
@@ -314,9 +313,9 @@ export class OrderBook {
   }
 
   // Returns price levels and volume at price level
-  public depth = (): [[number, number][], [number, number][]] => {
-    const asks: [number, number][] = []
-    const bids: [number, number][] = []
+  public depth = (): [Array<[number, number]>, Array<[number, number]>] => {
+    const asks: Array<[number, number]> = []
+    const bids: Array<[number, number]> = []
     this.asks.priceTree().forEach((levelPrice, level) => {
       asks.push([levelPrice, level.volume()])
     })
@@ -356,7 +355,7 @@ export class OrderBook {
       iter = this.bids.lowerThan
     }
 
-    while (size > 0 && level) {
+    while (size > 0 && (level != null)) {
       const levelVolume = level.volume()
       const levelPrice = level.price()
       if (this.greaterThanOrEqual(size, levelVolume)) {
@@ -376,26 +375,29 @@ export class OrderBook {
     return { price, err }
   }
 
-  private greaterThanOrEqual = (a: number, b: number): boolean => {
+  private readonly greaterThanOrEqual = (a: number, b: number): boolean => {
     return a >= b
   }
 
-  private lowerThanOrEqual = (a: number, b: number): boolean => {
+  private readonly lowerThanOrEqual = (a: number, b: number): boolean => {
     return a <= b
   }
 
-  private processQueue = (orderQueue: OrderQueue, quantityToTrade: number) => {
+  private readonly processQueue = (
+    orderQueue: OrderQueue,
+    quantityToTrade: number
+  ): IProcessOrder => {
     const response: IProcessOrder = {
       done: [],
       partial: null,
       partialQuantityProcessed: 0,
       quantityLeft: quantityToTrade,
-      err: null,
+      err: null
     }
-    if (response.quantityLeft) {
+    if (response.quantityLeft > 0) {
       while (orderQueue.len() > 0 && response.quantityLeft > 0) {
         const headOrder = orderQueue.head()
-        if (headOrder) {
+        if (headOrder != null) {
           if (response.quantityLeft < headOrder.size) {
             response.partial = new Order(
               headOrder.id,
@@ -412,7 +414,7 @@ export class OrderBook {
           } else {
             response.quantityLeft = response.quantityLeft - headOrder.size
             const canceledOrder = this.cancel(headOrder.id)
-            if (canceledOrder) response.done.push(canceledOrder)
+            if (canceledOrder != null) response.done.push(canceledOrder)
           }
         }
       }
@@ -420,7 +422,7 @@ export class OrderBook {
     return response
   }
 
-  private canFillOrder = (
+  private readonly canFillOrder = (
     orderSide: OrderSide,
     side: Side,
     size: number,
@@ -431,7 +433,7 @@ export class OrderBook {
       : this.sellOrderCanBeFilled(orderSide, size, price)
   }
 
-  private buyOrderCanBeFilled = (
+  private readonly buyOrderCanBeFilled = (
     orderSide: OrderSide,
     size: number,
     price: number
@@ -451,7 +453,7 @@ export class OrderBook {
     return cumulativeSize >= size
   }
 
-  private sellOrderCanBeFilled = (
+  private readonly sellOrderCanBeFilled = (
     orderSide: OrderSide,
     size: number,
     price: number

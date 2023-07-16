@@ -18,13 +18,13 @@ export enum TimeInForce {
 }
 
 export class Order {
-  private _id: string
-  private _side: Side
+  private readonly _id: string
+  private readonly _side: Side
   private _size: number
-  private _price: number
+  private readonly _price: number
   private _time: number
-  private _isMaker: boolean
-  constructor(
+  private readonly _isMaker: boolean
+  constructor (
     orderId: string,
     side: Side,
     size: number,
@@ -36,39 +36,47 @@ export class Order {
     this._side = side
     this._price = price
     this._size = size
-    this._time = time || Date.now()
-    this._isMaker = isMaker || false
+    this._time = time ?? Date.now()
+    this._isMaker = isMaker ?? false
   }
 
   // returns orderId of the order
-  get id(): string {
+  get id (): string {
     return this._id
   }
+
   // returns side of the order
-  get side(): Side {
+  get side (): Side {
     return this._side
   }
+
   // returns price of the order
-  get price(): number {
+  get price (): number {
     return this._price
   }
+
   // returns size of the order
-  get size(): number {
+  get size (): number {
     return this._size
   }
-  set size(size: number) {
+
+  set size (size: number) {
     this._size = size
   }
+
   // returns timestamp of the order
-  get time(): number {
+  get time (): number {
     return this._time
   }
-  set time(time: number) {
+
+  set time (time: number) {
     this._time = time
   }
-  get isMaker(): boolean {
+
+  get isMaker (): boolean {
     return this._isMaker
   }
+
   // returns string representation of the order
   toString = (): string => {
     return `${this._id}:
@@ -76,8 +84,9 @@ export class Order {
     size: ${this._side}
     price: ${this._price}
     time: ${this._time}
-    isMaker: ${this.isMaker}`
+    isMaker: ${this.isMaker as unknown as string}`
   }
+
   // returns JSON string of the order
   toJSON = (): string => {
     return JSON.stringify({
@@ -86,18 +95,26 @@ export class Order {
       size: this._size,
       price: this._price,
       time: this._time,
-      isMaker: this.isMaker,
+      isMaker: this.isMaker
     })
   }
+
   // returns an object with each property name and value
-  toObject = () => {
+  toObject = (): {
+    id: string
+    side: Side
+    size: number
+    price: number
+    time: number
+    isMaker: boolean
+  } => {
     return {
       id: this._id,
       side: this._side,
       size: this._size,
       price: this._price,
       time: this._time,
-      isMaker: this.isMaker,
+      isMaker: this.isMaker
     }
   }
 }

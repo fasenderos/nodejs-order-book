@@ -4,31 +4,30 @@ import { OrderBook } from '../src/orderbook'
 import { ERROR } from '../src/errors'
 import { test } from 'tap'
 
-const addDepth = (ob: OrderBook, prefix: string, quantity: number) => {
+const addDepth = (ob: OrderBook, prefix: string, quantity: number): void => {
   for (let index = 50; index < 100; index += 10) {
     ob.limit(Side.BUY, `${prefix}buy-${index}`, quantity, index)
   }
   for (let index = 100; index < 150; index += 10) {
     ob.limit(Side.SELL, `${prefix}sell-${index}`, quantity, index)
   }
-  return
 }
 
 // First test the addDepth function used by all the other test
-test('test addDepth testing function', ({ equal, end }) => {
+void test('test addDepth testing function', ({ equal, end }) => {
   const ob = new OrderBook()
   addDepth(ob, '', 10)
   equal(
     ob.toString(),
-    `\n140 -> 10\n130 -> 10\n120 -> 10\n110 -> 10\n100 -> 10\r\n------------------------------------\n90 -> 10\n80 -> 10\n70 -> 10\n60 -> 10\n50 -> 10`
+    '\n140 -> 10\n130 -> 10\n120 -> 10\n110 -> 10\n100 -> 10\r\n------------------------------------\n90 -> 10\n80 -> 10\n70 -> 10\n60 -> 10\n50 -> 10'
   )
   end()
 })
-test('test limit place', ({ equal, end }) => {
+void test('test limit place', ({ equal, end }) => {
   const ob = new OrderBook()
   const size = 2
   for (let index = 50; index < 100; index += 10) {
-    const { done, partial, partialQuantityProcessed, quantityLeft, err } =
+    const { done, partial, partialQuantityProcessed, err } =
       ob.limit(Side.BUY, `buy-${index}`, size, index)
     equal(done.length, 0)
     equal(partial === null, true)
@@ -37,7 +36,7 @@ test('test limit place', ({ equal, end }) => {
   }
 
   for (let index = 100; index < 150; index += 10) {
-    const { done, partial, partialQuantityProcessed, quantityLeft, err } =
+    const { done, partial, partialQuantityProcessed, err } =
       ob.limit(Side.SELL, `sell-${index}`, size, index)
     equal(done.length, 0)
     equal(partial === null, true)
@@ -53,14 +52,14 @@ test('test limit place', ({ equal, end }) => {
   depth.forEach((side, index) => {
     side.forEach((level, subIndex) => {
       equal(level[1], 2)
-      let price = index === 0 ? 100 + 10 * subIndex : 90 - 10 * subIndex
+      const price = index === 0 ? 100 + 10 * subIndex : 90 - 10 * subIndex
       equal(level[0], price)
     })
   })
   end()
 })
 
-test('test limit', ({ equal, end }) => {
+void test('test limit', ({ equal, end }) => {
   const ob = new OrderBook()
 
   addDepth(ob, '', 2)
@@ -76,7 +75,7 @@ test('test limit', ({ equal, end }) => {
 
   const process2 =
     // { done, partial, partialQuantityProcessed, quantityLeft, err } =
-    ob.limit(Side.BUY, `order-b150`, 10, 150)
+    ob.limit(Side.BUY, 'order-b150', 10, 150)
 
   equal(process2.err === null, true)
   equal(process2.done.length, 5)
@@ -84,14 +83,14 @@ test('test limit', ({ equal, end }) => {
   equal(process2.partial?.isMaker, true)
   equal(process2.partialQuantityProcessed, 9)
 
-  const process3 = ob.limit(Side.SELL, `buy-70`, 11, 40)
+  const process3 = ob.limit(Side.SELL, 'buy-70', 11, 40)
   equal(process3.err?.message, ERROR.ErrOrderExists)
 
-  const process4 = ob.limit(Side.SELL, `fake-70`, 0, 40)
+  const process4 = ob.limit(Side.SELL, 'fake-70', 0, 40)
   equal(process4.err?.message, ERROR.ErrInvalidQuantity)
 
-  // @ts-ignore
-  const process5 = ob.limit('unsupported-side', `order-70`, 70, 100)
+  // @ts-expect-error
+  const process5 = ob.limit('unsupported-side', 'order-70', 70, 100)
   equal(process5.err?.message, ERROR.ErrInvalidSide)
 
   const removed = ob.cancel('order-b100')
@@ -110,14 +109,14 @@ test('test limit', ({ equal, end }) => {
   equal(process6.partial === null, true)
   equal(process6.partialQuantityProcessed, 0)
 
-  // @ts-ignore
-  const process7 = ob.limit(Side.SELL, `fake-wrong-size`, '0', 40)
+  // @ts-expect-error
+  const process7 = ob.limit(Side.SELL, 'fake-wrong-size', '0', 40)
   equal(process7.err?.message, ERROR.ErrInvalidQuantity)
 
   const process8 = ob.limit(
     Side.SELL,
-    `fake-wrong-size`,
-    // @ts-ignore
+    'fake-wrong-size',
+    // @ts-expect-error
     null,
     40
   )
@@ -125,24 +124,24 @@ test('test limit', ({ equal, end }) => {
 
   const process9 = ob.limit(
     Side.SELL,
-    `fake-wrong-price`,
+    'fake-wrong-price',
     10,
-    // @ts-ignore
+    // @ts-expect-error
     '40'
   )
   equal(process9.err?.message, ERROR.ErrInvalidPrice)
 
-  // @ts-ignore
-  const process10 = ob.limit(Side.SELL, `fake-wrong-price`, 10)
+  // @ts-expect-error
+  const process10 = ob.limit(Side.SELL, 'fake-wrong-price', 10)
   equal(process10.err?.message, ERROR.ErrInvalidPrice)
 
-  // @ts-ignore
-  const process11 = ob.limit(Side.SELL, `unsupported-tif`, 10, 10, 'FAKE')
+  // @ts-expect-error
+  const process11 = ob.limit(Side.SELL, 'unsupported-tif', 10, 10, 'FAKE')
   equal(process11.err?.message, ERROR.ErrInvalidTimeInForce)
   end()
 })
 
-test('test limit FOK and IOC', ({ equal, end }) => {
+void test('test limit FOK and IOC', ({ equal, end }) => {
   const ob = new OrderBook()
   addDepth(ob, '', 2)
   const process1 = ob.limit(Side.BUY, 'order-fok-b100', 3, 100, TimeInForce.FOK)
@@ -205,7 +204,7 @@ test('test limit FOK and IOC', ({ equal, end }) => {
   end()
 })
 
-test('test market', ({ equal, end }) => {
+void test('test market', ({ equal, end }) => {
   const ob = new OrderBook()
 
   addDepth(ob, '', 2)
@@ -229,30 +228,30 @@ test('test market', ({ equal, end }) => {
   equal(process3.partialQuantityProcessed, 0)
   equal(process3.quantityLeft, 2)
 
-  // @ts-ignore
+  // @ts-expect-error
   const process4 = ob.market(Side.SELL, '0')
   equal(process4.err?.message, ERROR.ErrInsufficientQuantity)
 
-  // @ts-ignore
+  // @ts-expect-error
   const process5 = ob.market(Side.SELL)
   equal(process5.err?.message, ERROR.ErrInsufficientQuantity)
 
-  // @ts-ignore
+  // @ts-expect-error
   const process6 = ob.market('unsupported-side', 100)
   equal(process6.err?.message, ERROR.ErrInvalidSide)
   end()
 })
 
-test('createOrder error', ({ equal, end }) => {
+void test('createOrder error', ({ equal, end }) => {
   const ob = new OrderBook()
   addDepth(ob, '', 2)
-  // @ts-ignore
+  // @ts-expect-error
   const result = ob.createOrder('wrong-market-type', Side.SELL, 10)
   equal(result.err?.message, ERROR.ErrInvalidOrderType)
   end()
 })
 
-test('test modify', ({ equal, end }) => {
+void test('test modify', ({ equal, end }) => {
   const ob = new OrderBook()
 
   addDepth(ob, '', 2)
@@ -264,7 +263,7 @@ test('test modify', ({ equal, end }) => {
   const orderUpdateSize1: OrderUpdate = {
     side: Side.BUY,
     size: 990,
-    price: 52,
+    price: 52
   }
   // Response is the updated order or undefined if no order exist
   const response1 = ob.modify('first-order', orderUpdateSize1)
@@ -273,14 +272,14 @@ test('test modify', ({ equal, end }) => {
   const orderUpdatePrice1: OrderUpdate = {
     side: Side.BUY,
     size: 990,
-    price: 82,
+    price: 82
   }
 
   // Test SELL side
   const orderUpdateSize2: OrderUpdate = {
     side: Side.SELL,
     size: 990,
-    price: 200,
+    price: 200
   }
   // Response is the updated order or undefined if no order exist
   const response3 = ob.modify('second-order', orderUpdateSize2)
@@ -289,7 +288,7 @@ test('test modify', ({ equal, end }) => {
   const orderUpdatePrice2: OrderUpdate = {
     side: Side.SELL,
     size: 990,
-    price: 250,
+    price: 250
   }
   // Response is the updated order or undefined if no order exist
   const response4 = ob.modify('second-order', orderUpdatePrice2)
@@ -298,10 +297,10 @@ test('test modify', ({ equal, end }) => {
   // Test throw error when the side is not of type 'Side'
   try {
     const errorUpdate: OrderUpdate = {
-      // @ts-ignore
+      // @ts-expect-error
       side: 'fake-side',
       size: 990,
-      price: 250,
+      price: 250
     }
     ob.modify('second-order', errorUpdate)
   } catch (error) {
@@ -317,7 +316,7 @@ test('test modify', ({ equal, end }) => {
   end()
 })
 
-test('test priceCalculation', ({ equal, end }) => {
+void test('test priceCalculation', ({ equal, end }) => {
   const ob = new OrderBook()
 
   addDepth(ob, '05-', 10)

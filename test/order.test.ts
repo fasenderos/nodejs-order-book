@@ -2,7 +2,7 @@ import { Order } from '../src/order'
 import { Side } from '../src/side'
 import { test } from 'tap'
 
-test('it should create order object', ({ equal, same, end }) => {
+void test('it should create order object', ({ equal, same, end }) => {
   const id = 'fakeId'
   const side = Side.BUY
   const size = 5
@@ -23,7 +23,7 @@ test('it should create order object', ({ equal, same, end }) => {
     size,
     price,
     time,
-    isMaker: order.isMaker,
+    isMaker: order.isMaker
   })
   equal(
     order.toString(),
@@ -32,7 +32,7 @@ test('it should create order object', ({ equal, same, end }) => {
     size: ${side}
     price: ${price}
     time: ${time}
-    isMaker: ${false}`
+    isMaker: ${false as unknown as string}`
   )
   equal(
     order.toJSON(),
@@ -41,15 +41,15 @@ test('it should create order object', ({ equal, same, end }) => {
   end()
 })
 
-test('it should create order without passing a date', ({
+void test('it should create order without passing a date', ({
   equal,
   end,
   teardown,
-  same,
+  same
 }) => {
   const fakeTimestamp = 1487076708000
   const { now } = Date
-  // @ts-ignore
+  // @ts-expect-error
   teardown(() => (Date.now = now))
   Date.now = (...m) => fakeTimestamp
 
@@ -71,7 +71,7 @@ test('it should create order without passing a date', ({
     size,
     price,
     time: fakeTimestamp,
-    isMaker: false,
+    isMaker: false
   })
   equal(
     order.toString(),
@@ -80,7 +80,7 @@ test('it should create order without passing a date', ({
     size: ${side}
     price: ${price}
     time: ${fakeTimestamp}
-    isMaker: ${false}`
+    isMaker: ${false as unknown as string}`
   )
 
   equal(
@@ -91,7 +91,7 @@ test('it should create order without passing a date', ({
       size,
       price,
       time: fakeTimestamp,
-      isMaker: false,
+      isMaker: false
     })
   )
   end()

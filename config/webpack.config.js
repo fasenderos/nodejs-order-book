@@ -8,7 +8,7 @@ module.exports = {
     filename: 'index.js',
     library: 'exampleTypescriptPackage',
     libraryTarget: 'umd',
-    globalObject: 'this',
+    globalObject: 'this'
   },
   module: {
     rules: [
@@ -18,13 +18,13 @@ module.exports = {
         use: {
           loader: 'ts-loader',
           options: {
-            configFile: 'config/tsconfig.umd.json',
-          },
-        },
-      },
-    ],
+            configFile: 'config/tsconfig.umd.json'
+          }
+        }
+      }
+    ]
   },
   resolve: {
-    extensions: ['.ts', '.js', '.tsx', '.jsx'],
-  },
+    extensions: ['.ts', '.js', '.tsx', '.jsx']
+  }
 }

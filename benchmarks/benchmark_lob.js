@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 const bench = require('nanobench')
 const hft = require('../dist/cjs/index.js')
 const gaussian = require('gaussian')
 
 /* New Limits */
-function spamLimitOrders(book, count) {
+function spamLimitOrders (book, count) {
   for (let i = 0; i < count; i++) {
     book.limit('buy', i.toString(), 50, i)
   }
@@ -53,7 +52,7 @@ bench('Spam 300000 new Limits', function (b) {
 })
 
 /* New Orders */
-function spamOrders(book, count, variance = 5) {
+function spamOrders (book, count, variance = 5) {
   for (let i = 0; i < count; i++) {
     book.limit('buy', i.toString(), 50, i % variance)
   }
@@ -88,18 +87,18 @@ bench('Spam 1000 new Orders', function (b) {
 })
 
 /* Random submission and cancellation */
-function spamOrdersRandomCancels(
+function spamOrdersRandomCancels (
   book,
   count,
   mean = 500,
   variance = 30,
-  cancel_every = 5
+  cancelEvery = 5
 ) {
-  const price_distribution = gaussian(mean, variance)
-  book.limit('buy', '0', 50, price_distribution.ppf(Math.random()))
+  const priceDistribution = gaussian(mean, variance)
+  book.limit('buy', '0', 50, priceDistribution.ppf(Math.random()))
   for (let i = 1; i < count; i++) {
-    book.limit('buy', i.toString(), 50, price_distribution.ppf(Math.random()))
-    if (i % cancel_every == 0) book.cancel((i - cancel_every).toString())
+    book.limit('buy', i.toString(), 50, priceDistribution.ppf(Math.random()))
+    if (i % cancelEvery === 0) book.cancel((i - cancelEvery).toString())
   }
 }
 
@@ -132,24 +131,23 @@ bench('Spam 10000 orders and randomly cancel orders', function (b) {
 })
 
 /* Random submission, cancellation, and market orders */
-function spamLimitRandomOrders(
+function spamLimitRandomOrders (
   book,
   count,
-  price_mean = 500,
-  price_variance = 20,
-  quantity_mean = 100,
-  quantity_variance = 10,
-  order_every = 100
+  priceMean = 500,
+  priceVariance = 20,
+  quantityMean = 100,
+  quantityVariance = 10,
+  orderEvery = 100
 ) {
-  const price = gaussian(price_mean, price_variance)
-  const quantity = gaussian(quantity_mean, quantity_variance)
+  const price = gaussian(priceMean, priceVariance)
+  const quantity = gaussian(quantityMean, quantityVariance)
   for (let i = 1; i < count; i++) {
     const price_ = price.ppf(Math.random())
     const quantity_ = quantity.ppf(Math.random())
     book.limit('buy', i.toString(), 100, price_)
-    if (i % order_every == 0)
-      // random submit a market order
-      book.market('sell', quantity_)
+    // random submit a market order
+    if (i % orderEvery === 0) book.market('sell', quantity_)
   }
 }
 
@@ -174,16 +172,16 @@ bench('Spam 100000 limit orders and occasional market orders', function (b) {
   b.end()
 })
 
-function spamLimitManyMarketOrders(
+function spamLimitManyMarketOrders (
   book,
   count,
-  price_mean = 500,
-  price_variance = 20,
-  quantity_mean = 50,
-  quantity_variance = 10
+  priceMean = 500,
+  priceVariance = 20,
+  quantityMean = 50,
+  quantityVariance = 10
 ) {
-  const price = gaussian(price_mean, price_variance)
-  const quantity = gaussian(quantity_mean, quantity_variance)
+  const price = gaussian(priceMean, priceVariance)
+  const quantity = gaussian(quantityMean, quantityVariance)
 
   for (let i = 1; i < count; i++) {
     const price_ = price.ppf(Math.random())

@@ -3,10 +3,10 @@ import { Side } from '../src/side'
 import { OrderQueue } from '../src/orderqueue'
 import { test } from 'tap'
 
-test('it should append/update/remove orders from queue', ({
+void test('it should append/update/remove orders from queue', ({
   equal,
   same,
-  end,
+  end
 }) => {
   const price = 100
   const oq = new OrderQueue(price)
@@ -52,7 +52,7 @@ test('it should append/update/remove orders from queue', ({
   end()
 })
 
-test('it should update order size and the volume', ({ equal, end }) => {
+void test('it should update order size and the volume', ({ equal, end }) => {
   const price = 100
   const oq = new OrderQueue(price)
   const order1 = new Order('order1', Side.SELL, 5, price)
