@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.3.2](https://github.com/fasenderos/hft-limit-order-book/compare/v2.3.1...v2.3.2) (2023-07-16)
+
+
+### Features
+
+* use bignumber.js for size precision ([4449d68](https://github.com/fasenderos/hft-limit-order-book/commits/4449d68ec8e854272da694a9f325cb8ab481b961))
+
 ### [2.3.1](https://github.com/fasenderos/hft-limit-order-book/compare/v2.3.0...v2.3.1) (2023-07-16)
 
 ## [2.3.0](https://github.com/fasenderos/hft-limit-order-book/compare/v2.2.1...v2.3.0) (2023-05-09)
