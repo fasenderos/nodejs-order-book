@@ -1,8 +1,8 @@
 import { Order, OrderType, OrderUpdate, TimeInForce } from '../src/order'
+import { test } from 'tap'
 import { Side } from '../src/side'
 import { OrderBook } from '../src/orderbook'
 import { ERROR } from '../src/errors'
-import { test } from 'tap'
 
 const addDepth = (ob: OrderBook, prefix: string, quantity: number): void => {
   for (let index = 50; index < 100; index += 10) {
@@ -260,14 +260,14 @@ void test('test modify', ({ equal, end }) => {
   ob.limit(Side.SELL, 'second-order', 1000, 200)
 
   // Test BUY side
-  const orderUpdateSize1: OrderUpdate = {
+  const orderUpdateSize1 = {
     side: Side.BUY,
     size: 990,
     price: 52
   }
   // Response is the updated order or undefined if no order exist
   const response1 = ob.modify('first-order', orderUpdateSize1)
-  equal(response1?.size, orderUpdateSize1.size)
+  equal(response1?.size.toNumber(), orderUpdateSize1.size)
 
   const orderUpdatePrice1: OrderUpdate = {
     side: Side.BUY,
@@ -283,7 +283,7 @@ void test('test modify', ({ equal, end }) => {
   }
   // Response is the updated order or undefined if no order exist
   const response3 = ob.modify('second-order', orderUpdateSize2)
-  equal(response3?.size, orderUpdateSize2.size)
+  equal(response3?.size.toNumber(), orderUpdateSize2.size)
 
   const orderUpdatePrice2: OrderUpdate = {
     side: Side.SELL,

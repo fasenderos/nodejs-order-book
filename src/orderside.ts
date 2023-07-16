@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js'
 import createRBTree from 'functional-red-black-tree'
 import { CustomError, ERROR } from './errors'
 import { Order, OrderUpdate } from './order'
@@ -7,8 +8,8 @@ import { Side } from './side'
 export class OrderSide {
   private _priceTree: createRBTree.Tree<number, OrderQueue>
   private _prices: { [key: string]: OrderQueue } = {}
-  private _volume = 0
-  private _total = 0
+  private _volume = new BigNumber(0)
+  private _total = new BigNumber(0)
   private _numOrders = 0
   private _depthSide = 0
   private readonly _side: Side = Side.SELL
@@ -33,12 +34,12 @@ export class OrderSide {
   }
 
   // returns total amount of quantity in side
-  volume = (): number => {
+  volume = (): BigNumber => {
     return this._volume
   }
 
   // returns the total (size * price of each price level) in side
-  total = (): number => {
+  total = (): BigNumber => {
     return this._total
   }
 
@@ -58,8 +59,8 @@ export class OrderSide {
       this._depthSide += 1
     }
     this._numOrders += 1
-    this._volume += order.size
-    this._total += order.size * order.price
+    this._volume = this._volume.plus(order.size)
+    this._total = this._total.plus(order.size.multipliedBy(order.price))
     return this._prices[strPrice].append(order)
   }
 
@@ -77,8 +78,8 @@ export class OrderSide {
     }
 
     this._numOrders -= 1
-    this._volume -= order.size
-    this._total -= order.size * order.price
+    this._volume = this._volume.minus(order.size)
+    this._total = this._total.minus(order.size.multipliedBy(order.price))
     return order
   }
 
@@ -92,7 +93,7 @@ export class OrderSide {
       const newOrder = new Order(
         oldOrder.id,
         oldOrder.side,
-        orderUpdate.size ?? oldOrder.size,
+        orderUpdate.size !== undefined ? new BigNumber(orderUpdate.size) : oldOrder.size,
         orderUpdate.price,
         Date.now(),
         oldOrder.isMaker
@@ -101,13 +102,15 @@ export class OrderSide {
       return newOrder
     } else if (
       orderUpdate.size !== undefined &&
-      orderUpdate.size !== oldOrder.size
+      orderUpdate.size !== oldOrder.size.toNumber()
     ) {
       // Quantity changed. Price is the same.
+      const oldOrderSize: number = oldOrder.size.toNumber()
       const strPrice = oldOrder.price.toString()
-      this._volume += orderUpdate.size - oldOrder.size
-      this._total +=
-        orderUpdate.size * orderUpdate.price - oldOrder.size * oldOrder.price
+      this._volume = this._volume.plus(orderUpdate.size - oldOrderSize)
+      this._total = this._total.plus(
+        orderUpdate.size * orderUpdate.price - oldOrderSize * oldOrder.price
+      )
       this._prices[strPrice].updateOrderSize(oldOrder, orderUpdate.size)
       return oldOrder
     }
@@ -165,7 +168,8 @@ export class OrderSide {
     let s = ''
     let level = this.maxPriceQueue()
     while (level !== undefined) {
-      s += `\n${level.price()} -> ${level.volume()}`
+      const volume: string = level.volume().toString()
+      s += `\n${level.price()} -> ${volume}`
       level = this.lowerThan(level.price())
     }
     return s
