@@ -37,7 +37,7 @@
     "release:patch": "standard-version --release-as patch && git push && git push --tags",
     "test": "tap --no-coverage",
     "test:dev": "tap --watch",
-    "test:cov": "c8 tap --no-coverage",
+    "test:cov": "c8 --reporter=lcov tap --no-coverage",
     "prepare": "husky install"
   },
   "dependencies": {
