@@ -4,10 +4,10 @@ import { OrderSide } from '../src/orderside'
 import { ERROR } from '../src/errors'
 import { test } from 'tap'
 
-test('it should append/update/remove orders from queue on BUY side', ({
+void test('it should append/update/remove orders from queue on BUY side', ({
   equal,
   same,
-  end,
+  end
 }) => {
   const os = new OrderSide(Side.BUY)
   const order1 = new Order('order1', Side.BUY, 5, 10)
@@ -39,7 +39,7 @@ test('it should append/update/remove orders from queue on BUY side', ({
   equal(os.greaterThan(19)?.price(), 20)
   equal(os.greaterThan(21) === undefined, true)
 
-  equal(os.toString(), `\n20 -> 5\n10 -> 5`)
+  equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
   os.update(order1, { side: order1.side, size: 10, price: order1.price })
 
@@ -48,14 +48,14 @@ test('it should append/update/remove orders from queue on BUY side', ({
   equal(os.len(), 2)
   same(os.orders()[0], { ...order1, size: 10 })
   same(os.orders()[1], order2)
-  equal(os.toString(), `\n20 -> 5\n10 -> 10`)
+  equal(os.toString(), '\n20 -> 5\n10 -> 10')
 
   // When price is updated a new order will be created, so we can't match entire object, only properties
   // Update price of order1 < price order2
   let updatedOrder = os.update(order1, {
     side: order1.side,
     size: 10,
-    price: 15,
+    price: 15
   })
   equal(os.volume(), 15)
   equal(os.depth(), 2)
@@ -64,7 +64,7 @@ test('it should append/update/remove orders from queue on BUY side', ({
   equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 15)
   same(os.orders()[1], order2)
-  equal(os.toString(), `\n20 -> 5\n15 -> 10`)
+  equal(os.toString(), '\n20 -> 5\n15 -> 10')
 
   // Test for error when price level not exists
   try {
@@ -72,7 +72,7 @@ test('it should append/update/remove orders from queue on BUY side', ({
     os.update(order1, {
       side: order1.side,
       size: 10,
-      price: 20,
+      price: 20
     })
   } catch (error) {
     if (error instanceof Error) {
@@ -84,11 +84,11 @@ test('it should append/update/remove orders from queue on BUY side', ({
   // Update price of order1 == price order2
   // we have to type ignore here because we don't want to pass the size,
   // so the size from the oldOrder will be used instead
-  // @ts-ignore
+  // @ts-expect-error
   updatedOrder = os.update(updatedOrder as Order, {
     side: order1.side,
     // size: 10,
-    price: 20,
+    price: 20
   })
   equal(os.volume(), 15)
   equal(os.depth(), 1)
@@ -97,13 +97,13 @@ test('it should append/update/remove orders from queue on BUY side', ({
   updateOrder1 = os.orders()[1]
   equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 20)
-  equal(os.toString(), `\n20 -> 15`)
+  equal(os.toString(), '\n20 -> 15')
 
   // Update price of order1 > price order2
   updatedOrder = os.update(updatedOrder as Order, {
     side: order1.side,
     size: 10,
-    price: 25,
+    price: 25
   })
   equal(os.volume(), 15)
   equal(os.depth(), 2)
@@ -112,7 +112,7 @@ test('it should append/update/remove orders from queue on BUY side', ({
   updateOrder1 = os.orders()[1]
   equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 25)
-  equal(os.toString(), `\n25 -> 10\n20 -> 5`)
+  equal(os.toString(), '\n25 -> 10\n20 -> 5')
 
   // Remove the updated order
   os.remove(updatedOrder as Order)
@@ -123,7 +123,7 @@ test('it should append/update/remove orders from queue on BUY side', ({
   equal(os.len(), 1)
   same(os.orders()[0], order2)
 
-  equal(os.toString(), `\n20 -> 5`)
+  equal(os.toString(), '\n20 -> 5')
 
   // Remove the remaining order
   os.remove(order2)
@@ -136,10 +136,10 @@ test('it should append/update/remove orders from queue on BUY side', ({
 
   end()
 })
-test('it should append/update/remove orders from queue on SELL side', ({
+void test('it should append/update/remove orders from queue on SELL side', ({
   equal,
   same,
-  end,
+  end
 }) => {
   const os = new OrderSide(Side.SELL)
   const order1 = new Order('order1', Side.SELL, 5, 10)
@@ -172,7 +172,7 @@ test('it should append/update/remove orders from queue on SELL side', ({
   equal(os.greaterThan(19)?.price(), 20)
   equal(os.greaterThan(21) === undefined, true)
 
-  equal(os.toString(), `\n20 -> 5\n10 -> 5`)
+  equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
   os.update(order1, { side: order1.side, size: 10, price: order1.price })
 
@@ -181,14 +181,14 @@ test('it should append/update/remove orders from queue on SELL side', ({
   equal(os.len(), 2)
   same(os.orders()[0], { ...order1, size: 10 })
   same(os.orders()[1], order2)
-  equal(os.toString(), `\n20 -> 5\n10 -> 10`)
+  equal(os.toString(), '\n20 -> 5\n10 -> 10')
 
   // When price is updated a new order will be created, so we can't match entire object, only properties
   // Update price of order1 < price order2
   let updatedOrder = os.update(order1, {
     side: order1.side,
     size: 10,
-    price: 15,
+    price: 15
   })
   equal(os.volume(), 15)
   equal(os.depth(), 2)
@@ -197,7 +197,7 @@ test('it should append/update/remove orders from queue on SELL side', ({
   equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 15)
   same(os.orders()[1], order2)
-  equal(os.toString(), `\n20 -> 5\n15 -> 10`)
+  equal(os.toString(), '\n20 -> 5\n15 -> 10')
 
   // Test for error when price level not exists
   try {
@@ -205,7 +205,7 @@ test('it should append/update/remove orders from queue on SELL side', ({
     os.update(order1, {
       side: order1.side,
       size: 10,
-      price: 20,
+      price: 20
     })
   } catch (error) {
     if (error instanceof Error) {
@@ -217,11 +217,11 @@ test('it should append/update/remove orders from queue on SELL side', ({
   // Update price of order1 == price order2
   // we have to type ignore here because we don't want to pass the size,
   // so the size from the oldOrder will be used instead
-  // @ts-ignore
+  // @ts-expect-error
   updatedOrder = os.update(updatedOrder as Order, {
     side: order1.side,
     // size: 10,
-    price: 20,
+    price: 20
   })
   equal(os.volume(), 15)
   equal(os.depth(), 1)
@@ -230,13 +230,13 @@ test('it should append/update/remove orders from queue on SELL side', ({
   updateOrder1 = os.orders()[1]
   equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 20)
-  equal(os.toString(), `\n20 -> 15`)
+  equal(os.toString(), '\n20 -> 15')
 
   // Update price of order1 > price order2
   updatedOrder = os.update(updatedOrder as Order, {
     side: order1.side,
     size: 10,
-    price: 25,
+    price: 25
   })
   equal(os.volume(), 15)
   equal(os.depth(), 2)
@@ -245,7 +245,7 @@ test('it should append/update/remove orders from queue on SELL side', ({
   updateOrder1 = os.orders()[1]
   equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 25)
-  equal(os.toString(), `\n25 -> 10\n20 -> 5`)
+  equal(os.toString(), '\n25 -> 10\n20 -> 5')
 
   // Remove the updated order
   os.remove(updatedOrder as Order)
@@ -256,7 +256,7 @@ test('it should append/update/remove orders from queue on SELL side', ({
   equal(os.len(), 1)
   same(os.orders()[0], order2)
 
-  equal(os.toString(), `\n20 -> 5`)
+  equal(os.toString(), '\n20 -> 5')
 
   // Remove the remaining order
   os.remove(order2)

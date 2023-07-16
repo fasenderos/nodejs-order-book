@@ -2,13 +2,13 @@ import Denque from 'denque'
 import { Order } from './order'
 
 export class OrderQueue {
-  private _price: number
+  private readonly _price: number
   private _volume: number
-  private _orders: Denque<Order>
+  private readonly _orders: Denque<Order>
   // { orderID: index } index in denque
   private _ordersMap: { [key: string]: number } = {}
 
-  constructor(price: number) {
+  constructor (price: number) {
     this._price = price
     this._volume = 0
     this._orders = new Denque<Order>()
@@ -52,11 +52,12 @@ export class OrderQueue {
   }
 
   // sets up new order to list value
-  update = (oldOrder: Order, newOrder: Order) => {
+  update = (oldOrder: Order, newOrder: Order): void => {
     this._volume -= oldOrder.size
     this._volume += newOrder.size
     // Remove old order from head
     this._orders.shift()
+    /* eslint-disable @typescript-eslint/no-dynamic-delete */
     delete this._ordersMap[oldOrder.id]
     // Add new order to head
     this._orders.unshift(newOrder)
@@ -64,7 +65,7 @@ export class OrderQueue {
   }
 
   // removes order from the queue
-  remove = (order: Order) => {
+  remove = (order: Order): void => {
     this._volume -= order.size
     const deletedOrderIndex = this._ordersMap[order.id]
     this._orders.removeOne(deletedOrderIndex)
@@ -79,7 +80,7 @@ export class OrderQueue {
     }
   }
 
-  updateOrderSize = (order: Order, newSize: number) => {
+  updateOrderSize = (order: Order, newSize: number): void => {
     this._volume += newSize - order.size // update volume
     order.size = newSize
     order.time = Date.now()

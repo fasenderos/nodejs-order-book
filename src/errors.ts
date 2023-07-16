@@ -32,6 +32,7 @@ export const CustomError = (error?: ERROR | string): Error => {
     case ERROR.ErrLimitFOKNotFillable:
       return new Error(ERROR.ErrLimitFOKNotFillable)
     default:
-      return new Error(`${ERROR.Default}${error ? ': ' + error : ''}`)
+      error = error === undefined || error === '' ? '' : `: ${error}`
+      return new Error(`${ERROR.Default}${error}`)
   }
 }

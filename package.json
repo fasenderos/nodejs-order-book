@@ -25,7 +25,8 @@
     "build:umd": "node tools/cleanup umd && webpack --config config/webpack.config.js",
     "build:types": "node tools/cleanup types && tsc -p config/tsconfig.types.json",
     "clean": "node tools/cleanup",
-    "lint": "lint-staged",
+    "lint": "ts-standard | snazzy",
+    "lint:fix": "ts-standard --fix | snazzy",
     "package": "npm run build && npm pack",
     "postinstall": "husky install",
     "postpublish": "pinst --enable",
@@ -44,29 +45,24 @@
     "functional-red-black-tree": "1.0.1"
   },
   "devDependencies": {
-    "@commitlint/cli": "17.6.6",
-    "@commitlint/config-conventional": "17.6.6",
-    "@types/functional-red-black-tree": "1.0.2",
-    "@types/tap": "^15.0.8",
-    "@typescript-eslint/eslint-plugin": "5.61.0",
-    "@typescript-eslint/parser": "5.62.0",
+    "@commitlint/cli": "^17.0.0",
+    "@commitlint/config-conventional": "^17.0.0",
+    "@types/functional-red-black-tree": "^1.0.0",
+    "@types/tap": "^15.0.0",
     "c8": "^8.0.0",
-    "eslint": "8.45.0",
-    "eslint-config-prettier": "8.8.0",
-    "eslint-plugin-prettier": "5.0.0",
-    "gaussian": "1.3.0",
-    "husky": "8.0.3",
-    "lint-staged": "13.2.3",
-    "nanobench": "3.0.0",
-    "pinst": "3.0.0",
-    "prettier": "3.0.0",
-    "standard-version": "9.5.0",
-    "tap": "^16.3.7",
-    "ts-loader": "9.4.4",
-    "ts-node": "^10.9.1",
-    "typescript": "5.1.6",
-    "webpack": "5.88.1",
-    "webpack-cli": "5.1.4"
+    "gaussian": "^1.0.0",
+    "husky": "^8.0.0",
+    "nanobench": "^3.0.0",
+    "pinst": "^3.0.0",
+    "snazzy": "^9.0.0",
+    "standard-version": "^9.0.0",
+    "tap": "^16.0.0",
+    "ts-loader": "^9.0.0",
+    "ts-node": "^10.0.0",
+    "ts-standard": "^12.0.0",
+    "typescript": "^5.0.0",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^5.0.0"
   },
   "publishConfig": {
     "access": "public"
@@ -87,11 +83,6 @@
     "typescript",
     "trading"
   ],
-  "lint-staged": {
-    "*.ts": [
-      "prettier --write"
-    ]
-  },
   "tap": {
     "node-arg": [
       "--no-warnings",
@@ -99,5 +90,11 @@
       "ts-node/esm"
     ],
     "ts": false
+  },
+  "ts-standard": {
+    "ignore": [
+      "coverage",
+      "dist"
+    ]
   }
 }

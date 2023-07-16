@@ -11,9 +11,9 @@ export class OrderSide {
   private _total = 0
   private _numOrders = 0
   private _depthSide = 0
-  private _side: Side = Side.SELL
+  private readonly _side: Side = Side.SELL
 
-  constructor(side: Side) {
+  constructor (side: Side) {
     const compare =
       side === Side.SELL
         ? (a: number, b: number) => a - b
@@ -51,7 +51,7 @@ export class OrderSide {
   append = (order: Order): Order => {
     const price = order.price
     const strPrice = price.toString()
-    if (!this._prices[strPrice]) {
+    if (this._prices[strPrice] === undefined) {
       const priceQueue = new OrderQueue(price)
       this._prices[strPrice] = priceQueue
       this._priceTree = this._priceTree.insert(price, priceQueue)
@@ -67,9 +67,10 @@ export class OrderSide {
   remove = (order: Order): Order => {
     const price = order.price
     const strPrice = price.toString()
-    if (!this._prices[strPrice]) throw CustomError(ERROR.ErrInvalidPriceLevel)
+    if (this._prices[strPrice] === undefined) throw CustomError(ERROR.ErrInvalidPriceLevel)
     this._prices[strPrice].remove(order)
     if (this._prices[strPrice].len() === 0) {
+      /* eslint-disable @typescript-eslint/no-dynamic-delete */
       delete this._prices[strPrice]
       this._priceTree = this._priceTree.remove(price)
       this._depthSide -= 1
@@ -83,7 +84,7 @@ export class OrderSide {
 
   update = (oldOrder: Order, orderUpdate: OrderUpdate): Order | undefined => {
     if (
-      orderUpdate.price !== undefined &&
+      orderUpdate.price != null &&
       orderUpdate.price !== oldOrder.price
     ) {
       // Price changed. Remove order and update tree.
@@ -91,7 +92,7 @@ export class OrderSide {
       const newOrder = new Order(
         oldOrder.id,
         oldOrder.side,
-        orderUpdate.size || oldOrder.size,
+        orderUpdate.size ?? oldOrder.size,
         orderUpdate.price,
         Date.now(),
         oldOrder.isMaker
@@ -99,7 +100,7 @@ export class OrderSide {
       this.append(newOrder)
       return newOrder
     } else if (
-      orderUpdate.size !== undefined &&
+      orderUpdate.size != null &&
       orderUpdate.size !== oldOrder.size
     ) {
       // Quantity changed. Price is the same.
@@ -163,7 +164,7 @@ export class OrderSide {
   toString = (): string => {
     let s = ''
     let level = this.maxPriceQueue()
-    while (level) {
+    while (level != null) {
       s += `\n${level.price()} -> ${level.volume()}`
       level = this.lowerThan(level.price())
     }

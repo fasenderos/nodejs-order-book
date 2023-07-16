@@ -5,7 +5,6 @@ on:
     paths-ignore:
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/PULL_REQUEST_TEMPLATE.md'
-      - '.editorconfig'
       - 'CODE_OF_CONDUCT.md'
       - 'CONTRIBUTING.md'
       - 'LICENSE'
@@ -13,12 +12,10 @@ on:
       - 'SECURITY.md'
     branches:
       - main
-      - master
   pull_request:
     paths-ignore:
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/PULL_REQUEST_TEMPLATE.md'
-      - '.editorconfig'
       - 'CODE_OF_CONDUCT.md'
       - 'CONTRIBUTING.md'
       - 'LICENSE'
@@ -26,7 +23,6 @@ on:
       - 'SECURITY.md'
     branches:
       - main
-      - master
 
 jobs:
   test:
@@ -36,7 +32,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
-        node: [14.x, 16.x, 18.x]
+        node: [16.x, 18.x]
 
     steps:
       - uses: actions/checkout@v3
@@ -45,6 +41,6 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Install modules
-        run: yarn
+        run: npm install
       - name: Run tests
-        run: yarn test
+        run: npm test
