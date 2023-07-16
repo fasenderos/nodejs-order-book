@@ -2,135 +2,269 @@ import { Order } from '../src/order'
 import { Side } from '../src/side'
 import { OrderSide } from '../src/orderside'
 import { ERROR } from '../src/errors'
+import { test } from 'tap'
 
-describe('OrderSide', () => {
-  test('it should append/update/remove orders from queue', () => {
-    const os = new OrderSide(Side.SELL)
-    const order1 = new Order('order1', Side.SELL, 5, 10)
-    const order2 = new Order('order2', Side.SELL, 5, 20)
+test('it should append/update/remove orders from queue on BUY side', ({
+  equal,
+  same,
+  end,
+}) => {
+  const os = new OrderSide(Side.BUY)
+  const order1 = new Order('order1', Side.BUY, 5, 10)
+  const order2 = new Order('order2', Side.BUY, 5, 20)
 
-    expect(os.minPriceQueue()).toBeUndefined()
-    expect(os.maxPriceQueue()).toBeUndefined()
+  equal(os.minPriceQueue() === undefined, true)
+  equal(os.maxPriceQueue() === undefined, true)
 
-    os.append(order1)
+  os.append(order1)
+  equal(os.maxPriceQueue(), os.minPriceQueue())
+  equal(os.volume(), 5)
+  equal(os.total(), order1.price * order1.size)
+  equal(os.priceTree().length, 1)
 
-    expect(os.maxPriceQueue()).toBe(os.minPriceQueue())
-    expect(os.volume()).toBe(5)
-    expect(os.total()).toBe(order1.price * order1.size)
-    expect(os.priceTree().length).toBe(1)
+  os.append(order2)
+  equal(os.depth(), 2)
+  equal(os.volume(), 10)
+  equal(os.total(), order1.price * order1.size + order2.price * order2.size)
+  equal(os.len(), 2)
+  equal(os.priceTree().length, 2)
+  same(os.orders()[0], order1)
+  same(os.orders()[1], order2)
 
-    os.append(order2)
-    expect(os.depth()).toBe(2)
-    expect(os.volume()).toBe(10)
-    expect(os.total()).toBe(
-      order1.price * order1.size + order2.price * order2.size
-    )
-    expect(os.len()).toBe(2)
-    expect(os.priceTree().length).toBe(2)
-    expect(os.orders()[0]).toMatchObject(order1)
-    expect(os.orders()[1]).toMatchObject(order2)
+  equal(os.lowerThan(21)?.price(), 20)
+  equal(os.lowerThan(19)?.price(), 10)
+  equal(os.lowerThan(9) === undefined, true)
 
-    expect(os.lowerThan(21)?.price()).toBe(20)
-    expect(os.lowerThan(19)?.price()).toBe(10)
-    expect(os.lowerThan(9)).toBeUndefined()
+  equal(os.greaterThan(9)?.price(), 10)
+  equal(os.greaterThan(19)?.price(), 20)
+  equal(os.greaterThan(21) === undefined, true)
 
-    expect(os.greaterThan(9)?.price()).toBe(10)
-    expect(os.greaterThan(19)?.price()).toBe(20)
-    expect(os.greaterThan(21)).toBeUndefined()
+  equal(os.toString(), `\n20 -> 5\n10 -> 5`)
 
-    expect(os.toString()).toBe(`\n20 -> 5\n10 -> 5`)
+  os.update(order1, { side: order1.side, size: 10, price: order1.price })
 
-    os.update(order1, { side: order1.side, size: 10, price: order1.price })
+  equal(os.volume(), 15)
+  equal(os.depth(), 2)
+  equal(os.len(), 2)
+  same(os.orders()[0], { ...order1, size: 10 })
+  same(os.orders()[1], order2)
+  equal(os.toString(), `\n20 -> 5\n10 -> 10`)
 
-    expect(os.volume()).toBe(15)
-    expect(os.depth()).toBe(2)
-    expect(os.len()).toBe(2)
-    expect(os.orders()[0]).toMatchObject({ ...order1, size: 10 })
-    expect(os.orders()[1]).toMatchObject(order2)
-    expect(os.toString()).toBe(`\n20 -> 5\n10 -> 10`)
+  // When price is updated a new order will be created, so we can't match entire object, only properties
+  // Update price of order1 < price order2
+  let updatedOrder = os.update(order1, {
+    side: order1.side,
+    size: 10,
+    price: 15,
+  })
+  equal(os.volume(), 15)
+  equal(os.depth(), 2)
+  equal(os.len(), 2)
+  let updateOrder1 = os.orders()[0]
+  equal(updateOrder1.size, 10)
+  equal(updateOrder1.price, 15)
+  same(os.orders()[1], order2)
+  equal(os.toString(), `\n20 -> 5\n15 -> 10`)
 
-    // When price is updated a new order will be created, so we can't match entire object, only properties
-    // Update price of order1 < price order2
-    let updatedOrder = os.update(order1, {
+  // Test for error when price level not exists
+  try {
+    // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type ErrInvalidPriceLevel
+    os.update(order1, {
       side: order1.side,
       size: 10,
-      price: 15,
-    })
-    expect(os.volume()).toBe(15)
-    expect(os.depth()).toBe(2)
-    expect(os.len()).toBe(2)
-    let updateOrder1 = os.orders()[0]
-    expect(updateOrder1.size).toBe(10)
-    expect(updateOrder1.price).toBe(15)
-    expect(os.orders()[1]).toMatchObject(order2)
-    expect(os.toString()).toBe(`\n20 -> 5\n15 -> 10`)
-
-    // Test for error when price level not exists
-    try {
-      // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type ErrInvalidPriceLevel
-      os.update(order1, {
-        side: order1.side,
-        size: 10,
-        price: 20,
-      })
-    } catch (error) {
-      if (error instanceof Error) {
-        // TypeScript knows err is Error
-        expect(error?.message).toBe(ERROR.ErrInvalidPriceLevel)
-      }
-    }
-
-    // Update price of order1 == price order2
-    // we have to type ignore here because we don't want to pass the size,
-    // so the size from the oldOrder will be used instead
-    // @ts-ignore
-    updatedOrder = os.update(updatedOrder as Order, {
-      side: order1.side,
-      // size: 10,
       price: 20,
     })
-    expect(os.volume()).toBe(15)
-    expect(os.depth()).toBe(1)
-    expect(os.len()).toBe(2)
-    expect(os.orders()[0]).toMatchObject(order2)
-    updateOrder1 = os.orders()[1]
-    expect(updateOrder1.size).toBe(10)
-    expect(updateOrder1.price).toBe(20)
-    expect(os.toString()).toBe(`\n20 -> 15`)
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrInvalidPriceLevel)
+    }
+  }
 
-    // Update price of order1 > price order2
-    updatedOrder = os.update(updatedOrder as Order, {
+  // Update price of order1 == price order2
+  // we have to type ignore here because we don't want to pass the size,
+  // so the size from the oldOrder will be used instead
+  // @ts-ignore
+  updatedOrder = os.update(updatedOrder as Order, {
+    side: order1.side,
+    // size: 10,
+    price: 20,
+  })
+  equal(os.volume(), 15)
+  equal(os.depth(), 1)
+  equal(os.len(), 2)
+  same(os.orders()[0], order2)
+  updateOrder1 = os.orders()[1]
+  equal(updateOrder1.size, 10)
+  equal(updateOrder1.price, 20)
+  equal(os.toString(), `\n20 -> 15`)
+
+  // Update price of order1 > price order2
+  updatedOrder = os.update(updatedOrder as Order, {
+    side: order1.side,
+    size: 10,
+    price: 25,
+  })
+  equal(os.volume(), 15)
+  equal(os.depth(), 2)
+  equal(os.len(), 2)
+  same(os.orders()[0], order2)
+  updateOrder1 = os.orders()[1]
+  equal(updateOrder1.size, 10)
+  equal(updateOrder1.price, 25)
+  equal(os.toString(), `\n25 -> 10\n20 -> 5`)
+
+  // Remove the updated order
+  os.remove(updatedOrder as Order)
+
+  equal(os.maxPriceQueue(), os.minPriceQueue())
+  equal(os.depth(), 1)
+  equal(os.volume(), 5)
+  equal(os.len(), 1)
+  same(os.orders()[0], order2)
+
+  equal(os.toString(), `\n20 -> 5`)
+
+  // Remove the remaining order
+  os.remove(order2)
+
+  equal(os.maxPriceQueue(), os.minPriceQueue())
+  equal(os.depth(), 0)
+  equal(os.volume(), 0)
+  equal(os.len(), 0)
+  equal(os.toString(), '')
+
+  end()
+})
+test('it should append/update/remove orders from queue on SELL side', ({
+  equal,
+  same,
+  end,
+}) => {
+  const os = new OrderSide(Side.SELL)
+  const order1 = new Order('order1', Side.SELL, 5, 10)
+  const order2 = new Order('order2', Side.SELL, 5, 20)
+
+  equal(os.minPriceQueue() === undefined, true)
+  equal(os.maxPriceQueue() === undefined, true)
+
+  os.append(order1)
+
+  equal(os.maxPriceQueue(), os.minPriceQueue())
+  equal(os.volume(), 5)
+  equal(os.total(), order1.price * order1.size)
+  equal(os.priceTree().length, 1)
+
+  os.append(order2)
+  equal(os.depth(), 2)
+  equal(os.volume(), 10)
+  equal(os.total(), order1.price * order1.size + order2.price * order2.size)
+  equal(os.len(), 2)
+  equal(os.priceTree().length, 2)
+  same(os.orders()[0], order1)
+  same(os.orders()[1], order2)
+
+  equal(os.lowerThan(21)?.price(), 20)
+  equal(os.lowerThan(19)?.price(), 10)
+  equal(os.lowerThan(9) === undefined, true)
+
+  equal(os.greaterThan(9)?.price(), 10)
+  equal(os.greaterThan(19)?.price(), 20)
+  equal(os.greaterThan(21) === undefined, true)
+
+  equal(os.toString(), `\n20 -> 5\n10 -> 5`)
+
+  os.update(order1, { side: order1.side, size: 10, price: order1.price })
+
+  equal(os.volume(), 15)
+  equal(os.depth(), 2)
+  equal(os.len(), 2)
+  same(os.orders()[0], { ...order1, size: 10 })
+  same(os.orders()[1], order2)
+  equal(os.toString(), `\n20 -> 5\n10 -> 10`)
+
+  // When price is updated a new order will be created, so we can't match entire object, only properties
+  // Update price of order1 < price order2
+  let updatedOrder = os.update(order1, {
+    side: order1.side,
+    size: 10,
+    price: 15,
+  })
+  equal(os.volume(), 15)
+  equal(os.depth(), 2)
+  equal(os.len(), 2)
+  let updateOrder1 = os.orders()[0]
+  equal(updateOrder1.size, 10)
+  equal(updateOrder1.price, 15)
+  same(os.orders()[1], order2)
+  equal(os.toString(), `\n20 -> 5\n15 -> 10`)
+
+  // Test for error when price level not exists
+  try {
+    // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type ErrInvalidPriceLevel
+    os.update(order1, {
       side: order1.side,
       size: 10,
-      price: 25,
+      price: 20,
     })
-    expect(os.volume()).toBe(15)
-    expect(os.depth()).toBe(2)
-    expect(os.len()).toBe(2)
-    expect(os.orders()[0]).toMatchObject(order2)
-    updateOrder1 = os.orders()[1]
-    expect(updateOrder1.size).toBe(10)
-    expect(updateOrder1.price).toBe(25)
-    expect(os.toString()).toBe(`\n25 -> 10\n20 -> 5`)
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrInvalidPriceLevel)
+    }
+  }
 
-    // Remove the updated order
-    os.remove(updatedOrder as Order)
-
-    expect(os.maxPriceQueue()).toBe(os.minPriceQueue())
-    expect(os.depth()).toBe(1)
-    expect(os.volume()).toBe(5)
-    expect(os.len()).toBe(1)
-    expect(os.orders()[0]).toMatchObject(order2)
-
-    expect(os.toString()).toBe(`\n20 -> 5`)
-
-    // Remove the remaining order
-    os.remove(order2)
-
-    expect(os.maxPriceQueue()).toBe(os.minPriceQueue())
-    expect(os.depth()).toBe(0)
-    expect(os.volume()).toBe(0)
-    expect(os.len()).toBe(0)
-    expect(os.toString()).toBe('')
+  // Update price of order1 == price order2
+  // we have to type ignore here because we don't want to pass the size,
+  // so the size from the oldOrder will be used instead
+  // @ts-ignore
+  updatedOrder = os.update(updatedOrder as Order, {
+    side: order1.side,
+    // size: 10,
+    price: 20,
   })
+  equal(os.volume(), 15)
+  equal(os.depth(), 1)
+  equal(os.len(), 2)
+  same(os.orders()[0], order2)
+  updateOrder1 = os.orders()[1]
+  equal(updateOrder1.size, 10)
+  equal(updateOrder1.price, 20)
+  equal(os.toString(), `\n20 -> 15`)
+
+  // Update price of order1 > price order2
+  updatedOrder = os.update(updatedOrder as Order, {
+    side: order1.side,
+    size: 10,
+    price: 25,
+  })
+  equal(os.volume(), 15)
+  equal(os.depth(), 2)
+  equal(os.len(), 2)
+  same(os.orders()[0], order2)
+  updateOrder1 = os.orders()[1]
+  equal(updateOrder1.size, 10)
+  equal(updateOrder1.price, 25)
+  equal(os.toString(), `\n25 -> 10\n20 -> 5`)
+
+  // Remove the updated order
+  os.remove(updatedOrder as Order)
+
+  equal(os.maxPriceQueue(), os.minPriceQueue())
+  equal(os.depth(), 1)
+  equal(os.volume(), 5)
+  equal(os.len(), 1)
+  same(os.orders()[0], order2)
+
+  equal(os.toString(), `\n20 -> 5`)
+
+  // Remove the remaining order
+  os.remove(order2)
+
+  equal(os.maxPriceQueue(), os.minPriceQueue())
+  equal(os.depth(), 0)
+  equal(os.volume(), 0)
+  equal(os.len(), 0)
+  equal(os.toString(), '')
+  end()
 })
