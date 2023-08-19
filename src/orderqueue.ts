@@ -72,10 +72,8 @@ export class OrderQueue {
     delete this._ordersMap[order.id]
     // Update all orders indexes where index is greater than the deleted one
     for (const orderId in this._ordersMap) {
-      if (Object.prototype.hasOwnProperty.call(this._ordersMap, orderId)) {
-        if (this._ordersMap[orderId] > deletedOrderIndex) {
-          this._ordersMap[orderId] -= 1
-        }
+      if (this._ordersMap[orderId] > deletedOrderIndex) {
+        this._ordersMap[orderId] -= 1
       }
     }
   }

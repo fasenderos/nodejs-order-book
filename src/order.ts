@@ -1,6 +1,15 @@
 import BigNumber from 'bignumber.js'
 import { Side } from './side'
 
+interface IOrder {
+  id: string
+  side: Side
+  size: number
+  price: number
+  time: number
+  isMaker: boolean
+}
+
 export interface OrderUpdate {
   size: number
   price: number
@@ -41,81 +50,73 @@ export class Order {
     this._isMaker = isMaker ?? false
   }
 
-  // returns orderId of the order
+  // Getter for order ID
   get id (): string {
     return this._id
   }
 
-  // returns side of the order
+  // Getter for order side
   get side (): Side {
     return this._side
   }
 
-  // returns price of the order
+  // Getter for order price
   get price (): number {
     return this._price
   }
 
-  // returns size of the order
+  // Getter for order size
   get size (): BigNumber {
     return this._size
   }
 
+  // Setter for order size
   set size (size: BigNumber) {
     this._size = size
   }
 
-  // returns timestamp of the order
+  // Getter for order timestamp
   get time (): number {
     return this._time
   }
 
+  // Setter for order timestamp
   set time (time: number) {
     this._time = time
   }
 
+  // Getter for order isMaker
   get isMaker (): boolean {
     return this._isMaker
   }
 
-  // returns string representation of the order
-  toString = (): string => {
-    return `${this._id}:
+  // This method returns a string representation of the order
+  toString = (): string => (
+    `${this._id}:
     side: ${this._side}
-    size: ${this._size.toNumber() as unknown as string}
+    size: ${this._size.toString()}
     price: ${this._price}
     time: ${this._time}
-    isMaker: ${this.isMaker as unknown as string}`
-  }
+    isMaker: ${this._isMaker as unknown as string}`
+  )
 
-  // returns JSON string of the order
-  toJSON = (): string => {
-    return JSON.stringify({
-      id: this._id,
-      side: this._side,
-      size: this._size.toNumber(),
-      price: this._price,
-      time: this._time,
-      isMaker: this.isMaker
-    })
-  }
+  // This method returns a JSON string representation of the order
+  toJSON = (): string => JSON.stringify({
+    id: this._id,
+    side: this._side,
+    size: this._size.toNumber(),
+    price: this._price,
+    time: this._time,
+    isMaker: this._isMaker
+  })
 
-  // returns an object with each property name and value
-  toObject = (): {
-    id: string
-    side: Side
-    size: number
-    price: number
-    time: number
-    isMaker: boolean
-  } => {
-    return {
-      id: this._id,
-      side: this._side,
-      size: this._size.toNumber(),
-      price: this._price,
-      time: this._time,
-      isMaker: this.isMaker
-    }
-  }
+  // This method returns an object representation of the order
+  toObject = (): IOrder => ({
+    id: this._id,
+    side: this._side,
+    size: this._size.toNumber(),
+    price: this._price,
+    time: this._time,
+    isMaker: this._isMaker
+  })
 }

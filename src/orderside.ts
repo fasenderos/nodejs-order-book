@@ -156,10 +156,8 @@ export class OrderSide {
   orders = (): Order[] => {
     let orders: Order[] = []
     for (const price in this._prices) {
-      if (Object.prototype.hasOwnProperty.call(this._prices, price)) {
-        const allOrders = this._prices[price].toArray()
-        orders = orders.concat(allOrders)
-      }
+      const allOrders = this._prices[price].toArray()
+      orders = orders.concat(allOrders)
     }
     return orders
   }
