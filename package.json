@@ -37,7 +37,7 @@
     "release:patch": "standard-version --release-as patch && git push && git push --tags",
     "test": "tap --no-coverage",
     "test:dev": "tap --watch",
-    "test:cov": "c8 --reporter=lcov tap --no-coverage",
+    "test:cov": "tap",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -50,7 +50,6 @@
     "@commitlint/config-conventional": "^17.0.0",
     "@types/functional-red-black-tree": "^1.0.0",
     "@types/tap": "^15.0.0",
-    "c8": "^8.0.0",
     "gaussian": "^1.0.0",
     "husky": "^8.0.0",
     "nanobench": "^3.0.0",
