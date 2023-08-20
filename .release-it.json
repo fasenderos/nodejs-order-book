@@ -1,11 +1,37 @@
 {
   "git": {
-    "commitMessage": "chore(release): nestjs-ccxt@${version}"
+    "commitMessage": "chore(release): hft-limit-order-book@${version}",
+    "tagName": "v${version}",
+    "tagAnnotation": "Release v${version}",
+    "requireCommits": false,
+    "requireCleanWorkingDir": false
   },
   "github": {
-    "release": true
+    "release": true,
+    "releaseName": "v${version}",
+    "commitArgs": ["-S"],
+    "tagArgs": ["-s"]
   },
-  "hooks": {
-    "after:bump": "conventional-changelog -i CHANGELOG.md -s && git add CHANGELOG.md"
+  "npm": {
+    "publish": true
+  },
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "header": "# Changelog",
+      "infile": "CHANGELOG.md",
+      "preset": {
+        "name": "conventionalcommits",
+        "types": [
+          { "type": "feat", "section": "Features" },
+          { "type": "fix", "section": "Bug Fixes" },
+          { "type": "chore", "hidden": true },
+          { "type": "docs", "hidden": true },
+          { "type": "style", "hidden": true },
+          { "type": "refactor", "hidden": true },
+          { "type": "perf", "hidden": true },
+          { "type": "test", "hidden": true }
+        ]
+      }
+    }
   }
 }
