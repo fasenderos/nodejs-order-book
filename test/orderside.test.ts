@@ -42,6 +42,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
 
   equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
+  // Update order size and passing a price
   os.update(order1, { side: order1.side, size: 10, price: order1.price })
 
   equal(os.volume().toNumber(), 15)
@@ -50,6 +51,19 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   same(os.orders()[0], { ...order1, size: 10 })
   same(os.orders()[1], order2)
   equal(os.toString(), '\n20 -> 5\n10 -> 10')
+
+  // Update order size without passing price, so the old order price will be used
+  os.update(order1, { side: order1.side, size: 5 })
+
+  equal(os.volume().toNumber(), 10)
+  equal(os.depth(), 2)
+  equal(os.len(), 2)
+  same(os.orders()[0], { ...order1, size: 5 })
+  same(os.orders()[1], order2)
+  equal(os.toString(), '\n20 -> 5\n10 -> 5')
+
+  // When no size or price don't do nothing
+  equal(os.update(order1, { side: order1.side }), undefined)
 
   // When price is updated a new order will be created, so we can't match entire object, only properties
   // Update price of order1 < price order2
@@ -85,10 +99,8 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   // Update price of order1 == price order2
   // we have to type ignore here because we don't want to pass the size,
   // so the size from the oldOrder will be used instead
-  // @ts-expect-error
   updatedOrder = os.update(updatedOrder as Order, {
     side: order1.side,
-    // size: 10,
     price: 20
   })
   equal(os.volume().toNumber(), 15)
@@ -175,6 +187,7 @@ void test('it should append/update/remove orders from queue on SELL side', ({
 
   equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
+  // Update order size and passing a price
   os.update(order1, { side: order1.side, size: 10, price: order1.price })
 
   equal(os.volume().toNumber(), 15)
@@ -218,10 +231,8 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   // Update price of order1 == price order2
   // we have to type ignore here because we don't want to pass the size,
   // so the size from the oldOrder will be used instead
-  // @ts-expect-error
   updatedOrder = os.update(updatedOrder as Order, {
     side: order1.side,
-    // size: 10,
     price: 20
   })
   equal(os.volume().toNumber(), 15)

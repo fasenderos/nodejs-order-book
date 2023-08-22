@@ -102,7 +102,8 @@ void test('test limit', ({ equal, end }) => {
     Side.SELL,
     11,
     40,
-    'order-s40'
+    'order-s40',
+    TimeInForce.GTC
   )
   equal(process6.err === null, true)
   equal(process6.done.length, 7)
