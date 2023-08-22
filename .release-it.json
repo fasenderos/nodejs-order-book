@@ -3,8 +3,8 @@
     "commitMessage": "chore(release): hft-limit-order-book@${version}",
     "tagName": "v${version}",
     "tagAnnotation": "Release v${version}",
-    "requireCommits": false,
-    "requireCleanWorkingDir": false
+    "requireCommits": true,
+    "requireCleanWorkingDir": true
   },
   "github": {
     "release": true,
@@ -13,7 +13,7 @@
     "tagArgs": ["-s"]
   },
   "npm": {
-    "publish": true
+    "publish": false
   },
   "plugins": {
     "@release-it/conventional-changelog": {
