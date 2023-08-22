@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.3.4](https://github.com/fasenderos/hft-limit-order-book/compare/v2.3.3...v2.3.4) (2023-08-22)
+
+
+### Chore
+
+* **deps:** replace standard-version with release-it ([6368cab](https://github.com/fasenderos/hft-limit-order-book/commit/6368cab5d35de229e7b322220370eeb9dc62ab89))
+* optional size or price on order update ([148f050](https://github.com/fasenderos/hft-limit-order-book/commit/148f050f8cd77a37033b7e7746d3a5c72b2aee2a))
+
+
+### Documentation
+
+* recreate changelog with release-it conventionalcommits ([5068e84](https://github.com/fasenderos/hft-limit-order-book/commit/5068e84558820547dbd95b1a37ff52d4fd45def8))
+
+
+### Test
+
+* minimum coverage 95 ([7ac655d](https://github.com/fasenderos/hft-limit-order-book/commit/7ac655d349f196d1379b1a7a51e5cf4d7ed0a02f))
+
 ## [2.3.3](https://github.com/fasenderos/hft-limit-order-book/compare/v2.3.2...v2.3.3) (2023-08-19)
 
 
@@ -141,4 +159,3 @@
 ### Features
 
 * initial release ([1136a0e](https://github.com/fasenderos/hft-limit-order-book/commit/1136a0e14392709161ff82a8937ce601e1277d03))
-
