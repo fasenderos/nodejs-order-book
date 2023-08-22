@@ -23,7 +23,7 @@ jobs:
       - name: Setup .npmrc file to publish to npm
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
       - name: Install modules
         run: npm install
@@ -36,7 +36,7 @@ jobs:
       - name: Setup .npmrc file to publish to GitHub Packages
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: 'lts/*'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@fasenderos'
       - run: npm run addscope
