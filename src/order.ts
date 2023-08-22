@@ -11,9 +11,9 @@ interface IOrder {
 }
 
 export interface OrderUpdate {
-  size: number
-  price: number
   side: Side
+  size?: number
+  price?: number
 }
 
 export enum OrderType {

@@ -107,9 +107,10 @@ export class OrderSide {
       // Quantity changed. Price is the same.
       const oldOrderSize: number = oldOrder.size.toNumber()
       const strPrice = oldOrder.price.toString()
+      const newOrderPrize: number = orderUpdate.price ?? oldOrder.price
       this._volume = this._volume.plus(orderUpdate.size - oldOrderSize)
       this._total = this._total.plus(
-        orderUpdate.size * orderUpdate.price - oldOrderSize * oldOrder.price
+        orderUpdate.size * newOrderPrize - oldOrderSize * oldOrder.price
       )
       this._prices[strPrice].updateOrderSize(oldOrder, orderUpdate.size)
       return oldOrder
