@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.5](https://github.com/fasenderos/hft-limit-order-book/compare/v2.3.4...v2.3.5) (2023-08-22)
+
+
+### Chore
+
+* disable npm publish by release-it ([739e88a](https://github.com/fasenderos/hft-limit-order-book/commit/739e88a782a3017b18cdad3092ca943bb9e2a03c))
+
 ## [2.3.4](https://github.com/fasenderos/hft-limit-order-book/compare/v2.3.3...v2.3.4) (2023-08-22)
 
 
