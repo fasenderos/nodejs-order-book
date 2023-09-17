@@ -293,7 +293,7 @@ I would greatly appreciate any contributions to make this project better. Please
 4. Push your changes to your remote branch
 5. Open a pull request
 
-## Donations
+## Donation
 
 If this project help you reduce time to develop, you can give me a cup of coffee 🍵 :)
 
