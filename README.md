@@ -293,11 +293,15 @@ I would greatly appreciate any contributions to make this project better. Please
 4. Push your changes to your remote branch
 5. Open a pull request
 
-## Donation
+## Donations
 
 If this project help you reduce time to develop, you can give me a cup of coffee 🍵 :)
 
-ETH: `0xEE45AA08D65352d49344f42d9E0EAf14AA3D812d`
+- USDT (TRC20): `TXArNxsq2Ee8Jvsk45PudVio52Joiq1yEe`
+- BTC: `1GYDVSAQNgG7MFhV5bk15XJy3qoE4NFenp`
+- BTC (BEP20): `0xf673ee099be8129ec05e2f549d96ebea24ac5d97`
+- ETH (ERC20): `0xf673ee099be8129ec05e2f549d96ebea24ac5d97`
+- BNB (BEP20): `0xf673ee099be8129ec05e2f549d96ebea24ac5d97`
 
 ## License
 
