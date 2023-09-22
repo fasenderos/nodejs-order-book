@@ -99,7 +99,7 @@ limit(side: 'buy' | 'sell', orderID: string, size: number, price: number, timeIn
 For example:
 
 ```
-limit("sell", "uinqueID", 55, 100);
+limit("sell", "uniqueID", 55, 100);
 
 asks: 110 -> 5      110 -> 5
       100 -> 1      100 -> 56
@@ -112,7 +112,7 @@ partial - null
 ```
 
 ```
-limit("buy", "uinqueID", 7, 120);
+limit("buy", "uniqueID", 7, 120);
 
 asks: 110 -> 5
       100 -> 1
@@ -122,11 +122,11 @@ bids: 90  -> 5      120 -> 1
                     80  -> 1
 
 done    - 2 (or more orders)
-partial - uinqueID order
+partial - uniqueID order
 ```
 
 ```
-limit("buy", "uinqueID", 3, 120);
+limit("buy", "uniqueID", 3, 120);
 
 asks: 110 -> 5
       100 -> 1      110 -> 3
@@ -134,7 +134,7 @@ asks: 110 -> 5
 bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
 
-done    - 1 order with 100 price, (may be also few orders with 110 price) + uinqueID order
+done    - 1 order with 100 price, (may be also few orders with 110 price) + uniqueID order
 partial - 1 order with price 110
 ```
 
@@ -197,7 +197,7 @@ modify(orderID: string, { side: 'buy' | 'sell', size: number, price: number });
 For example:
 
 ```
-limit("sell", "uinqueID", 55, 100);
+limit("sell", "uniqueID", 55, 100);
 
 asks: 110 -> 5      110 -> 5
       100 -> 1      100 -> 56
@@ -206,7 +206,7 @@ bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
 
 // Modify the size from 55 to 65
-modify("uinqueID", { side: "sell", size: 65, price: 100 })
+modify("uniqueID", { side: "sell", size: 65, price: 100 })
 
 asks: 110 -> 5      110 -> 5
       100 -> 56     100 -> 66
@@ -216,7 +216,7 @@ bids: 90  -> 5      90  -> 5
 
 
 // Modify the price from 100 to 110
-modify("uinqueID", { side: "sell", size: 65, price: 110 })
+modify("uniqueID", { side: "sell", size: 65, price: 110 })
 
 asks: 110 -> 5
       100 -> 66     110 -> 71
