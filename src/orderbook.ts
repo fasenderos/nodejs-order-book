@@ -278,6 +278,19 @@ export class OrderBook {
       }
     }
 
+    // Let's say, orderbook's minimum best price (limit) is 100 inr
+    // And we don't allow users to trade fraction
+    // Now, if user puts an order worth of any amount less than 100, 
+    // that order will never go through as orderbook's best price is higher
+    // than maximum asked by the user.
+    if (sortedPrices[0] > amount) {
+      response.isAllowed = false
+      response.maxQtyToProvide = 0
+      response.err = CustomError(ERROR.ErrInvalidMinMarketAlternate)
+      return response
+    }
+
+
     response.isAllowed = true
     response.maxQtyToProvide = totalVolProcessed.toNumber()
 
@@ -323,12 +336,13 @@ export class OrderBook {
     console.log("Alt is: ", alternateMarketOrder)
     
     if (!alternateMarketOrder.isAllowed) {
-      response.err = CustomError(`market order is not allowed. error: ${alternateMarketOrder.err}`)
+      response.err = alternateMarketOrder.err ? alternateMarketOrder.err : CustomError(`market order is not allowed. error: ${alternateMarketOrder.err}`)
+      response.marketQtyProcessed = 0
       return response
     }
 
-
     if (!alternateMarketOrder.maxQtyToProvide) {
+      response.marketQtyProcessed = 0
       response.err = CustomError(`market order is not allowed. error: market depth is empty for Sell side.`)
       return response
     }

@@ -278,29 +278,41 @@ void test('alternate market', ({ equal, end }) => {
   equal(res2.err, null)
   equal(res2.marketQtyProcessed, 17)
 
- /**
-   * Test more realistic match market order, where user's quote is slightly less than depth
-   */
- ob = new OrderBook()
+  /**
+     * Test more realistic match market order, where user's quote is slightly less than depth
+     */
+  ob = new OrderBook()
 
- ob.limit(Side.SELL, '1', 10, 10000, TimeInForce.GTC)
- ob.limit(Side.SELL, '2', 7, 11000, TimeInForce.GTC)
+  ob.limit(Side.SELL, '1', 10, 10000, TimeInForce.GTC)
+  ob.limit(Side.SELL, '2', 7, 11000, TimeInForce.GTC)
 
- const res3 = ob.marketAlternate(Side.BUY, 167000)
- equal(res3.err, null)
- equal(res3.marketQtyProcessed, 16)
+  const res3 = ob.marketAlternate(Side.BUY, 167000)
+  equal(res3.err, null)
+  equal(res3.marketQtyProcessed, 16)
 
- /**
-   * Test more realistic match market order, where user's quote is much less than depth
-   */
- ob = new OrderBook()
+  /**
+     * Test more realistic match market order, where user's quote is much less than depth
+     */
+  ob = new OrderBook()
 
- ob.limit(Side.SELL, '1', 10, 10000, TimeInForce.GTC)
- ob.limit(Side.SELL, '2', 7, 11000, TimeInForce.GTC)
+  ob.limit(Side.SELL, '1', 10, 10000, TimeInForce.GTC)
+  ob.limit(Side.SELL, '2', 7, 11000, TimeInForce.GTC)
 
- const res4 = ob.marketAlternate(Side.BUY, 20000)
- equal(res4.err, null)
- equal(res4.marketQtyProcessed, 2)
+  const res4 = ob.marketAlternate(Side.BUY, 20000)
+  equal(res4.err, null)
+  equal(res4.marketQtyProcessed, 2)
+
+  /**
+     * Test more realistic match market order, where user's quote is much less than depth
+     */
+  ob = new OrderBook()
+
+  ob.limit(Side.SELL, '1', 10, 10000, TimeInForce.GTC)
+  ob.limit(Side.SELL, '2', 7, 11000, TimeInForce.GTC)
+
+  const res5 = ob.marketAlternate(Side.BUY, 9000)
+  equal(res5.err?.message, ERROR.ErrInvalidMinMarketAlternate)
+  equal(res5.marketQtyProcessed, 0)
 
   end()
 })
