@@ -17,9 +17,16 @@ import { Side } from './side'
 interface IProcessOrder {
   done: Order[]
   partial: Order | null
+  marketQtyProcessed?: number
   partialQuantityProcessed: number
   quantityLeft: number
   err: Error | null
+}
+
+interface IAlternateMarketOrder {
+  err: Error | null
+  isAllowed: boolean
+  maxQtyToProvide: number
 }
 
 const validTimeInForce = Object.values(TimeInForce)
@@ -127,6 +134,223 @@ export class OrderBook {
     response.quantityLeft = size
     return response
   }
+
+  public getOrderBookPricesSorted = (side: Side, sideToProcess: OrderSide) => {
+    const prices = [];
+    for (let price in sideToProcess.prices()) {
+      let priceQ: OrderQueue = sideToProcess.prices()[price]
+      prices.push(priceQ.price())
+    }
+    if(side === Side.BUY) {
+      prices.sort((a, b) => a - b);
+    } else {
+      prices.sort((a, b) => b - a);
+    }
+    return prices
+  }
+  /**
+   * 
+   * @param side - what do you want to do (`ob.Sell` or `ob.Buy`)
+   * @param sideToProcess - what side is being processed (`asks` or `bids`)
+   * @param amount - how much in fiat you want to transact
+   * @returns 
+   *    err - error in case isAllowed is false
+   *    isAllowed - false, if market depth is empty, else true
+   *    maxQtyToProvide - maximum token that can be provided by orderbook for a total of amount.
+   *    
+   */
+  public getAlternateMarketOrderQty = (side: Side, sideToProcess: OrderSide, amount: number): IAlternateMarketOrder => {
+    const response: IAlternateMarketOrder = {
+      isAllowed: false,
+      maxQtyToProvide: 0,
+      err: null,
+    }
+
+    if (sideToProcess.depth() === 0) {
+      response.err = new Error('Orderbook depth is empty, market order cannot be fulfilled')
+      return response;
+    }
+
+    // first get the sorted price levels.
+    // try to fetch the best average price within the total price limit.
+    //
+    // buy: { 100: 2, 90: 2, 80: 2, 70: 2 }
+    // sell: { 140: 2, 130: 2, 120: 2, 110: 2 }
+    let zeroPrice = new BigNumber('0')
+    let totalPrice = zeroPrice
+    let totalQty = zeroPrice
+    let totalVol = zeroPrice
+    let priceToQtyMap: {[key: string]: BigNumber} = {}
+
+    let totalAmountRemaining = new BigNumber(amount)
+    let sortedPrices = this.getOrderBookPricesSorted(side, sideToProcess)
+
+    let totalVolProcessed = zeroPrice
+    let amountProcessed = zeroPrice
+
+    let totalOrderbookAmount = zeroPrice
+
+    for(let key of sortedPrices) {
+      let priceQ = sideToProcess.prices()[key]
+      let vol = priceQ.volume()
+      let pricePerUnitBaseQty = priceQ.price()
+      totalOrderbookAmount = totalOrderbookAmount.plus(vol.multipliedBy(pricePerUnitBaseQty))
+      totalVol = totalVol.plus(vol)
+    }
+
+    console.log(`Total Orderbook Vol: ${totalOrderbookAmount}`)
+
+    // if orderbook has less liquidity than the current order
+    // fulfil the order
+    if (totalOrderbookAmount.isLessThanOrEqualTo(amount)) {
+      response.isAllowed = true
+      response.maxQtyToProvide = totalVol.toNumber()
+      return response
+    }
+    
+    main:
+    for(let key of sortedPrices) {
+      let priceQ = sideToProcess.prices()[key]
+      //   price -> qty
+      //	 180000 -> 5000
+      //
+      // required, 1000 INR.
+      //
+      // Orderbook Depth Redis:
+      // 	limitPrice: 180000
+      // 	token: 0.05 (precision is 100000)
+      //
+      // Orderbook Depth ME:
+      // 	limitPrice: 180000
+      // 	token: 0.05 * 100000
+
+      // While checking here, divide limit price with basePrecision as well.
+      // this will return the price in INR of 1 single unit (0.000001) of max precision we can provide. (1.8 INR per 0.000001 units)
+      //
+      // limitPrice: 180000 / 1L =  1.8
+      // token: 5000
+
+      let [vol, price] = [priceQ.volume(), priceQ.price()]
+
+      let [levelVolProcessed, pricePerUnitBaseQty] = [zeroPrice, price]
+      
+      console.log(`pricePerUnitBaseQty.Mul(vol) = ${vol.multipliedBy(pricePerUnitBaseQty)}`)
+
+      if (amountProcessed.isLessThanOrEqualTo(totalAmountRemaining) && vol.multipliedBy(pricePerUnitBaseQty).isGreaterThanOrEqualTo(totalAmountRemaining.minus(amountProcessed))) {
+        // skipValue should be controlled by the matching engine, it's used for cases
+        // where we store a token as a multiple of 10s or more
+        const skipValue = "1"
+        // loop until you get the volume at which it is lower or similar to your amount.
+        while (amountProcessed.isLessThanOrEqualTo(totalAmountRemaining)) {
+          levelVolProcessed = levelVolProcessed.plus(new BigNumber(skipValue))
+          totalVolProcessed = totalVolProcessed.plus(new BigNumber(skipValue))
+          // multiplying with skipValue, as only 1 volume is consumed at each iter.
+          amountProcessed = amountProcessed.plus(new BigNumber(skipValue).multipliedBy(pricePerUnitBaseQty))
+  
+          if (amountProcessed.isGreaterThan(totalAmountRemaining)) {
+            levelVolProcessed = levelVolProcessed.minus(new BigNumber(skipValue))
+            totalVolProcessed = totalVolProcessed.minus(new BigNumber(skipValue))
+  
+            amountProcessed = amountProcessed.minus(new BigNumber(skipValue).multipliedBy(pricePerUnitBaseQty))
+            // break the loop
+
+            priceToQtyMap[pricePerUnitBaseQty] = levelVolProcessed
+            // totalAmountRemaining = totalAmountRemaining.minus(price.Mul(levelVolProcessed))
+            console.log(`\nProcessed Amount: ${amountProcessed}, prices: ${priceQ.price()}, totalAmountRemaining: ${totalAmountRemaining.toString()} \n`)
+            break main
+          }
+        }
+      } else {
+        // user's asked amount is higher than volume.
+        levelVolProcessed = levelVolProcessed.plus(priceQ.volume())
+        totalVolProcessed = totalVolProcessed.plus(priceQ.volume())
+        amountProcessed = amountProcessed.plus(priceQ.volume().multipliedBy(pricePerUnitBaseQty))
+        priceToQtyMap[priceQ.price()] = priceQ.volume()
+      }
+
+      console.log(`\nProcessed Amount: ${amountProcessed}, price: ${priceQ.price()}, totalAmountRemaining: ${totalAmountRemaining.toString()} \n`)
+
+      for (let price in priceToQtyMap) {
+        let qty = priceToQtyMap[price]
+        let priceDecimal = new BigNumber(price)
+        totalPrice = totalPrice.plus(priceDecimal.multipliedBy(qty))
+        totalQty = totalQty.plus(qty)
+      }
+    }
+
+    response.isAllowed = true
+    response.maxQtyToProvide = totalVolProcessed.toNumber()
+
+    return response;
+  }
+
+  /**
+   * Create a marketAlternate order - you provide the quote quantity
+   *  @see {@link IProcessOrder} for the returned data structure
+   *
+   * @param side - `sell` or `buy`
+   * @param size - How much of currency you want to trade in units of quote currency
+   * @returns An object with the result of the processed order or an error
+   */
+  public marketAlternate = (side: Side, size: number): IProcessOrder => {
+    const response: IProcessOrder = {
+      done: [],
+      partial: null,
+      partialQuantityProcessed: 0,
+      quantityLeft: size,
+      err: null
+    }
+
+     // only buy side orders are supported for alternate market orders
+     if (side !== Side.BUY) {
+      response.err = CustomError(ERROR.ErrInvalidAlternateMarketOrderSide)
+      return response
+    }
+
+    if (typeof size !== 'number' || size <= 0) {
+      response.err = CustomError(ERROR.ErrInsufficientQuantity)
+      return response
+    }
+
+    let iter
+    let sideToProcess: OrderSide
+    
+    iter = this.asks.minPriceQueue
+    sideToProcess = this.asks
+    
+    // calculate the size that has to be sent to matching engine as here we receive inr only
+    const alternateMarketOrder = this.getAlternateMarketOrderQty(side, sideToProcess, size)
+    console.log("Alt is: ", alternateMarketOrder)
+    
+    if (!alternateMarketOrder.isAllowed) {
+      response.err = CustomError(`market order is not allowed. error: ${alternateMarketOrder.err}`)
+      return response
+    }
+
+
+    if (!alternateMarketOrder.maxQtyToProvide) {
+      response.err = CustomError(`market order is not allowed. error: market depth is empty for Sell side.`)
+      return response
+    }
+    
+    size = alternateMarketOrder.maxQtyToProvide;
+    
+    while (size > 0 && sideToProcess.len() > 0) {
+      // if sideToProcess.len > 0 it is not necessary to verify that bestPrice exists
+      const bestPrice = iter()
+      const { done, partial, partialQuantityProcessed, quantityLeft } =
+      this.processQueue(bestPrice as OrderQueue, size)
+      response.done = response.done.concat(done)
+      response.partial = partial
+      response.partialQuantityProcessed = partialQuantityProcessed
+      size = quantityLeft
+    }
+
+    response.quantityLeft = size
+    response.marketQtyProcessed = alternateMarketOrder.maxQtyToProvide
+    return response
+  }
+
 
   /**
    * Create a limit order

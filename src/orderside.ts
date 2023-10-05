@@ -33,6 +33,10 @@ export class OrderSide {
     return this._depthSide
   }
 
+  prices = (): {[key: string]: OrderQueue} => {
+    return this._prices
+  }
+
   // returns total amount of quantity in side
   volume = (): BigNumber => {
     return this._volume

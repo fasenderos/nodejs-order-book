@@ -243,6 +243,68 @@ void test('test market', ({ equal, end }) => {
   end()
 })
 
+void test('alternate market', ({ equal, end }) => {
+  /**
+   * Test Illiquid market order
+   */
+  let ob = new OrderBook()
+
+  ob.limit(Side.BUY, '1', 10, 10000, TimeInForce.GTC)
+
+  const r = ob.marketAlternate(Side.SELL, 17)
+  equal(r.err?.message, ERROR.ErrInvalidAlternateMarketOrderSide)
+
+  /**
+   * Test order-size is more than depth
+   */
+  ob = new OrderBook()
+
+  ob.limit(Side.SELL, '1', 10, 10000, TimeInForce.GTC)
+  ob.limit(Side.SELL, '2', 7, 11000, TimeInForce.GTC)
+
+  const res = ob.marketAlternate(Side.BUY, 187000)
+  equal(res.err, null)
+  equal(res.marketQtyProcessed, 17)
+
+  /**
+   * Test Exact match market order
+   */
+  ob = new OrderBook()
+
+  ob.limit(Side.SELL, '1', 10, 10000, TimeInForce.GTC)
+  ob.limit(Side.SELL, '2', 7, 11000, TimeInForce.GTC)
+
+  const res2 = ob.marketAlternate(Side.BUY, 177000)
+  equal(res2.err, null)
+  equal(res2.marketQtyProcessed, 17)
+
+ /**
+   * Test more realistic match market order, where user's quote is slightly less than depth
+   */
+ ob = new OrderBook()
+
+ ob.limit(Side.SELL, '1', 10, 10000, TimeInForce.GTC)
+ ob.limit(Side.SELL, '2', 7, 11000, TimeInForce.GTC)
+
+ const res3 = ob.marketAlternate(Side.BUY, 167000)
+ equal(res3.err, null)
+ equal(res3.marketQtyProcessed, 16)
+
+ /**
+   * Test more realistic match market order, where user's quote is much less than depth
+   */
+ ob = new OrderBook()
+
+ ob.limit(Side.SELL, '1', 10, 10000, TimeInForce.GTC)
+ ob.limit(Side.SELL, '2', 7, 11000, TimeInForce.GTC)
+
+ const res4 = ob.marketAlternate(Side.BUY, 20000)
+ equal(res4.err, null)
+ equal(res4.marketQtyProcessed, 2)
+
+  end()
+})
+
 void test('createOrder error', ({ equal, end }) => {
   const ob = new OrderBook()
   addDepth(ob, '', 2)
