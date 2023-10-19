@@ -28,6 +28,7 @@
     "lint": "ts-standard | snazzy",
     "lint:fix": "ts-standard --fix | snazzy",
     "package": "npm run build && npm pack",
+    "postinstall": "husky install",
     "postpublish": "pinst --enable",
     "prepublishOnly": "pinst --disable",
     "release": "release-it --ci",
@@ -36,7 +37,8 @@
     "release:patch": "release-it patch --ci",
     "test": "tap --no-coverage",
     "test:dev": "tap --watch",
-    "test:cov": "tap"
+    "test:cov": "tap",
+    "prepare": "husky install"
   },
   "dependencies": {
     "bignumber.js": "^9.1.1",
