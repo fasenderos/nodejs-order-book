@@ -419,3 +419,58 @@ void test('test priceCalculation', ({ equal, end }) => {
   equal(calc4.price, 10500)
   end()
 })
+
+void test('test export import', ({ equal, end }) => {
+  // add liquidity to ob
+  // export ob
+  // empty ob
+  // restore the exported ob
+  // order should work as expected
+  // test via matching
+
+  let ob = new OrderBook()
+  
+  ob.limit(Side.BUY, '1', 10, 10000, TimeInForce.GTC)
+  ob.limit(Side.BUY, '2', 10, 10001, TimeInForce.GTC)
+  ob.limit(Side.BUY, '3', 10, 10002, TimeInForce.GTC)
+
+  console.log(ob.depth()) 
+  
+  let snapshot = ob.export()
+  
+  ob = new OrderBook()
+
+  let [asks, bids] = ob.depth()
+
+  console.log(ob.depth()) 
+
+  // ob is now empty
+  equal(asks.length, 0)
+  equal(bids.length, 0)
+
+  ob.import(snapshot)
+
+  console.log(ob.depth())
+
+  // @ts-ignore
+  asks = ob.depth()[0]
+  bids = ob.depth()[1]
+
+  equal(asks.length, 0)
+  equal(bids.length, 3)
+
+  ob.limit(Side.SELL, '33', 10, 10002, TimeInForce.GTC)
+  ob.limit(Side.SELL, '22', 10, 10001, TimeInForce.GTC)
+  ob.limit(Side.SELL, '11', 10, 10000, TimeInForce.GTC)
+
+  console.log(ob.depth())
+
+  // @ts-ignore
+  asks = ob.depth()[0]
+  bids = ob.depth()[1]
+
+  equal(asks.length, 0)
+  equal(bids.length, 0)
+
+  end()
+})

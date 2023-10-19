@@ -29,12 +29,19 @@ interface IAlternateMarketOrder {
   maxQtyToProvide: number
 }
 
+interface IOrderBookMarshaler {
+  asks: OrderSide;
+  bids: OrderSide;
+}
+
 const validTimeInForce = Object.values(TimeInForce)
 
 export class OrderBook {
   private orders: { [key: string]: Order } = {}
-  private readonly bids: OrderSide
-  private readonly asks: OrderSide
+  // if they're readonly, then we won't be able to modify them during importing of orderbook
+  // hence not readonly anymore.
+  private bids: OrderSide
+  private asks: OrderSide
   constructor () {
     this.bids = new OrderSide(Side.BUY)
     this.asks = new OrderSide(Side.SELL)
@@ -552,7 +559,15 @@ export class OrderBook {
     return this.orders[orderID]
   }
 
-  // Returns price levels and volume at price level
+  /**
+   * Returns price levels and volume at price level
+   * 
+   * returns
+   *    `[
+   *        asks: Array<levelPrice: number, levelVolume: number>, 
+   *        bids:Array<levelPrice: number, levelVolume: number>
+   *    ]`
+   */
   public depth = (): [Array<[number, number]>, Array<[number, number]>] => {
     const asks: Array<[number, number]> = []
     const bids: Array<[number, number]> = []
@@ -716,5 +731,32 @@ export class OrderBook {
       }
     })
     return cumulativeSize >= size
+  }
+
+  // export simply returns a snapshot of orderbook
+  public export = (): IOrderBookMarshaler => (
+    {
+      asks: this.asks,
+      bids: this.bids
+    }
+	)
+
+  // 
+  /**
+   * import is intended for usage in tandem with `export` to restore the orderbook from a snapshot
+   * @param data 
+   */
+  public import = (data: IOrderBookMarshaler) => {
+    this.asks = data.asks
+    this.bids = data.bids
+    this.orders = {}
+
+    for (let order of this.asks.orders()) {
+      this.orders[order.id] = order
+    }
+
+    for (let order of this.bids.orders()) {
+      this.orders[order.id] = order
+    }
   }
 }
