@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@commitlint/cli": "^17.0.0",
-    "@commitlint/config-conventional": "^17.0.0",
+    "@commitlint/config-conventional": "^18.4.2",
     "@release-it/conventional-changelog": "^7.0.0",
     "@types/functional-red-black-tree": "^1.0.0",
     "@types/tap": "^15.0.0",
