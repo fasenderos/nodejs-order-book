@@ -13,7 +13,7 @@
 
 :star: Star me on GitHub — it motivates me a lot!
 
-Ultra-fast matching engine written in Javascript
+Ultra-fast matching engine written in TypeScript
 
 ## Features
 
