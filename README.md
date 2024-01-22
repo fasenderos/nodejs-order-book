@@ -47,9 +47,9 @@ yarn add hft-limit-order-book
 To start using order book you need to import `OrderBook` and create new instance:
 
 ```js
-import { OrderBook } from 'hft-limit-order-book'
+import { OrderBook } from 'hft-limit-order-book';
 
-const lob = new OrderBook()
+const lob = new OrderBook();
 ```
 
 Then you'll be able to use next primary functions:
@@ -218,8 +218,8 @@ bids: 90  -> 5      90  -> 5
 // Modify the price from 100 to 110
 modify("uniqueID", { side: "sell", size: 65, price: 110 })
 
-asks: 110 -> 5
-      100 -> 66     110 -> 71
+asks: 110 -> 5      110 -> 70
+      100 -> 66     100 -> 1
 --------------  ->  --------------
 bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
