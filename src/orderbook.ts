@@ -318,10 +318,10 @@ export class OrderBook {
   public depth = (): [Array<[number, number]>, Array<[number, number]>] => {
     const asks: Array<[number, number]> = []
     const bids: Array<[number, number]> = []
-    this.asks.priceTree().forEach((levelPrice, level) => {
+    this.asks.priceTree().forEach((levelPrice: number, level: OrderQueue) => {
       asks.push([levelPrice, level.volume().toNumber()])
     })
-    this.bids.priceTree().forEach((levelPrice, level) => {
+    this.bids.priceTree().forEach((levelPrice: number, level: OrderQueue) => {
       bids.push([levelPrice, level.volume().toNumber()])
     })
     return [asks, bids]
@@ -447,9 +447,9 @@ export class OrderBook {
     }
 
     let cumulativeSize = 0
-    orderSide.priceTree().forEach((_key, priceLevel) => {
-      if (price >= priceLevel.price() && cumulativeSize < size) {
-        const volume: number = priceLevel.volume().toNumber()
+    orderSide.priceTree().forEach((_: number, level: OrderQueue) => {
+      if (price >= level.price() && cumulativeSize < size) {
+        const volume: number = level.volume().toNumber()
         cumulativeSize += volume
       } else {
         return true // break the loop
@@ -469,9 +469,9 @@ export class OrderBook {
     }
 
     let cumulativeSize = 0
-    orderSide.priceTree().forEach((_key, priceLevel) => {
-      if (price <= priceLevel.price() && cumulativeSize < size) {
-        const volume: number = priceLevel.volume().toNumber()
+    orderSide.priceTree().forEach((_: number, level: OrderQueue) => {
+      if (price <= level.price() && cumulativeSize < size) {
+        const volume: number = level.volume().toNumber()
         cumulativeSize += volume
       } else {
         return true // break the loop

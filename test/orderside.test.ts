@@ -48,7 +48,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   equal(os.volume().toNumber(), 15)
   equal(os.depth(), 2)
   equal(os.len(), 2)
-  same(os.orders()[0], { ...order1, size: 10 })
+  same(os.orders()[0], { ...order1, size: new BigNumber(10) })
   same(os.orders()[1], order2)
   equal(os.toString(), '\n20 -> 5\n10 -> 10')
 
@@ -58,7 +58,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   equal(os.volume().toNumber(), 10)
   equal(os.depth(), 2)
   equal(os.len(), 2)
-  same(os.orders()[0], { ...order1, size: 5 })
+  same(os.orders()[0], { ...order1, size: new BigNumber(5) })
   same(os.orders()[1], order2)
   equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
@@ -193,7 +193,7 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   equal(os.volume().toNumber(), 15)
   equal(os.depth(), 2)
   equal(os.len(), 2)
-  same(os.orders()[0], { ...order1, size: 10 })
+  same(os.orders()[0], { ...order1, size: new BigNumber(10) })
   same(os.orders()[1], order2)
   equal(os.toString(), '\n20 -> 5\n10 -> 10')
 
