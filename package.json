@@ -37,7 +37,7 @@
     "release:patch": "release-it patch --ci",
     "test": "tap",
     "test:dev": "tap repl w",
-    "test:cov": "tap && tap report",
+    "test:cov": "tap && tap report lcov",
     "prepare": "husky install"
   },
   "dependencies": {

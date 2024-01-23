@@ -42,7 +42,7 @@ jobs:
           name: Unit tests
           command: npm run test:cov
       - codecov/upload:
-          file: './coverage/lcov.info'
+          file: './.tap/report/lcov.info'
 
 workflows:
   version: 2
