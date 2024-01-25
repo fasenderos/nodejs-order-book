@@ -188,10 +188,10 @@ quantityLeft - 4
  * Modify an existing order with given ID
  *
  * @param orderID - The ID of the order to be modified
- * @param orderUpdate - An object with the modified size and/or price of an order. To be note that the `side` can't be modified. The shape of the object is `{side, size, price}`.
+ * @param orderUpdate - An object with the modified size and/or price of an order. The shape of the object is `{size?: number, price?: number}`.
  * @returns The modified order if exists or `undefined`
  */
-modify(orderID: string, { side: 'buy' | 'sell', size: number, price: number });
+modify(orderID: string, { size: number, price: number });
 ```
 
 For example:
@@ -206,7 +206,7 @@ bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
 
 // Modify the size from 55 to 65
-modify("uniqueID", { side: "sell", size: 65, price: 100 })
+modify("uniqueID", { size: 65 })
 
 asks: 110 -> 5      110 -> 5
       100 -> 56     100 -> 66
@@ -216,7 +216,7 @@ bids: 90  -> 5      90  -> 5
 
 
 // Modify the price from 100 to 110
-modify("uniqueID", { side: "sell", size: 65, price: 110 })
+modify("uniqueID", { price: 110 })
 
 asks: 110 -> 5      110 -> 70
       100 -> 66     100 -> 1

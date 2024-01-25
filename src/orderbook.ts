@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { ERROR, CustomError } from './errors'
-import { Order, OrderType, OrderUpdate, TimeInForce } from './order'
+import { Order, OrderType, OrderUpdatePrize, OrderUpdateSize, TimeInForce } from './order'
 import { OrderQueue } from './orderqueue'
 import { OrderSide } from './orderside'
 import { Side } from './side'
@@ -9,7 +9,7 @@ import { Side } from './side'
  * This interface represents the result of a processed order or an error
  *
  * @param done - An array of orders fully filled by the processed order
- * @param partial - A partially executed order. It can be null when the processed order
+ * @param partial - A partially executed order. Is null when the processed order is completelly filled
  * @param partialQuantityProcessed - if `partial` is not null, this field represents the processed quantity of the partial order
  * @param quantityLeft - more than zero if there are not enought orders to process all quantity
  * @param err - Not null if size or price are less or equal zero, or the provided orderId already exists, or something else went wrong.
@@ -252,7 +252,13 @@ export class OrderBook {
       }
 
       response.done.push(
-        new Order(orderID, side, new BigNumber(size), totalPrice / totalQuantity, Date.now())
+        new Order(
+          orderID,
+          side,
+          new BigNumber(size),
+          totalPrice / totalQuantity,
+          Date.now()
+        )
       )
     }
 
@@ -268,23 +274,90 @@ export class OrderBook {
    * Modify an existing order with given ID
    *
    * @param orderID - The ID of the order to be modified
-   * @param orderUpdate - An object with the modified size and/or price of an order. To be note that the `side` can't be modified. The shape of the object is `{side, size, price}`.
+   * @param orderUpdate - An object with the modified size and/or price of an order. The shape of the object is `{size, price}`.
    * @returns The modified order if exists or `undefined`
    */
   public modify = (
     orderID: string,
-    orderUpdate: OrderUpdate
+    orderUpdate: OrderUpdatePrize | OrderUpdateSize
   ): Order | undefined => {
     const order = this.orders[orderID]
     if (order === undefined) return
-    const side = orderUpdate.side
-    if (side === Side.BUY) {
-      return this.bids.update(order, orderUpdate)
-    } else if (side === Side.SELL) {
-      return this.asks.update(order, orderUpdate)
+
+    let updatedOrder: Order | undefined
+    if (order.side === Side.BUY) {
+      // Check if price is changed
+      if (
+        orderUpdate.price !== undefined &&
+        orderUpdate.price !== order.price
+      ) {
+        const newPrice = orderUpdate.price
+        // Check if the limit new price is equal or greater than the current ask price.
+        // If so we have to remove the previous order and create a new limit order
+        const lowerAsk = this.asks.minPriceQueue()
+        if (lowerAsk !== undefined && newPrice >= lowerAsk.price()) {
+          this.cancel(order.id)
+          const result = this.limit(
+            order.side,
+            order.id,
+            orderUpdate.size ?? order.size.toNumber(),
+            newPrice
+          )
+          updatedOrder = result.partial?.id === order.id ? result.partial : result.done[result.done.length - 1]
+        } else {
+          updatedOrder = this.bids.updateOrderPrice(order, {
+            size: orderUpdate.size,
+            price: newPrice
+          })
+        }
+      } else if (
+        orderUpdate.size !== undefined &&
+        orderUpdate.size !== order.size.toNumber()
+      ) {
+        // Quantity changed. Price is the same.
+        const newSize = orderUpdate.size
+        updatedOrder = this.bids.updateOrderSize(order, { ...orderUpdate, size: newSize })
+      }
     } else {
-      throw CustomError(ERROR.ErrInvalidSide)
+      // Check if price is changed
+      if (
+        orderUpdate.price !== undefined &&
+        orderUpdate.price !== order.price
+      ) {
+        const newPrice = orderUpdate.price
+        // Check if the new price is equal or lower than the current bid price.
+        // If so we have to remove the previous order and create a new limit order
+        const highestBid = this.bids.maxPriceQueue()
+        if (
+          highestBid !== undefined &&
+          newPrice <= highestBid.price()
+        ) {
+          this.cancel(order.id)
+          const result = this.limit(
+            order.side,
+            order.id,
+            orderUpdate.size ?? order.size.toNumber(),
+            newPrice
+          )
+          updatedOrder = result.partial?.id === order.id ? result.partial : result.done[result.done.length - 1]
+        } else {
+          updatedOrder = this.asks.updateOrderPrice(order, {
+            size: orderUpdate.size,
+            price: newPrice
+          })
+        }
+      } else if (
+        orderUpdate.size !== undefined &&
+        orderUpdate.size !== order.size.toNumber()
+      ) {
+        // Quantity changed. Price is the same.
+        const newSize = orderUpdate.size
+        updatedOrder = this.asks.updateOrderSize(order, { ...orderUpdate, size: newSize })
+      }
     }
+    // is undefined when size and price are the same
+    if (updatedOrder != null) this.orders[orderID] = updatedOrder
+    return updatedOrder
   }
 
   /**

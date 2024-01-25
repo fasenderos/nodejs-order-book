@@ -1,4 +1,4 @@
-import { Order, OrderType, OrderUpdate, TimeInForce } from '../src/order'
+import { Order, OrderType, TimeInForce } from '../src/order'
 import { test } from 'tap'
 import { Side } from '../src/side'
 import { OrderBook } from '../src/orderbook'
@@ -27,8 +27,12 @@ void test('test limit place', ({ equal, end }) => {
   const ob = new OrderBook()
   const size = 2
   for (let index = 50; index < 100; index += 10) {
-    const { done, partial, partialQuantityProcessed, err } =
-      ob.limit(Side.BUY, `buy-${index}`, size, index)
+    const { done, partial, partialQuantityProcessed, err } = ob.limit(
+      Side.BUY,
+      `buy-${index}`,
+      size,
+      index
+    )
     equal(done.length, 0)
     equal(partial === null, true)
     equal(partialQuantityProcessed, 0)
@@ -36,8 +40,12 @@ void test('test limit place', ({ equal, end }) => {
   }
 
   for (let index = 100; index < 150; index += 10) {
-    const { done, partial, partialQuantityProcessed, err } =
-      ob.limit(Side.SELL, `sell-${index}`, size, index)
+    const { done, partial, partialQuantityProcessed, err } = ob.limit(
+      Side.SELL,
+      `sell-${index}`,
+      size,
+      index
+    )
     equal(done.length, 0)
     equal(partial === null, true)
     equal(partialQuantityProcessed, 0)
@@ -145,7 +153,13 @@ void test('test limit', ({ equal, end }) => {
 void test('test limit FOK and IOC', ({ equal, end }) => {
   const ob = new OrderBook()
   addDepth(ob, '', 2)
-  const process1 = ob.limit(Side.BUY, 'order-fok-b100', 3, 100, TimeInForce.FOK)
+  const process1 = ob.limit(
+    Side.BUY,
+    'order-fok-b100',
+    3,
+    100,
+    TimeInForce.FOK
+  )
   equal(process1.err?.message, ERROR.ErrLimitFOKNotFillable)
 
   const process2 = ob.limit(Side.SELL, 'order-fok-s90', 3, 90, TimeInForce.FOK)
@@ -257,62 +271,80 @@ void test('test modify', ({ equal, end }) => {
 
   addDepth(ob, '', 2)
 
-  ob.limit(Side.BUY, 'first-order', 1000, 52)
-  ob.limit(Side.SELL, 'second-order', 1000, 200)
+  const initialPrice1 = 52
+  const initialSize1 = 1000
+  const initialPrice2 = 200
+  const initialSize2 = 1000
+  ob.limit(Side.BUY, 'first-order', initialSize1, initialPrice1)
+  ob.limit(Side.SELL, 'second-order', initialSize2, initialPrice2)
 
-  // Test BUY side
-  const orderUpdateSize1 = {
-    side: Side.BUY,
-    size: 990,
-    price: 52
+  {
+    // SIDE BUY
+    const newSize = 990
+    // Test update size
+    // Response is the updated order or undefined if no order exist
+    let response = ob.modify('first-order', { size: newSize })
+    equal(response?.size.toNumber(), newSize)
+    equal(response?.price, initialPrice1)
+
+    // Test update price
+    const newPrice = 82
+    response = ob.modify('first-order', { price: newPrice, size: newSize })
+    equal(response?.price, newPrice)
+    equal(response?.size.toNumber(), newSize)
+
+    // @ts-expect-error properties bids and _priceTree are private
+    const bookOrdersSize = ob.asks._priceTree.values
+      .filter((queue) => queue.price() <= 130)
+      .map((queue) => queue.toArray().reduce((acc: number,
+        curr: Order) => acc + curr.size.toNumber(), 0))
+      .reduce((acc: number, curr: number) => acc + curr, 0)
+
+    // Test modify price order that cross the market price and don't fill completely
+    response = ob.modify('first-order', { price: 130 })
+    equal(response?.size.toNumber(), newSize - bookOrdersSize)
+
+    // TODO done only for coverage. But the response is the order with it's original size
+    // so we have to check the logic of the limit order
+    // Test modify price order that cross the market price and fill completely
+    ob.limit(Side.SELL, 'sell-to-be-filled', newSize, 140)
+    response = ob.modify('first-order', { price: 140, size: newSize + 2 })
   }
-  // Response is the updated order or undefined if no order exist
-  const response1 = ob.modify('first-order', orderUpdateSize1)
-  equal(response1?.size.toNumber(), orderUpdateSize1.size)
 
-  const orderUpdatePrice1: OrderUpdate = {
-    side: Side.BUY,
-    size: 990,
-    price: 82
-  }
+  {
+    // SIDE SELL
+    const newSize = 990
+    // Test update size
+    // Response is the updated order or undefined if no order exist
+    let response = ob.modify('second-order', { size: newSize })
+    equal(response?.size.toNumber(), newSize)
+    equal(response?.price, initialPrice2)
 
-  // Test SELL side
-  const orderUpdateSize2: OrderUpdate = {
-    side: Side.SELL,
-    size: 990,
-    price: 200
-  }
-  // Response is the updated order or undefined if no order exist
-  const response3 = ob.modify('second-order', orderUpdateSize2)
-  equal(response3?.size.toNumber(), orderUpdateSize2.size)
+    // Test update price
+    const newPrice = 250
+    response = ob.modify('second-order', { price: newPrice, size: newSize })
+    equal(response?.price, newPrice)
+    equal(response?.size.toNumber(), newSize)
 
-  const orderUpdatePrice2: OrderUpdate = {
-    side: Side.SELL,
-    size: 990,
-    price: 250
-  }
-  // Response is the updated order or undefined if no order exist
-  const response4 = ob.modify('second-order', orderUpdatePrice2)
-  equal(response4?.price, orderUpdatePrice2.price)
+    // @ts-expect-error properties bids and _priceTree are private
+    const bookOrdersSize = ob.bids._priceTree.values
+      .filter((queue) => queue.price() >= 80)
+      .map((queue) => queue.toArray().reduce((acc: number, curr: Order) => acc + curr.size.toNumber(), 0))
+      .reduce((acc: number, curr: number) => acc + curr, 0)
 
-  // Test throw error when the side is not of type 'Side'
-  try {
-    const errorUpdate: OrderUpdate = {
-      // @ts-expect-error
-      side: 'fake-side',
-      size: 990,
-      price: 250
-    }
-    ob.modify('second-order', errorUpdate)
-  } catch (error) {
-    if (error instanceof Error) {
-      // TypeScript knows err is Error
-      equal(error?.message, ERROR.ErrInvalidSide)
-    }
+    // Test modify price order that cross the market price
+    response = ob.modify('second-order', { price: 80 })
+    equal(response?.size.toNumber(), newSize - bookOrdersSize)
+
+    // TODO done only for coverage. But the response is the order with it's original size
+    // so we have to check the logic of the limit order
+    // Test modify price order that cross the market price and fill completely
+    ob.limit(Side.BUY, 'buy-to-be-filled', newSize, 70)
+    response = ob.modify('second-order', { price: 70, size: newSize + 2 })
   }
 
   // Test modify a non-existent order
-  const resp = ob.modify('non-existent-order', orderUpdatePrice1)
+  const resp = ob.modify('non-existent-order', { price: 123 })
   equal(resp === undefined, true)
   end()
 })

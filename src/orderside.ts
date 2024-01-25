@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js'
 import createRBTree from 'functional-red-black-tree'
 import { CustomError, ERROR } from './errors'
-import { Order, OrderUpdate } from './order'
+import { Order, OrderUpdatePrize, OrderUpdateSize } from './order'
 import { OrderQueue } from './orderqueue'
 import { Side } from './side'
 
@@ -68,7 +68,9 @@ export class OrderSide {
   remove = (order: Order): Order => {
     const price = order.price
     const strPrice = price.toString()
-    if (this._prices[strPrice] === undefined) throw CustomError(ERROR.ErrInvalidPriceLevel)
+    if (this._prices[strPrice] === undefined) {
+      throw CustomError(ERROR.ErrInvalidPriceLevel)
+    }
     this._prices[strPrice].remove(order)
     if (this._prices[strPrice].len() === 0) {
       /* eslint-disable @typescript-eslint/no-dynamic-delete */
@@ -83,38 +85,40 @@ export class OrderSide {
     return order
   }
 
-  update = (oldOrder: Order, orderUpdate: OrderUpdate): Order | undefined => {
-    if (
-      orderUpdate.price !== undefined &&
-      orderUpdate.price !== oldOrder.price
-    ) {
-      // Price changed. Remove order and update tree.
-      this.remove(oldOrder)
-      const newOrder = new Order(
-        oldOrder.id,
-        oldOrder.side,
-        orderUpdate.size !== undefined ? new BigNumber(orderUpdate.size) : oldOrder.size,
-        orderUpdate.price,
-        Date.now(),
-        oldOrder.isMaker
-      )
-      this.append(newOrder)
-      return newOrder
-    } else if (
-      orderUpdate.size !== undefined &&
-      orderUpdate.size !== oldOrder.size.toNumber()
-    ) {
-      // Quantity changed. Price is the same.
-      const oldOrderSize: number = oldOrder.size.toNumber()
-      const strPrice = oldOrder.price.toString()
-      const newOrderPrize: number = orderUpdate.price ?? oldOrder.price
-      this._volume = this._volume.plus(orderUpdate.size - oldOrderSize)
-      this._total = this._total.plus(
-        orderUpdate.size * newOrderPrize - oldOrderSize * oldOrder.price
-      )
-      this._prices[strPrice].updateOrderSize(oldOrder, orderUpdate.size)
-      return oldOrder
-    }
+  // Update the price of an order and return the order with the updated price
+  updateOrderPrice = (
+    oldOrder: Order,
+    orderUpdate: OrderUpdatePrize
+  ): Order => {
+    this.remove(oldOrder)
+    const newOrder = new Order(
+      oldOrder.id,
+      oldOrder.side,
+      orderUpdate.size !== undefined
+        ? new BigNumber(orderUpdate.size)
+        : oldOrder.size,
+      orderUpdate.price,
+      Date.now(),
+      oldOrder.isMaker
+    )
+    this.append(newOrder)
+    return newOrder
+  }
+
+  // Update the price of an order and return the order with the updated price
+  updateOrderSize = (
+    oldOrder: Order,
+    orderUpdate: OrderUpdateSize
+  ): Order => {
+    const oldOrderSize: number = oldOrder.size.toNumber()
+    const strPrice = oldOrder.price.toString()
+    const newOrderPrize: number = orderUpdate.price ?? oldOrder.price
+    this._volume = this._volume.plus(orderUpdate.size - oldOrderSize)
+    this._total = this._total.plus(
+      orderUpdate.size * newOrderPrize - oldOrderSize * oldOrder.price
+    )
+    this._prices[strPrice].updateOrderSize(oldOrder, orderUpdate.size)
+    return oldOrder
   }
 
   // returns max level of price

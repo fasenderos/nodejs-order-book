@@ -50,7 +50,6 @@ void test('it should create order without passing a date', ({
 }) => {
   const fakeTimestamp = 1487076708000
   const { now } = Date
-  // @ts-expect-error
   teardown(() => (Date.now = now))
   Date.now = (...m) => fakeTimestamp
 
@@ -96,4 +95,30 @@ void test('it should create order without passing a date', ({
     })
   )
   end()
+})
+
+void test('test orders setters', (t) => {
+  const id = 'fakeId'
+  const side = Side.BUY
+  const size = 5
+  const price = 100
+  const time = Date.now()
+  const order = new Order(id, side, new BigNumber(size), price, time)
+
+  // Price setter
+  const newPrice = 300
+  order.price = newPrice
+  t.equal(order.price, newPrice)
+
+  // Size setter
+  const newSize = new BigNumber(40)
+  order.size = newSize
+  t.equal(order.size.toNumber(), newSize.toNumber())
+
+  // Time setter
+  const newTime = Date.now()
+  order.time = newTime
+  t.equal(order.time, newTime)
+
+  t.end()
 })
