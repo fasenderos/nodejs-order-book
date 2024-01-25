@@ -51,7 +51,7 @@
     "@release-it/conventional-changelog": "^8.0.1",
     "@types/functional-red-black-tree": "^1.0.6",
     "gaussian": "^1.0.0",
-    "husky": "^8.0.0",
+    "husky": "^9.0.5",
     "nanobench": "^3.0.0",
     "pinst": "^3.0.0",
     "release-it": "^17.0.3",
