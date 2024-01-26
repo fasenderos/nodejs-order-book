@@ -10,7 +10,7 @@ interface IOrder {
   isMaker: boolean
 }
 
-export interface OrderUpdatePrize { price: number, size?: number }
+export interface OrderUpdatePrice { price: number, size?: number }
 export interface OrderUpdateSize { price?: number, size: number }
 
 export enum OrderType {

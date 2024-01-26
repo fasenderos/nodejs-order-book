@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js'
 import createRBTree from 'functional-red-black-tree'
 import { CustomError, ERROR } from './errors'
-import { Order, OrderUpdatePrize, OrderUpdateSize } from './order'
+import { Order, OrderUpdatePrice, OrderUpdateSize } from './order'
 import { OrderQueue } from './orderqueue'
 import { Side } from './side'
 
@@ -88,7 +88,7 @@ export class OrderSide {
   // Update the price of an order and return the order with the updated price
   updateOrderPrice = (
     oldOrder: Order,
-    orderUpdate: OrderUpdatePrize
+    orderUpdate: OrderUpdatePrice
   ): Order => {
     this.remove(oldOrder)
     const newOrder = new Order(

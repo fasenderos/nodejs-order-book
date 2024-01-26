@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { ERROR, CustomError } from './errors'
-import { Order, OrderType, OrderUpdatePrize, OrderUpdateSize, TimeInForce } from './order'
+import { Order, OrderType, OrderUpdatePrice, OrderUpdateSize, TimeInForce } from './order'
 import { OrderQueue } from './orderqueue'
 import { OrderSide } from './orderside'
 import { Side } from './side'
@@ -279,7 +279,7 @@ export class OrderBook {
    */
   public modify = (
     orderID: string,
-    orderUpdate: OrderUpdatePrize | OrderUpdateSize
+    orderUpdate: OrderUpdatePrice | OrderUpdateSize
   ): Order | undefined => {
     const order = this.orders[orderID]
     if (order === undefined) return
