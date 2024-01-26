@@ -10,11 +10,8 @@ interface IOrder {
   isMaker: boolean
 }
 
-export interface OrderUpdate {
-  side: Side
-  size?: number
-  price?: number
-}
+export interface OrderUpdatePrice { price: number, size?: number }
+export interface OrderUpdateSize { price?: number, size: number }
 
 export enum OrderType {
   LIMIT = 'limit',
@@ -31,7 +28,7 @@ export class Order {
   private readonly _id: string
   private readonly _side: Side
   private _size: BigNumber
-  private readonly _price: number
+  private _price: number
   private _time: number
   private readonly _isMaker: boolean
   constructor (
@@ -63,6 +60,11 @@ export class Order {
   // Getter for order price
   get price (): number {
     return this._price
+  }
+
+  // Getter for order price
+  set price (price: number) {
+    this._price = price
   }
 
   // Getter for order size

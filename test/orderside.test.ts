@@ -26,7 +26,11 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   os.append(order2)
   equal(os.depth(), 2)
   equal(os.volume().toNumber(), 10)
-  equal(os.total().toNumber(), order1.price * order1.size.toNumber() + order2.price * order2.size.toNumber())
+  equal(
+    os.total().toNumber(),
+    order1.price * order1.size.toNumber() +
+      order2.price * order2.size.toNumber()
+  )
   equal(os.len(), 2)
   equal(os.priceTree().length, 2)
   same(os.orders()[0], order1)
@@ -43,7 +47,10 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
   // Update order size and passing a price
-  os.update(order1, { side: order1.side, size: 10, price: order1.price })
+  os.updateOrderSize(order1, {
+    size: 10,
+    price: order1.price
+  })
 
   equal(os.volume().toNumber(), 15)
   equal(os.depth(), 2)
@@ -53,7 +60,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   equal(os.toString(), '\n20 -> 5\n10 -> 10')
 
   // Update order size without passing price, so the old order price will be used
-  os.update(order1, { side: order1.side, size: 5 })
+  os.updateOrderSize(order1, { size: 5 })
 
   equal(os.volume().toNumber(), 10)
   equal(os.depth(), 2)
@@ -62,13 +69,9 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   same(os.orders()[1], order2)
   equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
-  // When no size or price don't do nothing
-  equal(os.update(order1, { side: order1.side }), undefined)
-
   // When price is updated a new order will be created, so we can't match entire object, only properties
   // Update price of order1 < price order2
-  let updatedOrder = os.update(order1, {
-    side: order1.side,
+  let updatedOrder = os.updateOrderPrice(order1, {
     size: 10,
     price: 15
   })
@@ -84,8 +87,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   // Test for error when price level not exists
   try {
     // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type ErrInvalidPriceLevel
-    os.update(order1, {
-      side: order1.side,
+    os.updateOrderPrice(order1, {
       size: 10,
       price: 20
     })
@@ -96,11 +98,10 @@ void test('it should append/update/remove orders from queue on BUY side', ({
     }
   }
 
-  // Update price of order1 == price order2
+  // Update price of order1 == price order2, without providind size (the original order size is used)
   // we have to type ignore here because we don't want to pass the size,
   // so the size from the oldOrder will be used instead
-  updatedOrder = os.update(updatedOrder as Order, {
-    side: order1.side,
+  updatedOrder = os.updateOrderPrice(updatedOrder, {
     price: 20
   })
   equal(os.volume().toNumber(), 15)
@@ -113,8 +114,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   equal(os.toString(), '\n20 -> 15')
 
   // Update price of order1 > price order2
-  updatedOrder = os.update(updatedOrder as Order, {
-    side: order1.side,
+  updatedOrder = os.updateOrderPrice(updatedOrder, {
     size: 10,
     price: 25
   })
@@ -128,7 +128,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   equal(os.toString(), '\n25 -> 10\n20 -> 5')
 
   // Remove the updated order
-  os.remove(updatedOrder as Order)
+  os.remove(updatedOrder)
 
   equal(os.maxPriceQueue(), os.minPriceQueue())
   equal(os.depth(), 1)
@@ -171,7 +171,11 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   os.append(order2)
   equal(os.depth(), 2)
   equal(os.volume().toNumber(), 10)
-  equal(os.total().toNumber(), order1.price * order1.size.toNumber() + order2.price * order2.size.toNumber())
+  equal(
+    os.total().toNumber(),
+    order1.price * order1.size.toNumber() +
+      order2.price * order2.size.toNumber()
+  )
   equal(os.len(), 2)
   equal(os.priceTree().length, 2)
   same(os.orders()[0], order1)
@@ -188,7 +192,10 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
   // Update order size and passing a price
-  os.update(order1, { side: order1.side, size: 10, price: order1.price })
+  os.updateOrderSize(order1, {
+    size: 10,
+    price: order1.price
+  })
 
   equal(os.volume().toNumber(), 15)
   equal(os.depth(), 2)
@@ -199,8 +206,7 @@ void test('it should append/update/remove orders from queue on SELL side', ({
 
   // When price is updated a new order will be created, so we can't match entire object, only properties
   // Update price of order1 < price order2
-  let updatedOrder = os.update(order1, {
-    side: order1.side,
+  let updatedOrder = os.updateOrderPrice(order1, {
     size: 10,
     price: 15
   })
@@ -216,8 +222,7 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   // Test for error when price level not exists
   try {
     // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type ErrInvalidPriceLevel
-    os.update(order1, {
-      side: order1.side,
+    os.updateOrderPrice(order1, {
       size: 10,
       price: 20
     })
@@ -231,8 +236,8 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   // Update price of order1 == price order2
   // we have to type ignore here because we don't want to pass the size,
   // so the size from the oldOrder will be used instead
-  updatedOrder = os.update(updatedOrder as Order, {
-    side: order1.side,
+  updatedOrder = os.updateOrderPrice(updatedOrder, {
+    size: updatedOrder.size.toNumber(),
     price: 20
   })
   equal(os.volume().toNumber(), 15)
@@ -245,8 +250,7 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   equal(os.toString(), '\n20 -> 15')
 
   // Update price of order1 > price order2
-  updatedOrder = os.update(updatedOrder as Order, {
-    side: order1.side,
+  updatedOrder = os.updateOrderPrice(updatedOrder, {
     size: 10,
     price: 25
   })
@@ -260,7 +264,7 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   equal(os.toString(), '\n25 -> 10\n20 -> 5')
 
   // Remove the updated order
-  os.remove(updatedOrder as Order)
+  os.remove(updatedOrder)
 
   equal(os.maxPriceQueue(), os.minPriceQueue())
   equal(os.depth(), 1)
