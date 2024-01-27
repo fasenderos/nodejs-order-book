@@ -91,7 +91,7 @@ export class OrderBook {
    * @returns An object with the result of the processed order or an error
    */
   public market = (side: Side, size: number): IProcessOrder => {
-    const response = this.responseShape(size)
+    const response = this.getProcessOrderResponse(size)
 
     if (![Side.SELL, Side.BUY].includes(side)) {
       response.err = CustomError(ERROR.ErrInvalidSide)
@@ -145,7 +145,7 @@ export class OrderBook {
     price: number,
     timeInForce: TimeInForce = TimeInForce.GTC
   ): IProcessOrder => {
-    const response = this.responseShape(size)
+    const response = this.getProcessOrderResponse(size)
 
     if (![Side.SELL, Side.BUY].includes(side)) {
       response.err = CustomError(ERROR.ErrInvalidSide)
@@ -205,7 +205,7 @@ export class OrderBook {
       const newPrice = orderUpdate.price ?? order.price
       const newSize = orderUpdate.size ?? order.size
       if (newPrice > 0 && newSize > 0) {
-        const response = this.responseShape(newSize)
+        const response = this.getProcessOrderResponse(newSize)
         this.cancel(order.id)
         this.createLimitOrder(
           response,
@@ -318,7 +318,7 @@ export class OrderBook {
     return { price, err }
   }
 
-  private readonly responseShape = (size: number): IProcessOrder => {
+  private readonly getProcessOrderResponse = (size: number): IProcessOrder => {
     return {
       done: [],
       partial: null,
