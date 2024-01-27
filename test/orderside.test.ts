@@ -1,4 +1,3 @@
-import BigNumber from 'bignumber.js'
 import { test } from 'tap'
 import { Order } from '../src/order'
 import { Side } from '../src/side'
@@ -11,25 +10,25 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   end
 }) => {
   const os = new OrderSide(Side.BUY)
-  const order1 = new Order('order1', Side.BUY, new BigNumber(5), 10)
-  const order2 = new Order('order2', Side.BUY, new BigNumber(5), 20)
+  const order1 = new Order('order1', Side.BUY, 5, 10)
+  const order2 = new Order('order2', Side.BUY, 5, 20)
 
   equal(os.minPriceQueue() === undefined, true)
   equal(os.maxPriceQueue() === undefined, true)
 
   os.append(order1)
   equal(os.maxPriceQueue(), os.minPriceQueue())
-  equal(os.volume().toNumber(), 5)
-  equal(os.total().toNumber(), order1.price * order1.size.toNumber())
+  equal(os.volume(), 5)
+  equal(os.total(), order1.price * order1.size)
   equal(os.priceTree().length, 1)
 
   os.append(order2)
   equal(os.depth(), 2)
-  equal(os.volume().toNumber(), 10)
+  equal(os.volume(), 10)
   equal(
-    os.total().toNumber(),
-    order1.price * order1.size.toNumber() +
-      order2.price * order2.size.toNumber()
+    os.total(),
+    order1.price * order1.size +
+      order2.price * order2.size
   )
   equal(os.len(), 2)
   equal(os.priceTree().length, 2)
@@ -52,20 +51,20 @@ void test('it should append/update/remove orders from queue on BUY side', ({
     price: order1.price
   })
 
-  equal(os.volume().toNumber(), 15)
+  equal(os.volume(), 15)
   equal(os.depth(), 2)
   equal(os.len(), 2)
-  same(os.orders()[0], { ...order1, size: new BigNumber(10) })
+  same(os.orders()[0], { ...order1, size: 10 })
   same(os.orders()[1], order2)
   equal(os.toString(), '\n20 -> 5\n10 -> 10')
 
   // Update order size without passing price, so the old order price will be used
   os.updateOrderSize(order1, { size: 5 })
 
-  equal(os.volume().toNumber(), 10)
+  equal(os.volume(), 10)
   equal(os.depth(), 2)
   equal(os.len(), 2)
-  same(os.orders()[0], { ...order1, size: new BigNumber(5) })
+  same(os.orders()[0], { ...order1, size: 5 })
   same(os.orders()[1], order2)
   equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
@@ -75,11 +74,11 @@ void test('it should append/update/remove orders from queue on BUY side', ({
     size: 10,
     price: 15
   })
-  equal(os.volume().toNumber(), 15)
+  equal(os.volume(), 15)
   equal(os.depth(), 2)
   equal(os.len(), 2)
   let updateOrder1 = os.orders()[0]
-  equal(updateOrder1.size.toNumber(), 10)
+  equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 15)
   same(os.orders()[1], order2)
   equal(os.toString(), '\n20 -> 5\n15 -> 10')
@@ -104,12 +103,12 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   updatedOrder = os.updateOrderPrice(updatedOrder, {
     price: 20
   })
-  equal(os.volume().toNumber(), 15)
+  equal(os.volume(), 15)
   equal(os.depth(), 1)
   equal(os.len(), 2)
   same(os.orders()[0], order2)
   updateOrder1 = os.orders()[1]
-  equal(updateOrder1.size.toNumber(), 10)
+  equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 20)
   equal(os.toString(), '\n20 -> 15')
 
@@ -118,12 +117,12 @@ void test('it should append/update/remove orders from queue on BUY side', ({
     size: 10,
     price: 25
   })
-  equal(os.volume().toNumber(), 15)
+  equal(os.volume(), 15)
   equal(os.depth(), 2)
   equal(os.len(), 2)
   same(os.orders()[0], order2)
   updateOrder1 = os.orders()[1]
-  equal(updateOrder1.size.toNumber(), 10)
+  equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 25)
   equal(os.toString(), '\n25 -> 10\n20 -> 5')
 
@@ -132,7 +131,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
 
   equal(os.maxPriceQueue(), os.minPriceQueue())
   equal(os.depth(), 1)
-  equal(os.volume().toNumber(), 5)
+  equal(os.volume(), 5)
   equal(os.len(), 1)
   same(os.orders()[0], order2)
 
@@ -143,7 +142,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
 
   equal(os.maxPriceQueue(), os.minPriceQueue())
   equal(os.depth(), 0)
-  equal(os.volume().toNumber(), 0)
+  equal(os.volume(), 0)
   equal(os.len(), 0)
   equal(os.toString(), '')
 
@@ -155,8 +154,8 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   end
 }) => {
   const os = new OrderSide(Side.SELL)
-  const order1 = new Order('order1', Side.SELL, new BigNumber(5), 10)
-  const order2 = new Order('order2', Side.SELL, new BigNumber(5), 20)
+  const order1 = new Order('order1', Side.SELL, 5, 10)
+  const order2 = new Order('order2', Side.SELL, 5, 20)
 
   equal(os.minPriceQueue() === undefined, true)
   equal(os.maxPriceQueue() === undefined, true)
@@ -164,17 +163,17 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   os.append(order1)
 
   equal(os.maxPriceQueue(), os.minPriceQueue())
-  equal(os.volume().toNumber(), 5)
-  equal(os.total().toNumber(), order1.price * order1.size.toNumber())
+  equal(os.volume(), 5)
+  equal(os.total(), order1.price * order1.size)
   equal(os.priceTree().length, 1)
 
   os.append(order2)
   equal(os.depth(), 2)
-  equal(os.volume().toNumber(), 10)
+  equal(os.volume(), 10)
   equal(
-    os.total().toNumber(),
-    order1.price * order1.size.toNumber() +
-      order2.price * order2.size.toNumber()
+    os.total(),
+    order1.price * order1.size +
+      order2.price * order2.size
   )
   equal(os.len(), 2)
   equal(os.priceTree().length, 2)
@@ -197,10 +196,10 @@ void test('it should append/update/remove orders from queue on SELL side', ({
     price: order1.price
   })
 
-  equal(os.volume().toNumber(), 15)
+  equal(os.volume(), 15)
   equal(os.depth(), 2)
   equal(os.len(), 2)
-  same(os.orders()[0], { ...order1, size: new BigNumber(10) })
+  same(os.orders()[0], { ...order1, size: 10 })
   same(os.orders()[1], order2)
   equal(os.toString(), '\n20 -> 5\n10 -> 10')
 
@@ -210,11 +209,11 @@ void test('it should append/update/remove orders from queue on SELL side', ({
     size: 10,
     price: 15
   })
-  equal(os.volume().toNumber(), 15)
+  equal(os.volume(), 15)
   equal(os.depth(), 2)
   equal(os.len(), 2)
   let updateOrder1 = os.orders()[0]
-  equal(updateOrder1.size.toNumber(), 10)
+  equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 15)
   same(os.orders()[1], order2)
   equal(os.toString(), '\n20 -> 5\n15 -> 10')
@@ -237,15 +236,15 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   // we have to type ignore here because we don't want to pass the size,
   // so the size from the oldOrder will be used instead
   updatedOrder = os.updateOrderPrice(updatedOrder, {
-    size: updatedOrder.size.toNumber(),
+    size: updatedOrder.size,
     price: 20
   })
-  equal(os.volume().toNumber(), 15)
+  equal(os.volume(), 15)
   equal(os.depth(), 1)
   equal(os.len(), 2)
   same(os.orders()[0], order2)
   updateOrder1 = os.orders()[1]
-  equal(updateOrder1.size.toNumber(), 10)
+  equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 20)
   equal(os.toString(), '\n20 -> 15')
 
@@ -254,12 +253,12 @@ void test('it should append/update/remove orders from queue on SELL side', ({
     size: 10,
     price: 25
   })
-  equal(os.volume().toNumber(), 15)
+  equal(os.volume(), 15)
   equal(os.depth(), 2)
   equal(os.len(), 2)
   same(os.orders()[0], order2)
   updateOrder1 = os.orders()[1]
-  equal(updateOrder1.size.toNumber(), 10)
+  equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 25)
   equal(os.toString(), '\n25 -> 10\n20 -> 5')
 
@@ -268,7 +267,7 @@ void test('it should append/update/remove orders from queue on SELL side', ({
 
   equal(os.maxPriceQueue(), os.minPriceQueue())
   equal(os.depth(), 1)
-  equal(os.volume().toNumber(), 5)
+  equal(os.volume(), 5)
   equal(os.len(), 1)
   same(os.orders()[0], order2)
 
@@ -279,7 +278,7 @@ void test('it should append/update/remove orders from queue on SELL side', ({
 
   equal(os.maxPriceQueue(), os.minPriceQueue())
   equal(os.depth(), 0)
-  equal(os.volume().toNumber(), 0)
+  equal(os.volume(), 0)
   equal(os.len(), 0)
   equal(os.toString(), '')
   end()

@@ -1,4 +1,3 @@
-import BigNumber from 'bignumber.js'
 import { test } from 'tap'
 import { Order } from '../src/order'
 import { Side } from '../src/side'
@@ -9,12 +8,12 @@ void test('it should create order object', ({ equal, same, end }) => {
   const size = 5
   const price = 100
   const time = Date.now()
-  const order = new Order(id, side, new BigNumber(size), price, time)
+  const order = new Order(id, side, size, price, time)
 
   equal(order instanceof Order, true)
   equal(order.id, id)
   equal(order.side, side)
-  equal(order.size.toNumber(), size)
+  equal(order.size, size)
   equal(order.price, price)
   equal(order.time, time)
   equal(order.isMaker, false)
@@ -57,11 +56,11 @@ void test('it should create order without passing a date', ({
   const side = Side.BUY
   const size = 5
   const price = 100
-  const order = new Order(id, side, new BigNumber(size), price)
+  const order = new Order(id, side, size, price)
   equal(order instanceof Order, true)
   equal(order.id, id)
   equal(order.side, side)
-  equal(order.size.toNumber(), size)
+  equal(order.size, size)
   equal(order.price, price)
   equal(order.time, fakeTimestamp)
   equal(order.isMaker, false)
@@ -103,7 +102,7 @@ void test('test orders setters', (t) => {
   const size = 5
   const price = 100
   const time = Date.now()
-  const order = new Order(id, side, new BigNumber(size), price, time)
+  const order = new Order(id, side, size, price, time)
 
   // Price setter
   const newPrice = 300
@@ -111,9 +110,9 @@ void test('test orders setters', (t) => {
   t.equal(order.price, newPrice)
 
   // Size setter
-  const newSize = new BigNumber(40)
+  const newSize = 40
   order.size = newSize
-  t.equal(order.size.toNumber(), newSize.toNumber())
+  t.equal(order.size, newSize)
 
   // Time setter
   const newTime = Date.now()

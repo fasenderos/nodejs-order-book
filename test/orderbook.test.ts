@@ -284,25 +284,25 @@ void test('test modify', ({ equal, end }) => {
     // Test update size
     // Response is the updated order or undefined if no order exist
     let response = ob.modify('first-order', { size: newSize })
-    equal(response?.size.toNumber(), newSize)
+    equal(response?.size, newSize)
     equal(response?.price, initialPrice1)
 
     // Test update price
     const newPrice = 82
     response = ob.modify('first-order', { price: newPrice, size: newSize })
     equal(response?.price, newPrice)
-    equal(response?.size.toNumber(), newSize)
+    equal(response?.size, newSize)
 
     // @ts-expect-error properties bids and _priceTree are private
     const bookOrdersSize = ob.asks._priceTree.values
       .filter((queue) => queue.price() <= 130)
       .map((queue) => queue.toArray().reduce((acc: number,
-        curr: Order) => acc + curr.size.toNumber(), 0))
+        curr: Order) => acc + curr.size, 0))
       .reduce((acc: number, curr: number) => acc + curr, 0)
 
     // Test modify price order that cross the market price and don't fill completely
     response = ob.modify('first-order', { price: 130 })
-    equal(response?.size.toNumber(), newSize - bookOrdersSize)
+    equal(response?.size, newSize - bookOrdersSize)
 
     // TODO done only for coverage. But the response is the order with it's original size
     // so we have to check the logic of the limit order
@@ -317,24 +317,24 @@ void test('test modify', ({ equal, end }) => {
     // Test update size
     // Response is the updated order or undefined if no order exist
     let response = ob.modify('second-order', { size: newSize })
-    equal(response?.size.toNumber(), newSize)
+    equal(response?.size, newSize)
     equal(response?.price, initialPrice2)
 
     // Test update price
     const newPrice = 250
     response = ob.modify('second-order', { price: newPrice, size: newSize })
     equal(response?.price, newPrice)
-    equal(response?.size.toNumber(), newSize)
+    equal(response?.size, newSize)
 
     // @ts-expect-error properties bids and _priceTree are private
     const bookOrdersSize = ob.bids._priceTree.values
       .filter((queue) => queue.price() >= 80)
-      .map((queue) => queue.toArray().reduce((acc: number, curr: Order) => acc + curr.size.toNumber(), 0))
+      .map((queue) => queue.toArray().reduce((acc: number, curr: Order) => acc + curr.size, 0))
       .reduce((acc: number, curr: number) => acc + curr, 0)
 
     // Test modify price order that cross the market price
     response = ob.modify('second-order', { price: 80 })
-    equal(response?.size.toNumber(), newSize - bookOrdersSize)
+    equal(response?.size, newSize - bookOrdersSize)
 
     // TODO done only for coverage. But the response is the order with it's original size
     // so we have to check the logic of the limit order
