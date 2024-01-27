@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.0.0](https://github.com/fasenderos/hft-limit-order-book/compare/v3.0.0...v4.0.0) (2024-01-27)
+
+
+### Bug Fixes
+
+* modify size under the price-time-priority ([32cfe04](https://github.com/fasenderos/hft-limit-order-book/commit/32cfe047070bc4cfd8f3f6c2b8512866a90b7512)), closes [#336](https://github.com/fasenderos/hft-limit-order-book/issues/336)
+
+
+### Chore
+
+* **deps-dev:** bump husky from 8.0.3 to 9.0.6 ([a39deda](https://github.com/fasenderos/hft-limit-order-book/commit/a39deda622c7c6d9cee650c32ee053144a9d192c))
+* **deps-dev:** bump tap from 18.6.1 to 18.7.0 ([b8eb10e](https://github.com/fasenderos/hft-limit-order-book/commit/b8eb10edfa34760bd1bd45b19008d4dfb434af8f))
+
+
+### Test
+
+* modify order now return IProcessOrder ([838234b](https://github.com/fasenderos/hft-limit-order-book/commit/838234b53f4f63510f84943735e09d891f15fdf1))
+
 ## [3.0.0](https://github.com/fasenderos/hft-limit-order-book/compare/v2.3.5...v3.0.0) (2024-01-26)
 
 
