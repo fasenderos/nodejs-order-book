@@ -240,9 +240,8 @@ export class OrderBook {
       let totalPrice = 0
 
       response.done.forEach((order: Order) => {
-        const ordrSize: number = order.size
-        totalQuantity += ordrSize
-        totalPrice += order.price * ordrSize
+        totalQuantity += order.size
+        totalPrice += order.price * order.size
       })
       if (response.partialQuantityProcessed > 0 && response.partial !== null) {
         totalQuantity += response.partialQuantityProcessed
@@ -519,8 +518,7 @@ export class OrderBook {
     let cumulativeSize = 0
     orderSide.priceTree().forEach((_: number, level: OrderQueue) => {
       if (price >= level.price() && cumulativeSize < size) {
-        const volume: number = level.volume()
-        cumulativeSize += volume
+        cumulativeSize += level.volume()
       } else {
         return true // break the loop
       }
@@ -540,8 +538,7 @@ export class OrderBook {
     let cumulativeSize = 0
     orderSide.priceTree().forEach((_: number, level: OrderQueue) => {
       if (price <= level.price() && cumulativeSize < size) {
-        const volume: number = level.volume()
-        cumulativeSize += volume
+        cumulativeSize += level.volume()
       } else {
         return true // break the loop
       }
