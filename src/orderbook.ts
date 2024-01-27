@@ -1,4 +1,3 @@
-import BigNumber from 'bignumber.js'
 import { ERROR, CustomError } from './errors'
 import { Order, OrderType, OrderUpdatePrice, OrderUpdateSize, TimeInForce } from './order'
 import { OrderQueue } from './orderqueue'
@@ -226,7 +225,7 @@ export class OrderBook {
       const order = new Order(
         orderID,
         side,
-        new BigNumber(quantityToTrade),
+        quantityToTrade,
         price,
         Date.now(),
         true
@@ -241,7 +240,7 @@ export class OrderBook {
       let totalPrice = 0
 
       response.done.forEach((order: Order) => {
-        const ordrSize: number = order.size.toNumber()
+        const ordrSize: number = order.size
         totalQuantity += ordrSize
         totalPrice += order.price * ordrSize
       })
@@ -255,7 +254,7 @@ export class OrderBook {
         new Order(
           orderID,
           side,
-          new BigNumber(size),
+          size,
           totalPrice / totalQuantity,
           Date.now()
         )
@@ -300,7 +299,7 @@ export class OrderBook {
           const result = this.limit(
             order.side,
             order.id,
-            orderUpdate.size ?? order.size.toNumber(),
+            orderUpdate.size ?? order.size,
             newPrice
           )
           updatedOrder = result.partial?.id === order.id ? result.partial : result.done[result.done.length - 1]
@@ -312,7 +311,7 @@ export class OrderBook {
         }
       } else if (
         orderUpdate.size !== undefined &&
-        orderUpdate.size !== order.size.toNumber()
+        orderUpdate.size !== order.size
       ) {
         // Quantity changed. Price is the same.
         const newSize = orderUpdate.size
@@ -336,7 +335,7 @@ export class OrderBook {
           const result = this.limit(
             order.side,
             order.id,
-            orderUpdate.size ?? order.size.toNumber(),
+            orderUpdate.size ?? order.size,
             newPrice
           )
           updatedOrder = result.partial?.id === order.id ? result.partial : result.done[result.done.length - 1]
@@ -348,7 +347,7 @@ export class OrderBook {
         }
       } else if (
         orderUpdate.size !== undefined &&
-        orderUpdate.size !== order.size.toNumber()
+        orderUpdate.size !== order.size
       ) {
         // Quantity changed. Price is the same.
         const newSize = orderUpdate.size
@@ -392,10 +391,10 @@ export class OrderBook {
     const asks: Array<[number, number]> = []
     const bids: Array<[number, number]> = []
     this.asks.priceTree().forEach((levelPrice: number, level: OrderQueue) => {
-      asks.push([levelPrice, level.volume().toNumber()])
+      asks.push([levelPrice, level.volume()])
     })
     this.bids.priceTree().forEach((levelPrice: number, level: OrderQueue) => {
-      bids.push([levelPrice, level.volume().toNumber()])
+      bids.push([levelPrice, level.volume()])
     })
     return [asks, bids]
   }
@@ -431,7 +430,7 @@ export class OrderBook {
     }
 
     while (size > 0 && level !== undefined) {
-      const levelVolume = level.volume().toNumber()
+      const levelVolume = level.volume()
       const levelPrice = level.price()
       if (this.greaterThanOrEqual(size, levelVolume)) {
         price += levelPrice * levelVolume
@@ -473,12 +472,11 @@ export class OrderBook {
       while (orderQueue.len() > 0 && response.quantityLeft > 0) {
         const headOrder = orderQueue.head()
         if (headOrder !== undefined) {
-          const headSize = headOrder.size.toNumber()
-          if (response.quantityLeft < headSize) {
+          if (response.quantityLeft < headOrder.size) {
             response.partial = new Order(
               headOrder.id,
               headOrder.side,
-              new BigNumber(headSize - response.quantityLeft),
+              headOrder.size - response.quantityLeft,
               headOrder.price,
               headOrder.time,
               true
@@ -488,7 +486,7 @@ export class OrderBook {
             orderQueue.update(headOrder, response.partial)
             response.quantityLeft = 0
           } else {
-            response.quantityLeft = response.quantityLeft - headSize
+            response.quantityLeft = response.quantityLeft - headOrder.size
             const canceledOrder = this.cancel(headOrder.id)
             if (canceledOrder !== undefined) response.done.push(canceledOrder)
           }
@@ -514,15 +512,14 @@ export class OrderBook {
     size: number,
     price: number
   ): boolean => {
-    const insufficientSideVolume: boolean = orderSide.volume().lt(size)
-    if (insufficientSideVolume) {
+    if (orderSide.volume() < size) {
       return false
     }
 
     let cumulativeSize = 0
     orderSide.priceTree().forEach((_: number, level: OrderQueue) => {
       if (price >= level.price() && cumulativeSize < size) {
-        const volume: number = level.volume().toNumber()
+        const volume: number = level.volume()
         cumulativeSize += volume
       } else {
         return true // break the loop
@@ -536,15 +533,14 @@ export class OrderBook {
     size: number,
     price: number
   ): boolean => {
-    const insufficientSideVolume: boolean = orderSide.volume().lt(size)
-    if (insufficientSideVolume) {
+    if (orderSide.volume() < size) {
       return false
     }
 
     let cumulativeSize = 0
     orderSide.priceTree().forEach((_: number, level: OrderQueue) => {
       if (price <= level.price() && cumulativeSize < size) {
-        const volume: number = level.volume().toNumber()
+        const volume: number = level.volume()
         cumulativeSize += volume
       } else {
         return true // break the loop

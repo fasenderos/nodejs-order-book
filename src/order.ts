@@ -1,4 +1,3 @@
-import BigNumber from 'bignumber.js'
 import { Side } from './side'
 
 interface IOrder {
@@ -27,14 +26,14 @@ export enum TimeInForce {
 export class Order {
   private readonly _id: string
   private readonly _side: Side
-  private _size: BigNumber
+  private _size: number
   private _price: number
   private _time: number
   private readonly _isMaker: boolean
   constructor (
     orderId: string,
     side: Side,
-    size: BigNumber,
+    size: number,
     price: number,
     time?: number,
     isMaker?: boolean
@@ -68,12 +67,12 @@ export class Order {
   }
 
   // Getter for order size
-  get size (): BigNumber {
+  get size (): number {
     return this._size
   }
 
   // Setter for order size
-  set size (size: BigNumber) {
+  set size (size: number) {
     this._size = size
   }
 
@@ -106,7 +105,7 @@ export class Order {
   toJSON = (): string => JSON.stringify({
     id: this._id,
     side: this._side,
-    size: this._size.toNumber(),
+    size: this._size,
     price: this._price,
     time: this._time,
     isMaker: this._isMaker
@@ -116,7 +115,7 @@ export class Order {
   toObject = (): IOrder => ({
     id: this._id,
     side: this._side,
-    size: this._size.toNumber(),
+    size: this._size,
     price: this._price,
     time: this._time,
     isMaker: this._isMaker

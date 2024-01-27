@@ -1,17 +1,16 @@
-import BigNumber from 'bignumber.js'
 import Denque from 'denque'
 import { Order } from './order'
 
 export class OrderQueue {
   private readonly _price: number
-  private _volume: BigNumber
+  private _volume: number
   private readonly _orders: Denque<Order>
   // { orderID: index } index in denque
   private _ordersMap: { [key: string]: number } = {}
 
   constructor (price: number) {
     this._price = price
-    this._volume = new BigNumber(0)
+    this._volume = 0
     this._orders = new Denque<Order>()
   }
 
@@ -30,7 +29,7 @@ export class OrderQueue {
   }
 
   // returns price level of the queue
-  volume = (): BigNumber => {
+  volume = (): number => {
     return this._volume
   }
 
@@ -46,7 +45,7 @@ export class OrderQueue {
 
   // adds order to tail of the queue
   append = (order: Order): Order => {
-    this._volume = this._volume.plus(order.size)
+    this._volume += order.size
     this._orders.push(order)
     this._ordersMap[order.id] = this._orders.length - 1
     return order
@@ -54,7 +53,8 @@ export class OrderQueue {
 
   // sets up new order to list value
   update = (oldOrder: Order, newOrder: Order): void => {
-    this._volume = this._volume.minus(oldOrder.size).plus(newOrder.size)
+    this._volume -= oldOrder.size
+    this._volume += newOrder.size
     // Remove old order from head
     this._orders.shift()
     /* eslint-disable @typescript-eslint/no-dynamic-delete */
@@ -66,7 +66,7 @@ export class OrderQueue {
 
   // removes order from the queue
   remove = (order: Order): void => {
-    this._volume = this._volume.minus(order.size)
+    this._volume -= order.size
     const deletedOrderIndex = this._ordersMap[order.id]
     this._orders.removeOne(deletedOrderIndex)
     delete this._ordersMap[order.id]
@@ -79,9 +79,8 @@ export class OrderQueue {
   }
 
   updateOrderSize = (order: Order, size: number): void => {
-    const newSize = new BigNumber(size)
-    this._volume = this._volume.plus(newSize.minus(order.size)) // update volume
-    order.size = newSize
+    this._volume += size - order.size // update volume
+    order.size = size
     order.time = Date.now()
   }
 }
