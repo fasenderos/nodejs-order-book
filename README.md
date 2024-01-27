@@ -185,11 +185,14 @@ quantityLeft - 4
 
 ```js
 /**
- * Modify an existing order with given ID
+ * Modify an existing order with given ID. When an order is modified by price or quantity,
+ * it will be deemed as a new entry. Under the price-time-priority algorithm, orders are
+ * prioritized according to their order price and order time. Hence, the latest orders
+ * will be placed at the back of the matching order queue.
  *
  * @param orderID - The ID of the order to be modified
- * @param orderUpdate - An object with the modified size and/or price of an order. The shape of the object is `{size?: number, price?: number}`.
- * @returns The modified order if exists or `undefined`
+ * @param orderUpdate - An object with the modified size and/or price of an order. The shape of the object is `{size, price}`.
+ * @returns An object with the result of the processed order or an error
  */
 modify(orderID: string, { size: number, price: number });
 ```
