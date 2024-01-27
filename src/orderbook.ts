@@ -1,5 +1,11 @@
 import { ERROR, CustomError } from './errors'
-import { Order, OrderType, OrderUpdatePrice, OrderUpdateSize, TimeInForce } from './order'
+import {
+  Order,
+  OrderType,
+  OrderUpdatePrice,
+  OrderUpdateSize,
+  TimeInForce
+} from './order'
 import { OrderQueue } from './orderqueue'
 import { OrderSide } from './orderside'
 import { Side } from './side'
@@ -85,15 +91,9 @@ export class OrderBook {
    * @returns An object with the result of the processed order or an error
    */
   public market = (side: Side, size: number): IProcessOrder => {
-    const response: IProcessOrder = {
-      done: [],
-      partial: null,
-      partialQuantityProcessed: 0,
-      quantityLeft: size,
-      err: null
-    }
+    const response = this.getProcessOrderResponse(size)
 
-    if (side !== Side.SELL && side !== Side.BUY) {
+    if (![Side.SELL, Side.BUY].includes(side)) {
       response.err = CustomError(ERROR.ErrInvalidSide)
       return response
     }
@@ -145,15 +145,9 @@ export class OrderBook {
     price: number,
     timeInForce: TimeInForce = TimeInForce.GTC
   ): IProcessOrder => {
-    const response: IProcessOrder = {
-      done: [],
-      partial: null,
-      partialQuantityProcessed: 0,
-      quantityLeft: size,
-      err: null
-    }
+    const response = this.getProcessOrderResponse(size)
 
-    if (side !== Side.SELL && side !== Side.BUY) {
+    if (![Side.SELL, Side.BUY].includes(side)) {
       response.err = CustomError(ERROR.ErrInvalidSide)
       return response
     }
@@ -178,184 +172,60 @@ export class OrderBook {
       return response
     }
 
-    let quantityToTrade = size
-    let sideToProcess: OrderSide
-    let sideToAdd: OrderSide
-    let comparator
-    let iter
-
-    if (side === Side.BUY) {
-      sideToAdd = this.bids
-      sideToProcess = this.asks
-      comparator = this.greaterThanOrEqual
-      iter = this.asks.minPriceQueue
-    } else {
-      sideToAdd = this.asks
-      sideToProcess = this.bids
-      comparator = this.lowerThanOrEqual
-      iter = this.bids.maxPriceQueue
-    }
-
-    if (timeInForce === TimeInForce.FOK) {
-      const fillable = this.canFillOrder(sideToProcess, side, size, price)
-      if (!fillable) {
-        response.err = CustomError(ERROR.ErrLimitFOKNotFillable)
-        return response
-      }
-    }
-
-    let bestPrice = iter()
-    while (
-      quantityToTrade > 0 &&
-      sideToProcess.len() > 0 &&
-      bestPrice !== undefined &&
-      comparator(price, bestPrice.price())
-    ) {
-      const { done, partial, partialQuantityProcessed, quantityLeft } =
-        this.processQueue(bestPrice, quantityToTrade)
-      response.done = response.done.concat(done)
-      response.partial = partial
-      response.partialQuantityProcessed = partialQuantityProcessed
-      quantityToTrade = quantityLeft
-      response.quantityLeft = quantityToTrade
-      bestPrice = iter()
-    }
-
-    if (quantityToTrade > 0) {
-      const order = new Order(
-        orderID,
-        side,
-        quantityToTrade,
-        price,
-        Date.now(),
-        true
-      )
-      if (response.done.length > 0) {
-        response.partialQuantityProcessed = size - quantityToTrade
-        response.partial = order
-      }
-      this.orders[orderID] = sideToAdd.append(order)
-    } else {
-      let totalQuantity = 0
-      let totalPrice = 0
-
-      response.done.forEach((order: Order) => {
-        totalQuantity += order.size
-        totalPrice += order.price * order.size
-      })
-      if (response.partialQuantityProcessed > 0 && response.partial !== null) {
-        totalQuantity += response.partialQuantityProcessed
-        totalPrice +=
-          response.partial.price * response.partialQuantityProcessed
-      }
-
-      response.done.push(
-        new Order(
-          orderID,
-          side,
-          size,
-          totalPrice / totalQuantity,
-          Date.now()
-        )
-      )
-    }
-
-    // If IOC order was not matched completely remove from the order book
-    if (timeInForce === TimeInForce.IOC && response.quantityLeft > 0) {
-      this.cancel(orderID)
-    }
+    this.createLimitOrder(response, side, orderID, size, price, timeInForce)
 
     return response
   }
 
   /**
-   * Modify an existing order with given ID
+   * Modify an existing order with given ID. When an order is modified by price or quantity,
+   * it will be deemed as a new entry. Under the price-time-priority algorithm, orders are
+   * prioritized according to their order price and order time. Hence, the latest orders
+   * will be placed at the back of the matching order queue.
    *
    * @param orderID - The ID of the order to be modified
    * @param orderUpdate - An object with the modified size and/or price of an order. The shape of the object is `{size, price}`.
-   * @returns The modified order if exists or `undefined`
+   * @returns An object with the result of the processed order or an error
    */
   public modify = (
     orderID: string,
     orderUpdate: OrderUpdatePrice | OrderUpdateSize
-  ): Order | undefined => {
+  ): IProcessOrder => {
     const order = this.orders[orderID]
-    if (order === undefined) return
-
-    let updatedOrder: Order | undefined
-    if (order.side === Side.BUY) {
-      // Check if price is changed
-      if (
-        orderUpdate.price !== undefined &&
-        orderUpdate.price !== order.price
-      ) {
-        const newPrice = orderUpdate.price
-        // Check if the limit new price is equal or greater than the current ask price.
-        // If so we have to remove the previous order and create a new limit order
-        const lowerAsk = this.asks.minPriceQueue()
-        if (lowerAsk !== undefined && newPrice >= lowerAsk.price()) {
-          this.cancel(order.id)
-          const result = this.limit(
-            order.side,
-            order.id,
-            orderUpdate.size ?? order.size,
-            newPrice
-          )
-          updatedOrder = result.partial?.id === order.id ? result.partial : result.done[result.done.length - 1]
-        } else {
-          updatedOrder = this.bids.updateOrderPrice(order, {
-            size: orderUpdate.size,
-            price: newPrice
-          })
-        }
-      } else if (
-        orderUpdate.size !== undefined &&
-        orderUpdate.size !== order.size
-      ) {
-        // Quantity changed. Price is the same.
-        const newSize = orderUpdate.size
-        updatedOrder = this.bids.updateOrderSize(order, { ...orderUpdate, size: newSize })
-      }
-    } else {
-      // Check if price is changed
-      if (
-        orderUpdate.price !== undefined &&
-        orderUpdate.price !== order.price
-      ) {
-        const newPrice = orderUpdate.price
-        // Check if the new price is equal or lower than the current bid price.
-        // If so we have to remove the previous order and create a new limit order
-        const highestBid = this.bids.maxPriceQueue()
-        if (
-          highestBid !== undefined &&
-          newPrice <= highestBid.price()
-        ) {
-          this.cancel(order.id)
-          const result = this.limit(
-            order.side,
-            order.id,
-            orderUpdate.size ?? order.size,
-            newPrice
-          )
-          updatedOrder = result.partial?.id === order.id ? result.partial : result.done[result.done.length - 1]
-        } else {
-          updatedOrder = this.asks.updateOrderPrice(order, {
-            size: orderUpdate.size,
-            price: newPrice
-          })
-        }
-      } else if (
-        orderUpdate.size !== undefined &&
-        orderUpdate.size !== order.size
-      ) {
-        // Quantity changed. Price is the same.
-        const newSize = orderUpdate.size
-        updatedOrder = this.asks.updateOrderSize(order, { ...orderUpdate, size: newSize })
+    if (order === undefined) {
+      return {
+        done: [],
+        partial: null,
+        partialQuantityProcessed: 0,
+        quantityLeft: 0,
+        err: CustomError(ERROR.ErrOrderNotFound)
       }
     }
-    // is undefined when size and price are the same
-    if (updatedOrder != null) this.orders[orderID] = updatedOrder
-    return updatedOrder
+    if (orderUpdate?.price !== undefined || orderUpdate?.size !== undefined) {
+      const newPrice = orderUpdate.price ?? order.price
+      const newSize = orderUpdate.size ?? order.size
+      if (newPrice > 0 && newSize > 0) {
+        const response = this.getProcessOrderResponse(newSize)
+        this.cancel(order.id)
+        this.createLimitOrder(
+          response,
+          order.side,
+          order.id,
+          newSize,
+          newPrice,
+          TimeInForce.GTC
+        )
+        return response
+      }
+    }
+    // Missing one of price and/or size, or the provided ones are not greater than zero
+    return {
+      done: [],
+      partial: null,
+      partialQuantityProcessed: 0,
+      quantityLeft: orderUpdate?.size ?? 0,
+      err: CustomError(ERROR.ErrInvalidPriceOrQuantity)
+    }
   }
 
   /**
@@ -446,6 +316,113 @@ export class OrderBook {
     }
 
     return { price, err }
+  }
+
+  private readonly getProcessOrderResponse = (size: number): IProcessOrder => {
+    return {
+      done: [],
+      partial: null,
+      partialQuantityProcessed: 0,
+      quantityLeft: size,
+      err: null
+    }
+  }
+
+  private readonly createLimitOrder = (
+    response: IProcessOrder,
+    side: Side,
+    orderID: string,
+    size: number,
+    price: number,
+    timeInForce: TimeInForce
+  ): void => {
+    let quantityToTrade = size
+    let sideToProcess: OrderSide
+    let sideToAdd: OrderSide
+    let comparator
+    let iter
+
+    if (side === Side.BUY) {
+      sideToAdd = this.bids
+      sideToProcess = this.asks
+      comparator = this.greaterThanOrEqual
+      iter = this.asks.minPriceQueue
+    } else {
+      sideToAdd = this.asks
+      sideToProcess = this.bids
+      comparator = this.lowerThanOrEqual
+      iter = this.bids.maxPriceQueue
+    }
+
+    if (timeInForce === TimeInForce.FOK) {
+      const fillable = this.canFillOrder(sideToProcess, side, size, price)
+      if (!fillable) {
+        response.err = CustomError(ERROR.ErrLimitFOKNotFillable)
+        return
+      }
+    }
+
+    let bestPrice = iter()
+    while (
+      quantityToTrade > 0 &&
+      sideToProcess.len() > 0 &&
+      bestPrice !== undefined &&
+      comparator(price, bestPrice.price())
+    ) {
+      const { done, partial, partialQuantityProcessed, quantityLeft } =
+        this.processQueue(bestPrice, quantityToTrade)
+      response.done = response.done.concat(done)
+      response.partial = partial
+      response.partialQuantityProcessed = partialQuantityProcessed
+      quantityToTrade = quantityLeft
+      response.quantityLeft = quantityToTrade
+      bestPrice = iter()
+    }
+
+    if (quantityToTrade > 0) {
+      const order = new Order(
+        orderID,
+        side,
+        quantityToTrade,
+        price,
+        Date.now(),
+        true
+      )
+      if (response.done.length > 0) {
+        response.partialQuantityProcessed = size - quantityToTrade
+        response.partial = order
+      }
+      this.orders[orderID] = sideToAdd.append(order)
+    } else {
+      let totalQuantity = 0
+      let totalPrice = 0
+
+      response.done.forEach((order: Order) => {
+        totalQuantity += order.size
+        totalPrice += order.price * order.size
+      })
+
+      if (response.partialQuantityProcessed > 0 && response.partial !== null) {
+        totalQuantity += response.partialQuantityProcessed
+        totalPrice +=
+          response.partial.price * response.partialQuantityProcessed
+      }
+
+      response.done.push(
+        new Order(
+          orderID,
+          side,
+          size,
+          totalPrice / totalQuantity,
+          Date.now()
+        )
+      )
+    }
+
+    // If IOC order was not matched completely remove from the order book
+    if (timeInForce === TimeInForce.IOC && response.quantityLeft > 0) {
+      this.cancel(orderID)
+    }
   }
 
   private readonly greaterThanOrEqual = (a: number, b: number): boolean => {

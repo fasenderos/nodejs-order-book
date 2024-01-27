@@ -109,9 +109,9 @@ export class OrderSide {
     oldOrder: Order,
     orderUpdate: OrderUpdateSize
   ): Order => {
-    const newOrderPrize = orderUpdate.price ?? oldOrder.price
+    const newOrderPrice = orderUpdate.price ?? oldOrder.price
     this._volume += orderUpdate.size - oldOrder.size
-    this._total += orderUpdate.size * newOrderPrize - oldOrder.size * oldOrder.price
+    this._total += orderUpdate.size * newOrderPrice - oldOrder.size * oldOrder.price
     this._prices[oldOrder.price.toString()].updateOrderSize(oldOrder, orderUpdate.size)
     return oldOrder
   }

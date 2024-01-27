@@ -141,7 +141,7 @@ void test('test limit', ({ equal, end }) => {
   equal(process9.err?.message, ERROR.ErrInvalidPrice)
 
   // @ts-expect-error
-  const process10 = ob.limit(Side.SELL, 'fake-wrong-price', 10)
+  const process10 = ob.limit(Side.SELL, 'fake-without-price', 10)
   equal(process10.err?.message, ERROR.ErrInvalidPrice)
 
   // @ts-expect-error
@@ -282,16 +282,43 @@ void test('test modify', ({ equal, end }) => {
     // SIDE BUY
     const newSize = 990
     // Test update size
-    // Response is the updated order or undefined if no order exist
     let response = ob.modify('first-order', { size: newSize })
-    equal(response?.size, newSize)
-    equal(response?.price, initialPrice1)
+    equal(response?.done.length, 0)
+    equal(response?.err, null)
+    equal(response?.quantityLeft, newSize)
+
+    // Test passing an invalid price
+    response = ob.modify('first-order', { price: 0 })
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
+
+    // Test passing an invalid size
+    response = ob.modify('first-order', { size: -1 })
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
+
+    // Test passing an invalid size and price
+    response = ob.modify('first-order', { size: -1, price: 0 })
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
+
+    // Test passing an invalid price
+    response = ob.modify('first-order', { price: 0 })
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
+
+    // Test passing an invalid size
+    response = ob.modify('first-order', { size: -1 })
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
+
+    // Test modify without passing size and price
+    // @ts-expect-error
+    response = ob.modify('first-order')
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
 
     // Test update price
     const newPrice = 82
     response = ob.modify('first-order', { price: newPrice, size: newSize })
-    equal(response?.price, newPrice)
-    equal(response?.size, newSize)
+    equal(response?.done.length, 0)
+    equal(response?.err, null)
+    equal(response?.quantityLeft, newSize)
+    equal(ob.order('first-order')?.price, newPrice)
 
     // @ts-expect-error properties bids and _priceTree are private
     const bookOrdersSize = ob.asks._priceTree.values
@@ -302,29 +329,55 @@ void test('test modify', ({ equal, end }) => {
 
     // Test modify price order that cross the market price and don't fill completely
     response = ob.modify('first-order', { price: 130 })
-    equal(response?.size, newSize - bookOrdersSize)
-
-    // TODO done only for coverage. But the response is the order with it's original size
-    // so we have to check the logic of the limit order
-    // Test modify price order that cross the market price and fill completely
-    ob.limit(Side.SELL, 'sell-to-be-filled', newSize, 140)
-    response = ob.modify('first-order', { price: 140, size: newSize + 2 })
+    const completedOrders = response?.done.map((order) => order.id)
+    equal(completedOrders?.join(), ['sell-100', 'sell-110', 'sell-120', 'sell-130'].join())
+    equal(response?.partial?.id, 'first-order')
+    equal(response?.partial?.size, newSize - bookOrdersSize)
+    equal(response?.partialQuantityProcessed, bookOrdersSize)
+    equal(response?.quantityLeft, newSize - bookOrdersSize)
   }
 
   {
     // SIDE SELL
     const newSize = 990
     // Test update size
-    // Response is the updated order or undefined if no order exist
     let response = ob.modify('second-order', { size: newSize })
-    equal(response?.size, newSize)
-    equal(response?.price, initialPrice2)
+    equal(response?.done.length, 0)
+    equal(response?.err, null)
+    equal(response?.quantityLeft, newSize)
+
+    // Test passing an invalid price
+    response = ob.modify('second-order', { price: 0 })
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
+
+    // Test passing an invalid size
+    response = ob.modify('second-order', { size: -1 })
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
+
+    // Test passing an invalid size and price
+    response = ob.modify('second-order', { size: -1, price: 0 })
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
+
+    // Test passing an invalid price
+    response = ob.modify('second-order', { price: 0 })
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
+
+    // Test passing an invalid size
+    response = ob.modify('second-order', { size: -1 })
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
+
+    // Test modify without passing size and price
+    // @ts-expect-error
+    response = ob.modify('second-order')
+    equal(response?.err?.message, ERROR.ErrInvalidPriceOrQuantity)
 
     // Test update price
     const newPrice = 250
     response = ob.modify('second-order', { price: newPrice, size: newSize })
-    equal(response?.price, newPrice)
-    equal(response?.size, newSize)
+    equal(response?.done.length, 0)
+    equal(response?.err, null)
+    equal(response?.quantityLeft, newSize)
+    equal(ob.order('second-order')?.price, newPrice)
 
     // @ts-expect-error properties bids and _priceTree are private
     const bookOrdersSize = ob.bids._priceTree.values
@@ -334,18 +387,18 @@ void test('test modify', ({ equal, end }) => {
 
     // Test modify price order that cross the market price
     response = ob.modify('second-order', { price: 80 })
-    equal(response?.size, newSize - bookOrdersSize)
-
-    // TODO done only for coverage. But the response is the order with it's original size
-    // so we have to check the logic of the limit order
-    // Test modify price order that cross the market price and fill completely
-    ob.limit(Side.BUY, 'buy-to-be-filled', newSize, 70)
-    response = ob.modify('second-order', { price: 70, size: newSize + 2 })
+    const completedOrders = response?.done.map((order) => order.id)
+    equal(completedOrders?.join(), ['first-order', 'buy-90', 'buy-80'].join())
+    equal(response?.partial?.id, 'second-order')
+    equal(response?.partial?.size, newSize - bookOrdersSize)
+    equal(response?.partialQuantityProcessed, bookOrdersSize)
+    equal(response?.quantityLeft, newSize - bookOrdersSize)
   }
 
-  // Test modify a non-existent order
+  // Test modify a non-existent order without passing size
   const resp = ob.modify('non-existent-order', { price: 123 })
-  equal(resp === undefined, true)
+  equal(resp.err?.message, ERROR.ErrOrderNotFound)
+  equal(resp.quantityLeft, 0)
   end()
 })
 
