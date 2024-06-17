@@ -1,16 +1,5 @@
 import { Side } from './side'
-
-interface IOrder {
-  id: string
-  side: Side
-  size: number
-  price: number
-  time: number
-  isMaker: boolean
-}
-
-export interface OrderUpdatePrice { price: number, size?: number }
-export interface OrderUpdateSize { price?: number, size: number }
+import { IOrder } from './types'
 
 export enum OrderType {
   LIMIT = 'limit',
@@ -92,24 +81,24 @@ export class Order {
   }
 
   // This method returns a string representation of the order
-  toString = (): string => (
+  toString = (): string =>
     `${this._id}:
     side: ${this._side}
     size: ${this._size.toString()}
     price: ${this._price}
     time: ${this._time}
     isMaker: ${this._isMaker as unknown as string}`
-  )
 
   // This method returns a JSON string representation of the order
-  toJSON = (): string => JSON.stringify({
-    id: this._id,
-    side: this._side,
-    size: this._size,
-    price: this._price,
-    time: this._time,
-    isMaker: this._isMaker
-  })
+  toJSON = (): string =>
+    JSON.stringify({
+      id: this._id,
+      side: this._side,
+      size: this._size,
+      price: this._price,
+      time: this._time,
+      isMaker: this._isMaker
+    })
 
   // This method returns an object representation of the order
   toObject = (): IOrder => ({

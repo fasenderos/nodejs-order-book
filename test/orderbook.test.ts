@@ -3,13 +3,16 @@ import { test } from 'tap'
 import { Side } from '../src/side'
 import { OrderBook } from '../src/orderbook'
 import { ERROR } from '../src/errors'
+import { JournalLog } from '../src/types'
 
-const addDepth = (ob: OrderBook, prefix: string, quantity: number): void => {
+const addDepth = (ob: OrderBook, prefix: string, quantity: number, journal?: JournalLog[]): void => {
   for (let index = 50; index < 100; index += 10) {
-    ob.limit(Side.BUY, `${prefix}buy-${index}`, quantity, index)
+    const response = ob.limit(Side.BUY, `${prefix}buy-${index}`, quantity, index)
+    if (journal != null && response.log != null) journal.push(response.log)
   }
   for (let index = 100; index < 150; index += 10) {
-    ob.limit(Side.SELL, `${prefix}sell-${index}`, quantity, index)
+    const response = ob.limit(Side.SELL, `${prefix}sell-${index}`, quantity, index)
+    if (journal != null && response.log != null) journal.push(response.log)
   }
 }
 
@@ -428,5 +431,198 @@ void test('test priceCalculation', ({ equal, end }) => {
 
   equal(calc4.err?.message, ERROR.ErrInsufficientQuantity)
   equal(calc4.price, 10500)
+  end()
+})
+
+void test('orderbook enableJournaling option', ({ equal, end, same }) => {
+  const ob = new OrderBook({ enableJournaling: true })
+
+  {
+    const response = ob.limit(Side.BUY, 'first-order', 50, 100)
+    equal(typeof response.log?.ts, 'number')
+    equal(response.log?.op, 'l')
+    same(response.log?.o, {
+      side: Side.BUY,
+      orderID: 'first-order',
+      size: 50,
+      price: 100,
+      timeInForce: TimeInForce.GTC
+    })
+  }
+
+  {
+    const response = ob.market(Side.BUY, 50)
+    equal(typeof response.log?.ts, 'number')
+    equal(response.log?.op, 'm')
+    same(response.log?.o, {
+      side: Side.BUY,
+      size: 50
+    })
+  }
+
+  {
+    const response = ob.modify('first-order', { size: 55 })
+    equal(typeof response.log?.ts, 'number')
+    equal(response.log?.op, 'u')
+    same(response.log?.o, {
+      orderID: 'first-order',
+      orderUpdate: { size: 55 }
+    })
+  }
+
+  {
+    const response = ob.cancel('first-order')
+    equal(typeof response?.log?.ts, 'number')
+    equal(response?.log?.op, 'd')
+    same(response?.log?.o, {
+      orderID: 'first-order'
+    })
+  }
+
+  end()
+})
+
+void test('orderbook replayJournal', ({ equal, end }) => {
+  const ob = new OrderBook({ enableJournaling: true })
+
+  const journal: JournalLog[] = []
+
+  addDepth(ob, '', 2, journal)
+
+  {
+    // Add Market Order
+    const response = ob.market(Side.BUY, 3)
+    if (response.log != null) journal.push(response.log)
+  }
+
+  {
+    // Add Limit Order, modify and delete the order
+    const response = ob.limit(Side.BUY, 'limit-order-b100', 1, 100)
+    if (response.log != null) journal.push(response.log)
+    const modifyOrder = ob.modify('limit-order-b100', { size: 2 })
+    if (modifyOrder.log != null) journal.push(modifyOrder.log)
+    const deleteOrder = ob.cancel('limit-order-b100')
+    if (deleteOrder?.log != null) journal.push(deleteOrder.log)
+  }
+
+  const ob2 = new OrderBook({ journal })
+
+  equal(ob.toString(), ob2.toString())
+
+  end()
+})
+
+void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
+  // Test valid journal log that is not an array
+  try {
+    const journalLog: JournalLog = {
+      ts: Date.now(),
+      op: 'd',
+      o: { orderID: 'bar' }
+    }
+    // @ts-expect-error journal log must be an array
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: journalLog })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
+
+  // Test wrong op in journal log
+  try {
+    const wrongOp = [
+      {
+        ts: Date.now(),
+        op: 'x',
+        o: { foo: 'bar' }
+      }
+    ]
+    // @ts-expect-error wrong "op" provided
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: wrongOp })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
+
+  // Test wrong market order journal log
+  try {
+    const wrongOp = [
+      {
+        ts: Date.now(),
+        op: 'm',
+        o: { foo: 'bar' }
+      }
+    ]
+    // @ts-expect-error wrong market order "o" prop in journal log
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: wrongOp })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
+
+  // Test wrong limit order journal log
+  try {
+    const wrongOp = [
+      {
+        ts: Date.now(),
+        op: 'l',
+        o: { foo: 'bar' }
+      }
+    ]
+    // @ts-expect-error wrong limit order "o" prop in journal log
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: wrongOp })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
+
+  // Test wrong update order journal log
+  try {
+    const wrongOp = [
+      {
+        ts: Date.now(),
+        op: 'u',
+        o: { foo: 'bar' }
+      }
+    ]
+    // @ts-expect-error wrong update order "o" prop in journal log
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: wrongOp })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
+
+  // Test wrong delete order journal log
+  try {
+    const wrongOp = [
+      {
+        ts: Date.now(),
+        op: 'd',
+        o: { foo: 'bar' }
+      }
+    ]
+    // @ts-expect-error wrong delete order "o" prop in journal log
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: wrongOp })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
   end()
 })
