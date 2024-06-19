@@ -3,13 +3,32 @@ import { test } from 'tap'
 import { Side } from '../src/side'
 import { OrderBook } from '../src/orderbook'
 import { ERROR } from '../src/errors'
+import { JournalLog } from '../src/types'
+import { OrderQueue } from '../src/orderqueue'
 
-const addDepth = (ob: OrderBook, prefix: string, quantity: number): void => {
+const addDepth = (
+  ob: OrderBook,
+  prefix: string,
+  quantity: number,
+  journal?: JournalLog[]
+): void => {
   for (let index = 50; index < 100; index += 10) {
-    ob.limit(Side.BUY, `${prefix}buy-${index}`, quantity, index)
+    const response = ob.limit(
+      Side.BUY,
+      `${prefix}buy-${index}`,
+      quantity,
+      index
+    )
+    if (journal != null && response.log != null) journal.push(response.log)
   }
   for (let index = 100; index < 150; index += 10) {
-    ob.limit(Side.SELL, `${prefix}sell-${index}`, quantity, index)
+    const response = ob.limit(
+      Side.SELL,
+      `${prefix}sell-${index}`,
+      quantity,
+      index
+    )
+    if (journal != null && response.log != null) journal.push(response.log)
   }
 }
 
@@ -323,14 +342,18 @@ void test('test modify', ({ equal, end }) => {
     // @ts-expect-error properties bids and _priceTree are private
     const bookOrdersSize = ob.asks._priceTree.values
       .filter((queue) => queue.price() <= 130)
-      .map((queue) => queue.toArray().reduce((acc: number,
-        curr: Order) => acc + curr.size, 0))
+      .map((queue) =>
+        queue.toArray().reduce((acc: number, curr: Order) => acc + curr.size, 0)
+      )
       .reduce((acc: number, curr: number) => acc + curr, 0)
 
     // Test modify price order that cross the market price and don't fill completely
     response = ob.modify('first-order', { price: 130 })
     const completedOrders = response?.done.map((order) => order.id)
-    equal(completedOrders?.join(), ['sell-100', 'sell-110', 'sell-120', 'sell-130'].join())
+    equal(
+      completedOrders?.join(),
+      ['sell-100', 'sell-110', 'sell-120', 'sell-130'].join()
+    )
     equal(response?.partial?.id, 'first-order')
     equal(response?.partial?.size, newSize - bookOrdersSize)
     equal(response?.partialQuantityProcessed, bookOrdersSize)
@@ -382,7 +405,9 @@ void test('test modify', ({ equal, end }) => {
     // @ts-expect-error properties bids and _priceTree are private
     const bookOrdersSize = ob.bids._priceTree.values
       .filter((queue) => queue.price() >= 80)
-      .map((queue) => queue.toArray().reduce((acc: number, curr: Order) => acc + curr.size, 0))
+      .map((queue) =>
+        queue.toArray().reduce((acc: number, curr: Order) => acc + curr.size, 0)
+      )
       .reduce((acc: number, curr: number) => acc + curr, 0)
 
     // Test modify price order that cross the market price
@@ -428,5 +453,321 @@ void test('test priceCalculation', ({ equal, end }) => {
 
   equal(calc4.err?.message, ERROR.ErrInsufficientQuantity)
   equal(calc4.price, 10500)
+  end()
+})
+
+void test('orderbook enableJournaling option', ({ equal, end, same }) => {
+  const ob = new OrderBook({ enableJournaling: true })
+
+  {
+    const response = ob.limit(Side.BUY, 'first-order', 50, 100)
+    equal(response.log?.opId, 1)
+    equal(typeof response.log?.ts, 'number')
+    equal(response.log?.op, 'l')
+    same(response.log?.o, {
+      side: Side.BUY,
+      orderID: 'first-order',
+      size: 50,
+      price: 100,
+      timeInForce: TimeInForce.GTC
+    })
+  }
+
+  {
+    const response = ob.market(Side.BUY, 50)
+    equal(response.log?.opId, 2)
+    equal(typeof response.log?.ts, 'number')
+    equal(response.log?.op, 'm')
+    same(response.log?.o, {
+      side: Side.BUY,
+      size: 50
+    })
+  }
+
+  {
+    const response = ob.modify('first-order', { size: 55 })
+    equal(response.log?.opId, 3)
+    equal(typeof response.log?.ts, 'number')
+    equal(response.log?.op, 'u')
+    same(response.log?.o, {
+      orderID: 'first-order',
+      orderUpdate: { size: 55 }
+    })
+  }
+
+  {
+    const response = ob.cancel('first-order')
+    equal(response?.log?.opId, 4)
+    equal(typeof response?.log?.ts, 'number')
+    equal(response?.log?.op, 'd')
+    same(response?.log?.o, {
+      orderID: 'first-order'
+    })
+  }
+
+  end()
+})
+
+void test('orderbook replayJournal', ({ equal, end }) => {
+  const ob = new OrderBook({ enableJournaling: true })
+
+  const journal: JournalLog[] = []
+
+  addDepth(ob, '', 2, journal)
+
+  {
+    // Add Market Order
+    const response = ob.market(Side.BUY, 3)
+    if (response.log != null) journal.push(response.log)
+  }
+
+  {
+    // Add Limit Order, modify and delete the order
+    const response = ob.limit(Side.BUY, 'limit-order-b100', 1, 100)
+    if (response.log != null) journal.push(response.log)
+    const modifyOrder = ob.modify('limit-order-b100', { size: 2 })
+    if (modifyOrder.log != null) journal.push(modifyOrder.log)
+    const deleteOrder = ob.cancel('limit-order-b100')
+    if (deleteOrder?.log != null) journal.push(deleteOrder.log)
+  }
+
+  const ob2 = new OrderBook({ journal })
+
+  equal(ob.toString(), ob2.toString())
+
+  end()
+})
+
+void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
+  // Test valid journal log that is not an array
+  try {
+    const journalLog: JournalLog = {
+      opId: 1,
+      ts: Date.now(),
+      op: 'd',
+      o: { orderID: 'bar' }
+    }
+    // @ts-expect-error journal log must be an array
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: journalLog })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
+
+  // Test wrong op in journal log
+  try {
+    const wrongOp = [
+      {
+        ts: Date.now(),
+        op: 'x',
+        o: { foo: 'bar' }
+      }
+    ]
+    // @ts-expect-error wrong "op" provided
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: wrongOp })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
+
+  // Test wrong market order journal log
+  try {
+    const wrongOp = [
+      {
+        ts: Date.now(),
+        op: 'm',
+        o: { foo: 'bar' }
+      }
+    ]
+    // @ts-expect-error wrong market order "o" prop in journal log
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: wrongOp })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
+
+  // Test wrong limit order journal log
+  try {
+    const wrongOp = [
+      {
+        ts: Date.now(),
+        op: 'l',
+        o: { foo: 'bar' }
+      }
+    ]
+    // @ts-expect-error wrong limit order "o" prop in journal log
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: wrongOp })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
+
+  // Test wrong update order journal log
+  try {
+    const wrongOp = [
+      {
+        ts: Date.now(),
+        op: 'u',
+        o: { foo: 'bar' }
+      }
+    ]
+    // @ts-expect-error wrong update order "o" prop in journal log
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: wrongOp })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
+
+  // Test wrong delete order journal log
+  try {
+    const wrongOp = [
+      {
+        ts: Date.now(),
+        op: 'd',
+        o: { foo: 'bar' }
+      }
+    ]
+    // @ts-expect-error wrong delete order "o" prop in journal log
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const ob = new OrderBook({ journal: wrongOp })
+  } catch (error) {
+    if (error instanceof Error) {
+      // TypeScript knows err is Error
+      equal(error?.message, ERROR.ErrJournalLog)
+    }
+  }
+  end()
+})
+
+void test('orderbook test snapshot', ({ equal, end }) => {
+  const ob = new OrderBook()
+  addDepth(ob, '', 10)
+  const snapshot = ob.snapshot()
+
+  equal(Array.isArray(snapshot.asks), true)
+  equal(Array.isArray(snapshot.bids), true)
+  equal(typeof snapshot.ts, 'number')
+  snapshot.asks.forEach((level) => {
+    equal(typeof level.price, 'number')
+    equal(Array.isArray(level.orders), true)
+    level.orders.forEach((order) => {
+      equal(order instanceof Order, true)
+    })
+  })
+
+  snapshot.bids.forEach((level) => {
+    equal(typeof level.price, 'number')
+    equal(Array.isArray(level.orders), true)
+    level.orders.forEach((order) => {
+      equal(order instanceof Order, true)
+    })
+  })
+
+  end()
+})
+
+void test('orderbook restore from snapshot', ({ equal, same, end }) => {
+  // Create a new orderbook with 3 orders for price levels and make a snapshot
+  const journal: JournalLog[] = []
+  const ob = new OrderBook({ enableJournaling: true })
+  addDepth(ob, 'first-run-', 10, journal)
+  addDepth(ob, 'second-run-', 10, journal)
+  addDepth(ob, 'third-run-', 10, journal)
+
+  const snapshot = ob.snapshot()
+  {
+    // Create a new orderbook from the snapshot and check is the same as before
+    const ob2 = new OrderBook({ snapshot, enableJournaling: true })
+
+    equal(ob.toString(), ob2.toString())
+    same(ob.depth(), ob2.depth())
+
+    // @ts-expect-error these are private properties
+    same(ob.orders, ob2.orders)
+    // @ts-expect-error these are private properties
+    equal(ob.asks.volume(), ob2.asks.volume())
+    // @ts-expect-error these are private properties
+    equal(ob.bids.volume(), ob2.bids.volume())
+
+    // @ts-expect-error these are private properties
+    equal(ob.asks.total(), ob2.asks.total())
+    // @ts-expect-error these are private properties
+    equal(ob.bids.total(), ob2.bids.total())
+
+    // @ts-expect-error these are private properties
+    equal(ob.asks.len(), ob2.asks.len())
+    // @ts-expect-error these are private properties
+    equal(ob.bids.len(), ob2.bids.len())
+
+    equal(ob.lastOp, ob2.lastOp)
+
+    const prev = {}
+    const restored = {}
+
+    // @ts-expect-error these are private properties
+    ob.asks.priceTree().forEach((price: number, level: OrderQueue) => {
+      prev[price] = level.toArray()
+    })
+
+    // @ts-expect-error these are private properties
+    ob.bids.priceTree().forEach((price: number, level: OrderQueue) => {
+      prev[price] = level.toArray()
+    })
+
+    // @ts-expect-error these are private properties
+    ob2.asks.priceTree().forEach((price: number, level: OrderQueue) => {
+      restored[price] = level.toArray()
+    })
+
+    // @ts-expect-error these are private properties
+    ob2.bids.priceTree().forEach((price: number, level: OrderQueue) => {
+      restored[price] = level.toArray()
+    })
+
+    same(prev, restored)
+
+    // Compare also the snapshot from the original order book and the restored one
+    const snapshot2 = ob2.snapshot()
+    same(snapshot.asks, snapshot2.asks)
+    same(snapshot.bids, snapshot2.bids)
+  }
+
+  {
+    // Add three additional order to the original orderbook with journal
+    const lastOp = ob.lastOp
+    addDepth(ob, 'fourth-run-', 10, journal)
+    addDepth(ob, 'fifth-run-', 10, journal)
+    addDepth(ob, 'sixth-run-', 10, journal)
+
+    const ob2 = new OrderBook({ snapshot, journal, enableJournaling: true })
+    equal(ob2.lastOp, lastOp + 30) // every run add 10 additional orders
+  }
+
+  end()
+})
+
+void test('orderbook test unreachable lines', ({ equal, same, end }) => {
+  const ob = new OrderBook({ enableJournaling: true })
+  addDepth(ob, '', 10)
+
+  // test SELL side remove order with journal enabled
+  const deleted = ob.cancel('sell-100')
+  equal(ob.lastOp, deleted?.log?.opId)
+
   end()
 })

@@ -68,5 +68,7 @@ void test('it should update order size and the volume', ({ equal, end }) => {
 
   equal(oq.volume(), 15)
   equal(order1.size, newSize)
+  // Original size should not be changed
+  equal(order1.origSize, 5)
   end()
 })

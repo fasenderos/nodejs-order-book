@@ -14,12 +14,14 @@ void test('it should create order object', ({ equal, same, end }) => {
   equal(order.id, id)
   equal(order.side, side)
   equal(order.size, size)
+  equal(order.origSize, size)
   equal(order.price, price)
   equal(order.time, time)
   equal(order.isMaker, false)
   same(order.toObject(), {
     id,
     side,
+    origSize: size,
     size,
     price,
     time,
@@ -29,6 +31,7 @@ void test('it should create order object', ({ equal, same, end }) => {
     order.toString(),
     `${id}:
     side: ${side}
+    origSize: ${size}
     size: ${size}
     price: ${price}
     time: ${time}
@@ -36,7 +39,15 @@ void test('it should create order object', ({ equal, same, end }) => {
   )
   equal(
     order.toJSON(),
-    JSON.stringify({ id, side, size, price, time, isMaker: false })
+    JSON.stringify({
+      id,
+      side,
+      origSize: size,
+      size,
+      price,
+      time,
+      isMaker: false
+    })
   )
   end()
 })
@@ -61,12 +72,14 @@ void test('it should create order without passing a date', ({
   equal(order.id, id)
   equal(order.side, side)
   equal(order.size, size)
+  equal(order.origSize, size)
   equal(order.price, price)
   equal(order.time, fakeTimestamp)
   equal(order.isMaker, false)
   same(order.toObject(), {
     id,
     side,
+    origSize: size,
     size,
     price,
     time: fakeTimestamp,
@@ -76,6 +89,7 @@ void test('it should create order without passing a date', ({
     order.toString(),
     `${id}:
     side: ${side}
+    origSize: ${size}
     size: ${size}
     price: ${price}
     time: ${fakeTimestamp}
@@ -87,6 +101,7 @@ void test('it should create order without passing a date', ({
     JSON.stringify({
       id,
       side,
+      origSize: size,
       size,
       price,
       time: fakeTimestamp,
@@ -118,6 +133,9 @@ void test('test orders setters', (t) => {
   const newTime = Date.now()
   order.time = newTime
   t.equal(order.time, newTime)
+
+  // Original size should not be changed
+  t.equal(order.origSize, size)
 
   t.end()
 })
