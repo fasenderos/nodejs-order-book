@@ -267,6 +267,14 @@ Snapshots are crucial for restoring the order book to a previous state. The syst
 
 ### Important: Users must ensure that orders included in the snapshot are not passed into the journal. Doing so can lead to duplication of orders, which can cause inconsistencies in the order book state.
 ```js
+const lob = new OrderBook();
+
+// ... after some time take a snapshot of the order book and save it on the database
+
+const snapshot = lob.snapshot();
+
+// On server restart get the snapshot from the database and initialize the order book
+
 const lob = new OrderBook({ snapshot });
 ```
 
@@ -274,6 +282,8 @@ const lob = new OrderBook({ snapshot });
 The `journal` feature allows for the logging of changes and activities within the orderbook and contains all the orders operations. This is useful for recovering the state of orderbook after unexpected events.
 ```js
 // Assuming 'logs' is an array of log entries retrieved from the database
+
+const logs = await getLogsFromDatabase();
 const lob = new OrderBook({ journal: logs, enableJournalLog: true });
 ```
 By combining snapshots with journaling, the system can effectively restore and audit the state of the order book, ensuring data integrity and providing a reliable mechanism for state recovery.
@@ -282,6 +292,10 @@ By combining snapshots with journaling, the system can effectively restore and a
 `enabledJournaling` is a configuration setting that determines whether journaling is enabled or disabled. When enabled, all changes to the order book and related activities are logged into a journal. This helps in tracking and auditing the state of the order book over time.
 ```js
 const lob = new OrderBook({ enableJournaling: true }); // false by default
+
+// after every order save the log to the database
+const order = lob.limit("sell", "uniqueID", 55, 100)
+await saveLogtoDatabase(order.log)
 ```
 
 ## Development
