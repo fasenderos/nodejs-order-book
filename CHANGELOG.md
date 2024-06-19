@@ -1,5 +1,51 @@
 # Changelog
 
+## [5.0.0](https://github.com/fasenderos/hft-limit-order-book/compare/v4.0.0...v5.0.0) (2024-06-19)
+
+
+### Features
+
+* add enableJournaling option and replayJournal functionality ([f451c50](https://github.com/fasenderos/hft-limit-order-book/commit/f451c5077df72fabbca4526f26bf750668348fdd))
+* avoid restoring same order twice ([483eef9](https://github.com/fasenderos/hft-limit-order-book/commit/483eef928a81d60eafdfa75961e709bb4ce7df0e))
+* snapshot and restore functionality + add origSize to Order ([7d09059](https://github.com/fasenderos/hft-limit-order-book/commit/7d0905976d3b118e35fba31e4923b6a6ea4d219a))
+
+
+### Chore
+
+* **deps-dev:** bump @commitlint/cli from 18.6.0 to 18.6.1 ([f8193db](https://github.com/fasenderos/hft-limit-order-book/commit/f8193db3f50eec2d1a70a742b1e106c4dee9d6d2))
+* **deps-dev:** bump @commitlint/config-conventional ([f4745e6](https://github.com/fasenderos/hft-limit-order-book/commit/f4745e67b7766c10c31c271ae911777fe7b6c54b))
+* **deps-dev:** bump @commitlint/config-conventional ([7972796](https://github.com/fasenderos/hft-limit-order-book/commit/797279684b1af3799e01d8c25b5c9bd5c7572d36))
+* **deps-dev:** bump braces from 3.0.2 to 3.0.3 ([7231418](https://github.com/fasenderos/hft-limit-order-book/commit/72314189c4b067502f017a7b52c0bd1d5d0f3196))
+* **deps-dev:** bump husky from 9.0.10 to 9.0.11 ([67041f9](https://github.com/fasenderos/hft-limit-order-book/commit/67041f9d1cea29f2bca233cc5077a551f0170a14))
+* **deps-dev:** bump husky from 9.0.6 to 9.0.7 ([31e04c6](https://github.com/fasenderos/hft-limit-order-book/commit/31e04c631af549b68416decda39112d77f6215e9))
+* **deps-dev:** bump husky from 9.0.7 to 9.0.10 ([3313c37](https://github.com/fasenderos/hft-limit-order-book/commit/3313c37bd8c106673efe08a85dd6f696efed927d))
+* **deps-dev:** bump ip from 2.0.0 to 2.0.1 ([1920277](https://github.com/fasenderos/hft-limit-order-book/commit/192027787c5aef9b3b0419fdae4b364379d44178))
+* **deps-dev:** bump release-it from 17.0.3 to 17.0.5 ([886630e](https://github.com/fasenderos/hft-limit-order-book/commit/886630e29a65f2dd15d85c8ed87ccb9066431152))
+* **deps-dev:** bump release-it from 17.0.5 to 17.1.1 ([5dd483a](https://github.com/fasenderos/hft-limit-order-book/commit/5dd483a2093dcd370567276e3c2650709dd32912))
+* **deps-dev:** bump release-it from 17.1.1 to 17.2.0 ([fae5e69](https://github.com/fasenderos/hft-limit-order-book/commit/fae5e69ecc9b9bfe6606f4a5ef7fd4591ec8fac4))
+* **deps-dev:** bump release-it from 17.2.0 to 17.2.1 ([4a98f82](https://github.com/fasenderos/hft-limit-order-book/commit/4a98f82494cca909cc8f512482d240b44700fdcf))
+* **deps-dev:** bump release-it from 17.2.1 to 17.3.0 ([75a65f8](https://github.com/fasenderos/hft-limit-order-book/commit/75a65f8329dc1a410d5c639e5a19f687d7d9c77a))
+* **deps-dev:** bump tap from 18.7.0 to 18.7.1 ([03d1588](https://github.com/fasenderos/hft-limit-order-book/commit/03d1588f89389300cd1e673d9efa246da7f71d01))
+* **deps-dev:** bump tap from 18.7.1 to 18.7.2 ([dc871c0](https://github.com/fasenderos/hft-limit-order-book/commit/dc871c090c2ce471b56da92b7b012f779db03860))
+* **deps-dev:** bump tap from 18.7.2 to 18.7.3 ([b0ec86d](https://github.com/fasenderos/hft-limit-order-book/commit/b0ec86d0ae31c4bc573a7ef9ab165c1481e2ee20))
+* **deps-dev:** bump typescript from 5.3.3 to 5.4.2 ([4cec012](https://github.com/fasenderos/hft-limit-order-book/commit/4cec012d271d6e429f67cb24e2ff983010cfa2b6))
+* **deps-dev:** bump typescript from 5.4.2 to 5.4.3 ([075fd42](https://github.com/fasenderos/hft-limit-order-book/commit/075fd421ab1641e1c13d9f6a5c98741f5939a30d))
+* **deps-dev:** bump typescript from 5.4.3 to 5.4.4 ([9b2918a](https://github.com/fasenderos/hft-limit-order-book/commit/9b2918a1d93c8e5aaac1f0b14251f46a6fb08fa6))
+* **deps-dev:** bump typescript from 5.4.4 to 5.4.5 ([a639640](https://github.com/fasenderos/hft-limit-order-book/commit/a63964014cea3e5d8b6782d68de980135e111af8))
+* **deps-dev:** bump webpack from 5.90.0 to 5.90.1 ([68efd0a](https://github.com/fasenderos/hft-limit-order-book/commit/68efd0a62483fd6b79f7b4ce64ce87f5ca188a44))
+* **deps-dev:** bump webpack from 5.90.1 to 5.90.2 ([1387ff2](https://github.com/fasenderos/hft-limit-order-book/commit/1387ff24315e9a67b6e3358f61aaaa2e385664e2))
+* **deps-dev:** bump webpack from 5.90.2 to 5.90.3 ([0ce68d3](https://github.com/fasenderos/hft-limit-order-book/commit/0ce68d3a084bf92ddda74ae8de29e09515a78752))
+* **deps-dev:** bump webpack from 5.90.3 to 5.91.0 ([b3cbc36](https://github.com/fasenderos/hft-limit-order-book/commit/b3cbc36ac38dc65976d8ebdb4fc5392c1f21d2ad))
+* **deps-dev:** bump webpack from 5.91.0 to 5.92.0 ([7659d4a](https://github.com/fasenderos/hft-limit-order-book/commit/7659d4ad579b3c5499d0b3ce2d924d60e4024828))
+* **deps-dev:** bump webpack from 5.92.0 to 5.92.1 ([f6018fa](https://github.com/fasenderos/hft-limit-order-book/commit/f6018faf77c8a004fde5a8bffc8951b8787b25a7))
+* **deps-dev:** bump ws from 8.17.0 to 8.17.1 ([a0cfe03](https://github.com/fasenderos/hft-limit-order-book/commit/a0cfe03f225975b05625e27153403911264eb413))
+
+
+### Documentation
+
+* documented new journal and snapshot features ([60f9434](https://github.com/fasenderos/hft-limit-order-book/commit/60f9434172395223ef745a3753c6527507cef1cc))
+* improve documentation with better examples ([80bfbca](https://github.com/fasenderos/hft-limit-order-book/commit/80bfbcacb95a86ad96b0c9a4ba487e8928f7aaef))
+
 ## [4.0.0](https://github.com/fasenderos/hft-limit-order-book/compare/v3.0.0...v4.0.0) (2024-01-27)
 
 
