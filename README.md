@@ -22,6 +22,7 @@ Ultra-fast matching engine written in TypeScript
 - Supports time in force GTC, FOK and IOC
 - Supports order cancelling
 - Supports order price and/or size updating
+- Snapshot and journaling functionalities for restoring the order book during server startup
 - **High performance (above 300k trades per second)**
 
 **Machine:** ASUS ExpertBook, 11th Gen Intel(R) Core(TM) i7-1165G7, 2.80Ghz, 16GB RAM, Node.js v18.4.0.
