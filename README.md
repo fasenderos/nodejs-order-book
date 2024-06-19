@@ -283,8 +283,10 @@ await saveSnapshot(snapshot)
 // If you want you can safely remove all logs preceding the `lastOp` id of the snapshot, and continue to save each subsequent log to the database
 await removePreviousLogs(snapshot.lastOp)
 
-// On server restart get the snapshot from the database and initialize the order book
+// On server restart get the snapshot and logs from the database and initialize the order book
 const logs = await getLogs()
+const snapshot = await getSnapshot();
+
 const lob = new OrderBook({ snapshot, journal: log enableJournaling: true });
 ```
 
