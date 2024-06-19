@@ -569,6 +569,7 @@ export class OrderBook {
           } else {
             response.quantityLeft = response.quantityLeft - headOrder.size
             const canceledOrder = this.cancel(headOrder.id)
+            /* c8 ignore next unable to test when order is undefined */
             if (canceledOrder?.order !== undefined) {
               response.done.push(canceledOrder.order)
             }
