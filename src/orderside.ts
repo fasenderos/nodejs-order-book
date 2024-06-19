@@ -1,8 +1,9 @@
 import createRBTree from 'functional-red-black-tree'
 import { CustomError, ERROR } from './errors'
-import { Order, OrderUpdatePrice, OrderUpdateSize } from './order'
+import { Order } from './order'
 import { OrderQueue } from './orderqueue'
 import { Side } from './side'
+import type { OrderUpdatePrice, OrderUpdateSize } from './types'
 
 export class OrderSide {
   private _priceTree: createRBTree.Tree<number, OrderQueue>
@@ -93,26 +94,26 @@ export class OrderSide {
     const newOrder = new Order(
       oldOrder.id,
       oldOrder.side,
-      orderUpdate.size !== undefined
-        ? orderUpdate.size
-        : oldOrder.size,
+      orderUpdate.size !== undefined ? orderUpdate.size : oldOrder.size,
       orderUpdate.price,
       Date.now(),
-      oldOrder.isMaker
+      oldOrder.isMaker,
+      oldOrder.origSize
     )
     this.append(newOrder)
     return newOrder
   }
 
   // Update the price of an order and return the order with the updated price
-  updateOrderSize = (
-    oldOrder: Order,
-    orderUpdate: OrderUpdateSize
-  ): Order => {
+  updateOrderSize = (oldOrder: Order, orderUpdate: OrderUpdateSize): Order => {
     const newOrderPrice = orderUpdate.price ?? oldOrder.price
     this._volume += orderUpdate.size - oldOrder.size
-    this._total += orderUpdate.size * newOrderPrice - oldOrder.size * oldOrder.price
-    this._prices[oldOrder.price.toString()].updateOrderSize(oldOrder, orderUpdate.size)
+    this._total +=
+      orderUpdate.size * newOrderPrice - oldOrder.size * oldOrder.price
+    this._prices[oldOrder.price.toString()].updateOrderSize(
+      oldOrder,
+      orderUpdate.size
+    )
     return oldOrder
   }
 
