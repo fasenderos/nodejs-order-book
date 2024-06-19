@@ -17,6 +17,7 @@ const validTimeInForce = Object.values(TimeInForce)
 
 export class OrderBook {
   private orders: { [key: string]: Order } = {}
+  private _lastOp: number = 0
   private readonly bids: OrderSide
   private readonly asks: OrderSide
   private readonly enableJournaling: boolean
@@ -42,8 +43,17 @@ export class OrderBook {
     // Than replay from journal log
     if (journal != null) {
       if (!Array.isArray(journal)) throw CustomError(ERROR.ErrJournalLog)
+      // If a snapshot is available be sure to remove logs before the last restored operation
+      if (snapshot != null && snapshot.lastOp > 0) {
+        journal = journal.filter((log) => log.opId > snapshot.lastOp)
+      }
       this.replayJournal(journal)
     }
+  }
+
+  // Getter for the lastOp
+  get lastOp (): number {
+    return this._lastOp
   }
 
   /**
@@ -135,6 +145,7 @@ export class OrderBook {
     response.quantityLeft = quantityToTrade
     if (this.enableJournaling) {
       response.log = {
+        opId: ++this._lastOp,
         ts: Date.now(),
         op: 'm',
         o: { side, size }
@@ -191,6 +202,7 @@ export class OrderBook {
     this.createLimitOrder(response, side, orderID, size, price, timeInForce)
     if (this.enableJournaling) {
       response.log = {
+        opId: ++this._lastOp,
         ts: Date.now(),
         op: 'l',
         o: { side, orderID, size, price, timeInForce }
@@ -229,7 +241,7 @@ export class OrderBook {
       const newSize = orderUpdate.size ?? order.size
       if (newPrice > 0 && newSize > 0) {
         const response = this.getProcessOrderResponse(newSize)
-        this.cancel(order.id)
+        this._cancelOrder(order.id, true)
         this.createLimitOrder(
           response,
           order.side,
@@ -240,6 +252,7 @@ export class OrderBook {
         )
         if (this.enableJournaling) {
           response.log = {
+            opId: ++this._lastOp,
             ts: Date.now(),
             op: 'u',
             o: { orderID, orderUpdate }
@@ -265,24 +278,7 @@ export class OrderBook {
    * @returns The removed order if exists or `undefined`
    */
   public cancel = (orderID: string): ICancelOrder | undefined => {
-    const order = this.orders[orderID]
-    if (order === undefined) return
-    /* eslint-disable @typescript-eslint/no-dynamic-delete */
-    delete this.orders[orderID]
-    if (order.side === Side.BUY) {
-      return {
-        order: this.bids.remove(order),
-        ...(this.enableJournaling
-          ? { log: { ts: Date.now(), op: 'd', o: { orderID } } }
-          : {})
-      }
-    }
-    return {
-      order: this.asks.remove(order),
-      ...(this.enableJournaling
-        ? { log: { ts: Date.now(), op: 'd', o: { orderID } } }
-        : {})
-    }
+    return this._cancelOrder(orderID)
   }
 
   /**
@@ -367,10 +363,11 @@ export class OrderBook {
     this.asks.priceTree().forEach((price: number, orders: OrderQueue) => {
       asks.push({ price, orders: orders.toArray() })
     })
-    return { bids, asks, ts: Date.now() }
+    return { bids, asks, ts: Date.now(), lastOp: this._lastOp }
   }
 
   private readonly restoreSnapshot = (snapshot: Snapshot): void => {
+    this._lastOp = snapshot.lastOp
     for (const level of snapshot.bids) {
       for (const order of level.orders) {
         this.orders[order.id] = order
@@ -384,6 +381,44 @@ export class OrderBook {
         this.asks.append(order)
       }
     }
+  }
+
+  private readonly _cancelOrder = (
+    orderID: string,
+    skipOpInc: boolean = false
+  ): ICancelOrder | undefined => {
+    const order = this.orders[orderID]
+    if (order === undefined) return
+    /* eslint-disable @typescript-eslint/no-dynamic-delete */
+    delete this.orders[orderID]
+    if (order.side === Side.BUY) {
+      const response: ICancelOrder = {
+        order: this.bids.remove(order)
+      }
+      if (this.enableJournaling) {
+        response.log = {
+          opId: skipOpInc ? this._lastOp : ++this._lastOp,
+          ts: Date.now(),
+          op: 'd',
+          o: { orderID }
+        }
+      }
+      return response
+    }
+
+    // Side SELL
+    const response: ICancelOrder = {
+      order: this.asks.remove(order)
+    }
+    if (this.enableJournaling) {
+      response.log = {
+        opId: skipOpInc ? this._lastOp : ++this._lastOp,
+        ts: Date.now(),
+        op: 'd',
+        o: { orderID }
+      }
+    }
+    return response
   }
 
   private readonly getProcessOrderResponse = (size: number): IProcessOrder => {
@@ -483,7 +518,7 @@ export class OrderBook {
 
     // If IOC order was not matched completely remove from the order book
     if (timeInForce === TimeInForce.IOC && response.quantityLeft > 0) {
-      this.cancel(orderID)
+      this._cancelOrder(orderID, true)
     }
   }
 
@@ -568,7 +603,7 @@ export class OrderBook {
             response.quantityLeft = 0
           } else {
             response.quantityLeft = response.quantityLeft - headOrder.size
-            const canceledOrder = this.cancel(headOrder.id)
+            const canceledOrder = this._cancelOrder(headOrder.id, true)
             /* c8 ignore next unable to test when order is undefined */
             if (canceledOrder?.order !== undefined) {
               response.done.push(canceledOrder.order)

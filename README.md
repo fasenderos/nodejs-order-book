@@ -261,21 +261,30 @@ A `snapshot` represents the state of the order book at a specific point in time.
 
  - `asks`: An array of ask orders, where each order contains a price and a list of orders associated with that price.
  - `bids`: An array of bid orders, where each order contains a price and a list of orders associated with that price.
-- `ts`: A timestamp indicating when the snapshot was taken, in Unix timestamp format.
+ - `ts`: A timestamp indicating when the snapshot was taken, in Unix timestamp format.
+ - `lastOp`: The id of the last operation included in the snapshot
 
 Snapshots are crucial for restoring the order book to a previous state. The system can restore from a snapshot before processing any journal logs, ensuring consistency and accuracy.
+After taking the snapshot, you can safely remove all logs preceding the `lastOp` id.
 
-### Important: Users must ensure that orders included in the snapshot are not passed into the journal. Doing so can lead to duplication of orders, which can cause inconsistencies in the order book state.
 ```js
-const lob = new OrderBook();
+const lob = new OrderBook({ enableJournaling: true});
+
+// after every order save the log to the database
+const order = lob.limit("sell", "uniqueID", 55, 100)
+await saveLog(order.log)
 
 // ... after some time take a snapshot of the order book and save it on the database
 
 const snapshot = lob.snapshot();
+await saveSnapshot(snapshot)
+
+// If you want you can safely remove all logs preceding the `lastOp` id of the snapshot, and continue to save each subsequent log to the database
+await removePreviousLogs(snapshot.lastOp)
 
 // On server restart get the snapshot from the database and initialize the order book
-
-const lob = new OrderBook({ snapshot });
+const logs = await getLogs()
+const lob = new OrderBook({ snapshot, journal: log enableJournaling: true });
 ```
 
 ### Journal Logs
@@ -283,7 +292,7 @@ The `journal` feature allows for the logging of changes and activities within th
 ```js
 // Assuming 'logs' is an array of log entries retrieved from the database
 
-const logs = await getLogsFromDatabase();
+const logs = await getLogs();
 const lob = new OrderBook({ journal: logs, enableJournalLog: true });
 ```
 By combining snapshots with journaling, the system can effectively restore and audit the state of the order book, ensuring data integrity and providing a reliable mechanism for state recovery.
@@ -295,7 +304,7 @@ const lob = new OrderBook({ enableJournaling: true }); // false by default
 
 // after every order save the log to the database
 const order = lob.limit("sell", "uniqueID", 55, 100)
-await saveLogtoDatabase(order.log)
+await saveLog(order.log)
 ```
 
 ## Development

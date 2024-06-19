@@ -461,6 +461,7 @@ void test('orderbook enableJournaling option', ({ equal, end, same }) => {
 
   {
     const response = ob.limit(Side.BUY, 'first-order', 50, 100)
+    equal(response.log?.opId, 1)
     equal(typeof response.log?.ts, 'number')
     equal(response.log?.op, 'l')
     same(response.log?.o, {
@@ -474,6 +475,7 @@ void test('orderbook enableJournaling option', ({ equal, end, same }) => {
 
   {
     const response = ob.market(Side.BUY, 50)
+    equal(response.log?.opId, 2)
     equal(typeof response.log?.ts, 'number')
     equal(response.log?.op, 'm')
     same(response.log?.o, {
@@ -484,6 +486,7 @@ void test('orderbook enableJournaling option', ({ equal, end, same }) => {
 
   {
     const response = ob.modify('first-order', { size: 55 })
+    equal(response.log?.opId, 3)
     equal(typeof response.log?.ts, 'number')
     equal(response.log?.op, 'u')
     same(response.log?.o, {
@@ -494,6 +497,7 @@ void test('orderbook enableJournaling option', ({ equal, end, same }) => {
 
   {
     const response = ob.cancel('first-order')
+    equal(response?.log?.opId, 4)
     equal(typeof response?.log?.ts, 'number')
     equal(response?.log?.op, 'd')
     same(response?.log?.o, {
@@ -538,6 +542,7 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
   // Test valid journal log that is not an array
   try {
     const journalLog: JournalLog = {
+      opId: 1,
       ts: Date.now(),
       op: 'd',
       o: { orderID: 'bar' }
@@ -678,65 +683,91 @@ void test('orderbook test snapshot', ({ equal, end }) => {
 
 void test('orderbook restore from snapshot', ({ equal, same, end }) => {
   // Create a new orderbook with 3 orders for price levels and make a snapshot
-  const ob = new OrderBook()
-  addDepth(ob, 'first-run-', 10)
-  addDepth(ob, 'second-run-', 10)
-  addDepth(ob, 'third-run-', 10)
+  const journal: JournalLog[] = []
+  const ob = new OrderBook({ enableJournaling: true })
+  addDepth(ob, 'first-run-', 10, journal)
+  addDepth(ob, 'second-run-', 10, journal)
+  addDepth(ob, 'third-run-', 10, journal)
 
   const snapshot = ob.snapshot()
+  {
+    // Create a new orderbook from the snapshot and check is the same as before
+    const ob2 = new OrderBook({ snapshot, enableJournaling: true })
 
-  // Create a new orderbook from the snapshot and check is the same as before
-  const ob2 = new OrderBook({ snapshot })
+    equal(ob.toString(), ob2.toString())
+    same(ob.depth(), ob2.depth())
 
-  equal(ob.toString(), ob2.toString())
-  same(ob.depth(), ob2.depth())
+    // @ts-expect-error these are private properties
+    same(ob.orders, ob2.orders)
+    // @ts-expect-error these are private properties
+    equal(ob.asks.volume(), ob2.asks.volume())
+    // @ts-expect-error these are private properties
+    equal(ob.bids.volume(), ob2.bids.volume())
 
-  // @ts-expect-error these are private properties
-  same(ob.orders, ob2.orders)
-  // @ts-expect-error these are private properties
-  equal(ob.asks.volume(), ob2.asks.volume())
-  // @ts-expect-error these are private properties
-  equal(ob.bids.volume(), ob2.bids.volume())
+    // @ts-expect-error these are private properties
+    equal(ob.asks.total(), ob2.asks.total())
+    // @ts-expect-error these are private properties
+    equal(ob.bids.total(), ob2.bids.total())
 
-  // @ts-expect-error these are private properties
-  equal(ob.asks.total(), ob2.asks.total())
-  // @ts-expect-error these are private properties
-  equal(ob.bids.total(), ob2.bids.total())
+    // @ts-expect-error these are private properties
+    equal(ob.asks.len(), ob2.asks.len())
+    // @ts-expect-error these are private properties
+    equal(ob.bids.len(), ob2.bids.len())
 
-  // @ts-expect-error these are private properties
-  equal(ob.asks.len(), ob2.asks.len())
-  // @ts-expect-error these are private properties
-  equal(ob.bids.len(), ob2.bids.len())
+    equal(ob.lastOp, ob2.lastOp)
 
-  const prev = {}
-  const restored = {}
+    const prev = {}
+    const restored = {}
 
-  // @ts-expect-error these are private properties
-  ob.asks.priceTree().forEach((price: number, level: OrderQueue) => {
-    prev[price] = level.toArray()
-  })
+    // @ts-expect-error these are private properties
+    ob.asks.priceTree().forEach((price: number, level: OrderQueue) => {
+      prev[price] = level.toArray()
+    })
 
-  // @ts-expect-error these are private properties
-  ob.bids.priceTree().forEach((price: number, level: OrderQueue) => {
-    prev[price] = level.toArray()
-  })
+    // @ts-expect-error these are private properties
+    ob.bids.priceTree().forEach((price: number, level: OrderQueue) => {
+      prev[price] = level.toArray()
+    })
 
-  // @ts-expect-error these are private properties
-  ob2.asks.priceTree().forEach((price: number, level: OrderQueue) => {
-    restored[price] = level.toArray()
-  })
+    // @ts-expect-error these are private properties
+    ob2.asks.priceTree().forEach((price: number, level: OrderQueue) => {
+      restored[price] = level.toArray()
+    })
 
-  // @ts-expect-error these are private properties
-  ob2.bids.priceTree().forEach((price: number, level: OrderQueue) => {
-    restored[price] = level.toArray()
-  })
+    // @ts-expect-error these are private properties
+    ob2.bids.priceTree().forEach((price: number, level: OrderQueue) => {
+      restored[price] = level.toArray()
+    })
 
-  same(prev, restored)
+    same(prev, restored)
 
-  // Compare also the snapshot from the original order book and the restored one
-  const snapshot2 = ob2.snapshot()
-  same(snapshot.asks, snapshot2.asks)
-  same(snapshot.bids, snapshot2.bids)
+    // Compare also the snapshot from the original order book and the restored one
+    const snapshot2 = ob2.snapshot()
+    same(snapshot.asks, snapshot2.asks)
+    same(snapshot.bids, snapshot2.bids)
+  }
+
+  {
+    // Add three additional order to the original orderbook with journal
+    const lastOp = ob.lastOp
+    addDepth(ob, 'fourth-run-', 10, journal)
+    addDepth(ob, 'fifth-run-', 10, journal)
+    addDepth(ob, 'sixth-run-', 10, journal)
+
+    const ob2 = new OrderBook({ snapshot, journal, enableJournaling: true })
+    equal(ob2.lastOp, lastOp + 30) // every run add 10 additional orders
+  }
+
+  end()
+})
+
+void test('orderbook test unreachable lines', ({ equal, same, end }) => {
+  const ob = new OrderBook({ enableJournaling: true })
+  addDepth(ob, '', 10)
+
+  // test SELL side remove order with journal enabled
+  const deleted = ob.cancel('sell-100')
+  equal(ob.lastOp, deleted?.log?.opId)
 
   end()
 })

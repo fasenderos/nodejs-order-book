@@ -32,6 +32,8 @@ export interface ICancelOrder {
  * Represents a log entry for a market order operation.
  */
 export interface MarketOrderJournalLog {
+  /** Incremental ID of the operation */
+  opId: number
   /** Timestamp of the operation. */
   ts: number
   /** Operation type: 'm' for market order. */
@@ -44,6 +46,8 @@ export interface MarketOrderJournalLog {
  * Represents a log entry for a limit order operation.
  */
 export interface LimitOrderJournalLog {
+  /** Incremental ID of the operation */
+  opId: number
   /** Timestamp of the operation. */
   ts: number
   /** Operation type: 'l' for limit order. */
@@ -56,6 +60,8 @@ export interface LimitOrderJournalLog {
  * Represents a log entry for an order modification operation.
  */
 export interface ModifyOrderJournalLog {
+  /** Incremental ID of the operation */
+  opId: number
   /** Timestamp of the operation. */
   ts: number
   /** Operation type: 'u' for update order. */
@@ -68,6 +74,8 @@ export interface ModifyOrderJournalLog {
  * Represents a log entry for an order cancellation operation.
  */
 export interface CancelOrderJournalLog {
+  /** Incremental ID of the operation */
+  opId: number
   /** Timestamp of the operation. */
   ts: number
   /** Operation type: 'd' for delete order. */
@@ -204,4 +212,6 @@ export interface Snapshot {
   }>
   /** Unix timestamp representing when the snapshot was taken */
   ts: number
+  /** The id of the last operation inserted in the orderbook */
+  lastOp: number
 }
