@@ -9,7 +9,8 @@ import type {
   JournalLog,
   OrderBookOptions,
   OrderUpdatePrice,
-  OrderUpdateSize
+  OrderUpdateSize,
+  Snapshot
 } from './types'
 
 const validTimeInForce = Object.values(TimeInForce)
@@ -22,13 +23,23 @@ export class OrderBook {
   /**
    * Creates an instance of OrderBook.
    * @param {OrderBookOptions} [options={}] - Options for configuring the order book.
-   * @param {boolean} [options.enableJournaling=false] - Flag to enable journaling. Default to false
+   * @param {JournalLog} [options.snapshot] - The orderbook snapshot will be restored before processing any journal logs, if any.
    * @param {JournalLog} [options.journal] - Array of journal logs (optional).
+   * @param {boolean} [options.enableJournaling=false] - Flag to enable journaling. Default to false
    */
-  constructor ({ enableJournaling = false, journal }: OrderBookOptions = {}) {
+  constructor ({
+    snapshot,
+    journal,
+    enableJournaling = false
+  }: OrderBookOptions = {}) {
     this.bids = new OrderSide(Side.BUY)
     this.asks = new OrderSide(Side.SELL)
     this.enableJournaling = enableJournaling
+    // First restore from orderbook snapshot
+    if (snapshot != null) {
+      this.restoreSnapshot(snapshot)
+    }
+    // Than replay from journal log
     if (journal != null) {
       if (!Array.isArray(journal)) throw CustomError(ERROR.ErrJournalLog)
       this.replayJournal(journal)
@@ -347,6 +358,34 @@ export class OrderBook {
     return { price, err }
   }
 
+  public snapshot = (): Snapshot => {
+    const bids: Array<{ price: number, orders: Order[] }> = []
+    const asks: Array<{ price: number, orders: Order[] }> = []
+    this.bids.priceTree().forEach((price: number, orders: OrderQueue) => {
+      bids.push({ price, orders: orders.toArray() })
+    })
+    this.asks.priceTree().forEach((price: number, orders: OrderQueue) => {
+      asks.push({ price, orders: orders.toArray() })
+    })
+    return { bids, asks, ts: Date.now() }
+  }
+
+  private readonly restoreSnapshot = (snapshot: Snapshot): void => {
+    for (const level of snapshot.bids) {
+      for (const order of level.orders) {
+        this.orders[order.id] = order
+        this.bids.append(order)
+      }
+    }
+
+    for (const level of snapshot.asks) {
+      for (const order of level.orders) {
+        this.orders[order.id] = order
+        this.asks.append(order)
+      }
+    }
+  }
+
   private readonly getProcessOrderResponse = (size: number): IProcessOrder => {
     return {
       done: [],
@@ -520,7 +559,8 @@ export class OrderBook {
               headOrder.size - response.quantityLeft,
               headOrder.price,
               headOrder.time,
-              true
+              true,
+              headOrder.origSize
             )
             this.orders[headOrder.id] = response.partial
             response.partialQuantityProcessed = response.quantityLeft

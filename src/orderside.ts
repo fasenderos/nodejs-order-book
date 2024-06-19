@@ -97,7 +97,8 @@ export class OrderSide {
       orderUpdate.size !== undefined ? orderUpdate.size : oldOrder.size,
       orderUpdate.price,
       Date.now(),
-      oldOrder.isMaker
+      oldOrder.isMaker,
+      oldOrder.origSize
     )
     this.append(newOrder)
     return newOrder

@@ -4,14 +4,30 @@ import { Side } from '../src/side'
 import { OrderBook } from '../src/orderbook'
 import { ERROR } from '../src/errors'
 import { JournalLog } from '../src/types'
+import { OrderQueue } from '../src/orderqueue'
 
-const addDepth = (ob: OrderBook, prefix: string, quantity: number, journal?: JournalLog[]): void => {
+const addDepth = (
+  ob: OrderBook,
+  prefix: string,
+  quantity: number,
+  journal?: JournalLog[]
+): void => {
   for (let index = 50; index < 100; index += 10) {
-    const response = ob.limit(Side.BUY, `${prefix}buy-${index}`, quantity, index)
+    const response = ob.limit(
+      Side.BUY,
+      `${prefix}buy-${index}`,
+      quantity,
+      index
+    )
     if (journal != null && response.log != null) journal.push(response.log)
   }
   for (let index = 100; index < 150; index += 10) {
-    const response = ob.limit(Side.SELL, `${prefix}sell-${index}`, quantity, index)
+    const response = ob.limit(
+      Side.SELL,
+      `${prefix}sell-${index}`,
+      quantity,
+      index
+    )
     if (journal != null && response.log != null) journal.push(response.log)
   }
 }
@@ -326,14 +342,18 @@ void test('test modify', ({ equal, end }) => {
     // @ts-expect-error properties bids and _priceTree are private
     const bookOrdersSize = ob.asks._priceTree.values
       .filter((queue) => queue.price() <= 130)
-      .map((queue) => queue.toArray().reduce((acc: number,
-        curr: Order) => acc + curr.size, 0))
+      .map((queue) =>
+        queue.toArray().reduce((acc: number, curr: Order) => acc + curr.size, 0)
+      )
       .reduce((acc: number, curr: number) => acc + curr, 0)
 
     // Test modify price order that cross the market price and don't fill completely
     response = ob.modify('first-order', { price: 130 })
     const completedOrders = response?.done.map((order) => order.id)
-    equal(completedOrders?.join(), ['sell-100', 'sell-110', 'sell-120', 'sell-130'].join())
+    equal(
+      completedOrders?.join(),
+      ['sell-100', 'sell-110', 'sell-120', 'sell-130'].join()
+    )
     equal(response?.partial?.id, 'first-order')
     equal(response?.partial?.size, newSize - bookOrdersSize)
     equal(response?.partialQuantityProcessed, bookOrdersSize)
@@ -385,7 +405,9 @@ void test('test modify', ({ equal, end }) => {
     // @ts-expect-error properties bids and _priceTree are private
     const bookOrdersSize = ob.bids._priceTree.values
       .filter((queue) => queue.price() >= 80)
-      .map((queue) => queue.toArray().reduce((acc: number, curr: Order) => acc + curr.size, 0))
+      .map((queue) =>
+        queue.toArray().reduce((acc: number, curr: Order) => acc + curr.size, 0)
+      )
       .reduce((acc: number, curr: number) => acc + curr, 0)
 
     // Test modify price order that cross the market price
@@ -624,5 +646,97 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
       equal(error?.message, ERROR.ErrJournalLog)
     }
   }
+  end()
+})
+
+void test('orderbook test snapshot', ({ equal, end }) => {
+  const ob = new OrderBook()
+  addDepth(ob, '', 10)
+  const snapshot = ob.snapshot()
+
+  equal(Array.isArray(snapshot.asks), true)
+  equal(Array.isArray(snapshot.bids), true)
+  equal(typeof snapshot.ts, 'number')
+  snapshot.asks.forEach((level) => {
+    equal(typeof level.price, 'number')
+    equal(Array.isArray(level.orders), true)
+    level.orders.forEach((order) => {
+      equal(order instanceof Order, true)
+    })
+  })
+
+  snapshot.bids.forEach((level) => {
+    equal(typeof level.price, 'number')
+    equal(Array.isArray(level.orders), true)
+    level.orders.forEach((order) => {
+      equal(order instanceof Order, true)
+    })
+  })
+
+  end()
+})
+
+void test('orderbook restore from snapshot', ({ equal, same, end }) => {
+  // Create a new orderbook with 3 orders for price levels and make a snapshot
+  const ob = new OrderBook()
+  addDepth(ob, 'first-run-', 10)
+  addDepth(ob, 'second-run-', 10)
+  addDepth(ob, 'third-run-', 10)
+
+  const snapshot = ob.snapshot()
+
+  // Create a new orderbook from the snapshot and check is the same as before
+  const ob2 = new OrderBook({ snapshot })
+
+  equal(ob.toString(), ob2.toString())
+  same(ob.depth(), ob2.depth())
+
+  // @ts-expect-error these are private properties
+  same(ob.orders, ob2.orders)
+  // @ts-expect-error these are private properties
+  equal(ob.asks.volume(), ob2.asks.volume())
+  // @ts-expect-error these are private properties
+  equal(ob.bids.volume(), ob2.bids.volume())
+
+  // @ts-expect-error these are private properties
+  equal(ob.asks.total(), ob2.asks.total())
+  // @ts-expect-error these are private properties
+  equal(ob.bids.total(), ob2.bids.total())
+
+  // @ts-expect-error these are private properties
+  equal(ob.asks.len(), ob2.asks.len())
+  // @ts-expect-error these are private properties
+  equal(ob.bids.len(), ob2.bids.len())
+
+  const prev = {}
+  const restored = {}
+
+  // @ts-expect-error these are private properties
+  ob.asks.priceTree().forEach((price: number, level: OrderQueue) => {
+    prev[price] = level.toArray()
+  })
+
+  // @ts-expect-error these are private properties
+  ob.bids.priceTree().forEach((price: number, level: OrderQueue) => {
+    prev[price] = level.toArray()
+  })
+
+  // @ts-expect-error these are private properties
+  ob2.asks.priceTree().forEach((price: number, level: OrderQueue) => {
+    restored[price] = level.toArray()
+  })
+
+  // @ts-expect-error these are private properties
+  ob2.bids.priceTree().forEach((price: number, level: OrderQueue) => {
+    restored[price] = level.toArray()
+  })
+
+  same(prev, restored)
+
+  // Compare also the snapshot from the original order book and the restored one
+  const snapshot2 = ob2.snapshot()
+  same(snapshot.asks, snapshot2.asks)
+  same(snapshot.bids, snapshot2.bids)
+
   end()
 })

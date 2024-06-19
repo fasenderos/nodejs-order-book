@@ -16,6 +16,7 @@ export class Order {
   private readonly _id: string
   private readonly _side: Side
   private _size: number
+  private readonly _origSize: number
   private _price: number
   private _time: number
   private readonly _isMaker: boolean
@@ -25,12 +26,14 @@ export class Order {
     size: number,
     price: number,
     time?: number,
-    isMaker?: boolean
+    isMaker?: boolean,
+    origSize?: number
   ) {
     this._id = orderId
     this._side = side
     this._price = price
     this._size = size
+    this._origSize = origSize ?? size
     this._time = time ?? Date.now()
     this._isMaker = isMaker ?? false
   }
@@ -65,6 +68,11 @@ export class Order {
     this._size = size
   }
 
+  // Getter for the original size of the order
+  get origSize (): number {
+    return this._origSize
+  }
+
   // Getter for order timestamp
   get time (): number {
     return this._time
@@ -84,6 +92,7 @@ export class Order {
   toString = (): string =>
     `${this._id}:
     side: ${this._side}
+    origSize: ${this._origSize.toString()}
     size: ${this._size.toString()}
     price: ${this._price}
     time: ${this._time}
@@ -91,19 +100,13 @@ export class Order {
 
   // This method returns a JSON string representation of the order
   toJSON = (): string =>
-    JSON.stringify({
-      id: this._id,
-      side: this._side,
-      size: this._size,
-      price: this._price,
-      time: this._time,
-      isMaker: this._isMaker
-    })
+    JSON.stringify(this.toObject())
 
   // This method returns an object representation of the order
   toObject = (): IOrder => ({
     id: this._id,
     side: this._side,
+    origSize: this._origSize,
     size: this._size,
     price: this._price,
     time: this._time,

@@ -133,6 +133,11 @@ export interface CancelOrderOptions {
  * Options for configuring the order book.
  */
 export interface OrderBookOptions {
+  /**
+   * Orderbook snapshot to restore from. The restoration
+   * will be executed before processing any journal logs, if any.
+   */
+  snapshot?: Snapshot
   /** Flag to enable journaling. */
   enableJournaling?: boolean
   /** Array of journal logs. */
@@ -147,6 +152,8 @@ export interface IOrder {
   id: string
   /** Side of the order (buy/sell). */
   side: Side
+  /** Original size of the order. */
+  origSize: number
   /** Size of the order. */
   size: number
   /** Price of the order. */
@@ -175,4 +182,26 @@ export interface OrderUpdateSize {
   price?: number
   /** New size of the order. */
   size: number
+}
+
+/**
+ * Interface to represent a snapshot of the order book
+ */
+export interface Snapshot {
+  /** List of ask orders, each with a price and a list of associated orders */
+  asks: Array<{
+    /** Price of the ask order */
+    price: number
+    /** List of orders associated with this price */
+    orders: Order[]
+  }>
+  /** List of bid orders, each with a price and a list of associated orders */
+  bids: Array<{
+    /** Price of the bid order */
+    price: number
+    /** List of orders associated with this price */
+    orders: Order[]
+  }>
+  /** Unix timestamp representing when the snapshot was taken */
+  ts: number
 }
