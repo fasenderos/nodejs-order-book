@@ -7,6 +7,8 @@ import type {
   ICancelOrder,
   IProcessOrder,
   JournalLog,
+  LimitOrderOptions,
+  MarketOrderOptions,
   OrderBookOptions,
   OrderUpdatePrice,
   OrderUpdateSize,
@@ -86,14 +88,16 @@ export class OrderBook {
   ): IProcessOrder => {
     switch (type) {
       case OrderType.MARKET:
-        return this.market(side, size)
+        return this.market({ side, size })
       case OrderType.LIMIT:
         return this.limit(
-          side,
-          orderID as string,
-          size,
-          price as number,
-          timeInForce
+          {
+            side,
+            orderID,
+            size,
+            price,
+            timeInForce
+          }
         )
       default:
         return {
@@ -114,7 +118,7 @@ export class OrderBook {
    * @param size - How much of currency you want to trade in units of base currency
    * @returns An object with the result of the processed order or an error
    */
-  public market = (side: Side, size: number): IProcessOrder => {
+  public market = ({ side, size }: MarketOrderOptions): IProcessOrder => {
     let quantityToTrade = size
     const response = this.getProcessOrderResponse(quantityToTrade)
 
@@ -142,7 +146,7 @@ export class OrderBook {
       // if sideToProcess.len > 0 it is not necessary to verify that bestPrice exists
       const bestPrice = iter() as OrderQueue
       const { done, partial, partialQuantityProcessed, quantityLeft } =
-      this.processQueue(bestPrice, quantityToTrade)
+        this.processQueue(bestPrice, quantityToTrade)
       this._marketPrice = bestPrice?.price()
       response.done = response.done.concat(done)
       response.partial = partial
@@ -173,11 +177,13 @@ export class OrderBook {
    * @returns An object with the result of the processed order or an error
    */
   public limit = (
-    side: Side,
-    orderID: string,
-    size: number,
-    price: number,
-    timeInForce: TimeInForce = TimeInForce.GTC
+    {
+      side,
+      orderID,
+      size,
+      price,
+      timeInForce = TimeInForce.GTC
+    }: LimitOrderOptions
   ): IProcessOrder => {
     const response = this.getProcessOrderResponse(size)
 
@@ -539,29 +545,35 @@ export class OrderBook {
   private readonly replayJournal = (journal: JournalLog[]): void => {
     for (const log of journal) {
       switch (log.op) {
-        case 'm':
-          if (log.o.side == null || log.o.size == null) {
+        case 'm':{
+          const { side, size } = log.o
+          if (side == null || size == null) {
             throw CustomError(ERROR.ErrJournalLog)
           }
-          this.market(log.o.side, log.o.size)
+          this.market({ side, size })
           break
-        case 'l':
+        }
+        case 'l': {
+          const { side, orderID, size, price, timeInForce } = log.o
           if (
-            log.o.side == null ||
-            log.o.orderID == null ||
-            log.o.size == null ||
-            log.o.price == null
+            side == null ||
+            orderID == null ||
+            size == null ||
+            price == null
           ) {
             throw CustomError(ERROR.ErrJournalLog)
           }
           this.limit(
-            log.o.side,
-            log.o.orderID,
-            log.o.size,
-            log.o.price,
-            log.o.timeInForce
+            {
+              side,
+              orderID,
+              size,
+              price,
+              timeInForce
+            }
           )
           break
+        }
         case 'd':
           if (log.o.orderID == null) throw CustomError(ERROR.ErrJournalLog)
           this.cancel(log.o.orderID)
