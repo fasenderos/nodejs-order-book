@@ -18,6 +18,7 @@ const validTimeInForce = Object.values(TimeInForce)
 export class OrderBook {
   private orders: { [key: string]: Order } = {}
   private _lastOp: number = 0
+  private _marketPrice: number = 0
   private readonly bids: OrderSide
   private readonly asks: OrderSide
   private readonly enableJournaling: boolean
@@ -49,6 +50,11 @@ export class OrderBook {
       }
       this.replayJournal(journal)
     }
+  }
+
+  // Getter for the market price
+  get marketPrice (): number {
+    return this._marketPrice
   }
 
   // Getter for the lastOp
@@ -134,9 +140,10 @@ export class OrderBook {
 
     while (quantityToTrade > 0 && sideToProcess.len() > 0) {
       // if sideToProcess.len > 0 it is not necessary to verify that bestPrice exists
-      const bestPrice = iter()
+      const bestPrice = iter() as OrderQueue
       const { done, partial, partialQuantityProcessed, quantityLeft } =
-        this.processQueue(bestPrice as OrderQueue, quantityToTrade)
+      this.processQueue(bestPrice, quantityToTrade)
+      this._marketPrice = bestPrice?.price()
       response.done = response.done.concat(done)
       response.partial = partial
       response.partialQuantityProcessed = partialQuantityProcessed
@@ -474,6 +481,7 @@ export class OrderBook {
     ) {
       const { done, partial, partialQuantityProcessed, quantityLeft } =
         this.processQueue(bestPrice, quantityToTrade)
+      this._marketPrice = bestPrice.price()
       response.done = response.done.concat(done)
       response.partial = partial
       response.partialQuantityProcessed = partialQuantityProcessed
@@ -483,14 +491,14 @@ export class OrderBook {
     }
 
     if (quantityToTrade > 0) {
-      const order = new Order(
-        orderID,
+      const order = new Order({
+        id: orderID,
         side,
-        quantityToTrade,
+        size: quantityToTrade,
         price,
-        Date.now(),
-        true
-      )
+        time: Date.now(),
+        isMaker: true
+      })
       if (response.done.length > 0) {
         response.partialQuantityProcessed = size - quantityToTrade
         response.partial = order
@@ -512,7 +520,13 @@ export class OrderBook {
       }
 
       response.done.push(
-        new Order(orderID, side, size, totalPrice / totalQuantity, Date.now())
+        new Order({
+          id: orderID,
+          side,
+          size,
+          price: totalPrice / totalQuantity,
+          time: Date.now()
+        })
       )
     }
 
@@ -588,15 +602,15 @@ export class OrderBook {
         const headOrder = orderQueue.head()
         if (headOrder !== undefined) {
           if (response.quantityLeft < headOrder.size) {
-            response.partial = new Order(
-              headOrder.id,
-              headOrder.side,
-              headOrder.size - response.quantityLeft,
-              headOrder.price,
-              headOrder.time,
-              true,
-              headOrder.origSize
-            )
+            response.partial = new Order({
+              id: headOrder.id,
+              side: headOrder.side,
+              size: headOrder.size - response.quantityLeft,
+              price: headOrder.price,
+              time: headOrder.time,
+              isMaker: true,
+              origSize: headOrder.origSize
+            })
             this.orders[headOrder.id] = response.partial
             response.partialQuantityProcessed = response.quantityLeft
             orderQueue.update(headOrder, response.partial)
