@@ -1,7 +1,8 @@
 import { test } from 'tap'
-import { Order } from '../src/order'
+import { LimitOrder, OrderFactory } from '../src/order'
 import { Side } from '../src/side'
 import { OrderQueue } from '../src/orderqueue'
+import { OrderType, TimeInForce } from '../src/types'
 
 void test('it should append/update/remove orders from queue', ({
   equal,
@@ -10,14 +11,30 @@ void test('it should append/update/remove orders from queue', ({
 }) => {
   const price = 100
   const oq = new OrderQueue(price)
-  const order1 = new Order('order1', Side.SELL, 5, price)
-  const order2 = new Order('order2', Side.SELL, 5, price)
+  const order1 = OrderFactory.createOrder({
+    type: OrderType.LIMIT,
+    id: 'order1',
+    side: Side.SELL,
+    size: 5,
+    price,
+    timeInForce: TimeInForce.GTC,
+    isMaker: true
+  })
+  const order2 = OrderFactory.createOrder({
+    type: OrderType.LIMIT,
+    id: 'order2',
+    side: Side.SELL,
+    size: 5,
+    price,
+    timeInForce: TimeInForce.GTC,
+    isMaker: true
+  })
 
   const head = oq.append(order1)
   const tail = oq.append(order2)
 
-  equal(head instanceof Order, true)
-  equal(tail instanceof Order, true)
+  equal(head instanceof LimitOrder, true)
+  equal(tail instanceof LimitOrder, true)
   same(head, order1)
   same(tail, order2)
   equal(oq.volume(), 10)
@@ -27,7 +44,15 @@ void test('it should append/update/remove orders from queue', ({
   same(orders[0].toObject(), order1.toObject())
   same(orders[1].toObject(), order2.toObject())
 
-  const order3 = new Order('order3', Side.SELL, 10, price)
+  const order3 = OrderFactory.createOrder({
+    type: OrderType.LIMIT,
+    id: 'order3',
+    side: Side.SELL,
+    size: 10,
+    price,
+    timeInForce: TimeInForce.GTC,
+    isMaker: true
+  })
 
   // Test update. Number of orders is always 2
   oq.update(head, order3)
@@ -55,8 +80,24 @@ void test('it should append/update/remove orders from queue', ({
 void test('it should update order size and the volume', ({ equal, end }) => {
   const price = 100
   const oq = new OrderQueue(price)
-  const order1 = new Order('order1', Side.SELL, 5, price)
-  const order2 = new Order('order2', Side.SELL, 5, price)
+  const order1 = OrderFactory.createOrder({
+    type: OrderType.LIMIT,
+    id: 'order1',
+    side: Side.SELL,
+    size: 5,
+    price,
+    timeInForce: TimeInForce.GTC,
+    isMaker: true
+  })
+  const order2 = OrderFactory.createOrder({
+    type: OrderType.LIMIT,
+    id: 'order2',
+    side: Side.SELL,
+    size: 5,
+    price,
+    timeInForce: TimeInForce.GTC,
+    isMaker: true
+  })
 
   oq.append(order1)
   oq.append(order2)
