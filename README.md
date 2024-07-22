@@ -19,6 +19,7 @@ Ultra-fast matching engine written in TypeScript
 
 - Standard price-time priority
 - Supports both market and limit orders
+- Supports conditional orders (Stop Market and Stop Limit)
 - Supports time in force GTC, FOK and IOC
 - Supports order cancelling
 - Supports order price and/or size updating
@@ -56,11 +57,11 @@ const lob = new OrderBook()
 Then you'll be able to use next primary functions:
 
 ```js
-lob.createOrder(type: 'limit' | 'market', side: 'buy' | 'sell', size: number, price: number, orderID: string)
+lob.createOrder({ type: 'limit' | 'market', side: 'buy' | 'sell', size: number, price: number, id?: string, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
-lob.limit(side: 'buy' | 'sell', orderID: string, size: number, price: number)
+lob.limit({ id: string, side: 'buy' | 'sell', size: number, price: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
-lob.market(side: 'buy' | 'sell', size: number)
+lob.market({ side: 'buy' | 'sell', size: number })
 
 lob.modify(orderID: string, { side: 'buy' | 'sell', size: number, price: number })
 
@@ -69,38 +70,45 @@ lob.cancel(orderID: string)
 
 ## About primary functions
 
-To add an order to the order book you can call the general `createOrder()` function or calling the underlying `limit()` or `market()` functions
+To add an order to the order book you can call the general `createOrder()` function or calling the underlying `limit()`, `market()`, `stopLimit()` or `stopMarket()` functions
 
 ### Create Order
 
 ```js
 // Create a limit order
-createOrder('limit', side: 'buy' | 'sell', size: number, price: number, orderID: string, timeInForce?: 'GTC' | 'FOK' | 'IOC')
+createOrder({ type: 'limit', side: 'buy' | 'sell', size: number, price: number, id: string, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
 // Create a market order
-createOrder('market', side: 'buy' | 'sell', size: number)
+createOrder({ type: 'market', side: 'buy' | 'sell', size: number })
+
+// Create a stop limit order
+createOrder({ type: 'stop_limit', side: 'buy' | 'sell', size: number, price: number, id: string, stopPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+
+// Create a stop market order
+createOrder({ type: 'stop_market', side: 'buy' | 'sell', size: number, stopPrice: number })
 ```
 
 ### Create Limit Order
 
 ```js
 /**
- * Create a limit order
+ * Create a limit order. See {@link LimitOrderOptions} for details.
  *
- * @param side - `sell` or `buy`
- * @param orderID - Unique order ID
- * @param size - How much of currency you want to trade in units of base currency
- * @param price - The price at which the order is to be fullfilled, in units of the quote currency
- * @param timeInForce - Time-in-force type supported are: GTC, FOK, IOC
- * @returns An object with the result of the processed order or an error
+ * @param options
+ * @param options.side - `sell` or `buy`
+ * @param options.id - Unique order ID
+ * @param options.size - How much of currency you want to trade in units of base currency
+ * @param options.price - The price at which the order is to be fullfilled, in units of the quote currency
+ * @param options.timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
+ * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
  */
-limit(side: 'buy' | 'sell', orderID: string, size: number, price: number, timeInForce?: 'GTC' | 'FOK' | 'IOC')
+limit({ side: 'buy' | 'sell', id: string, size: number, price: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 ```
 
 For example:
 
 ```
-limit("sell", "uniqueID", 55, 100)
+limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
 
 asks: 110 -> 5      110 -> 5
       100 -> 1      100 -> 56
@@ -113,7 +121,7 @@ partial - null
 ```
 
 ```
-limit("buy", "uniqueID", 7, 120)
+limit({ side: "buy", id: "uniqueID", size: 7, price: 120 })
 
 asks: 110 -> 5
       100 -> 1
@@ -127,7 +135,7 @@ partial - uniqueID order
 ```
 
 ```
-limit("buy", "uniqueID", 3, 120)
+limit({ side: "buy", id: "uniqueID", size: 3, price: 120 })
 
 asks: 110 -> 5
       100 -> 1      110 -> 3
@@ -143,19 +151,20 @@ partial - 1 order with price 110
 
 ```js
 /**
- * Create a market order
+ * Create a market order. See {@link MarketOrderOptions} for details.
  *
- * @param side - `sell` or `buy`
- * @param size - How much of currency you want to trade in units of base currency
- * @returns An object with the result of the processed order or an error
+ * @param options
+ * @param options.side - `sell` or `buy`
+ * @param options.size - How much of currency you want to trade in units of base currency
+ * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
  */
-market(side: 'buy' | 'sell', size: number)
+market({ side: 'buy' | 'sell', size: number })
 ```
 
 For example:
 
 ```
-market('sell', 6)
+market({ side: 'sell', size: 6 })
 
 asks: 110 -> 5      110 -> 5
       100 -> 1      100 -> 1
@@ -169,7 +178,7 @@ quantityLeft - 0
 ```
 
 ```
-market('buy', 10)
+market({ side: 'buy', size: 10 })
 
 asks: 110 -> 5
       100 -> 1
@@ -201,7 +210,7 @@ modify(orderID: string, { size: number, price: number })
 For example:
 
 ```
-limit("sell", "uniqueID", 55, 100)
+limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
 
 asks: 110 -> 5      110 -> 5
       100 -> 1      100 -> 56
@@ -272,7 +281,7 @@ After taking the snapshot, you can safely remove all logs preceding the `lastOp`
 const lob = new OrderBook({ enableJournaling: true})
 
 // after every order save the log to the database
-const order = lob.limit("sell", "uniqueID", 55, 100)
+const order = lob.limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
 await saveLog(order.log)
 
 // ... after some time take a snapshot of the order book and save it on the database
@@ -306,7 +315,7 @@ By combining snapshots with journaling, you can effectively restore and audit th
 const lob = new OrderBook({ enableJournaling: true }) // false by default
 
 // after every order save the log to the database
-const order = lob.limit("sell", "uniqueID", 55, 100)
+const order = lob.limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
 await saveLog(order.log)
 ```
 

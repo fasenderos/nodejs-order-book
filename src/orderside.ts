@@ -1,6 +1,6 @@
 import createRBTree from 'functional-red-black-tree'
 import { CustomError, ERROR } from './errors'
-import { Order } from './order'
+import { LimitOrder, OrderFactory } from './order'
 import { OrderQueue } from './orderqueue'
 import { Side } from './side'
 import type { OrderUpdatePrice, OrderUpdateSize } from './types'
@@ -49,7 +49,7 @@ export class OrderSide {
   }
 
   // appends order to definite price level
-  append = (order: Order): Order => {
+  append = (order: LimitOrder): LimitOrder => {
     const price = order.price
     const strPrice = price.toString()
     if (this._prices[strPrice] === undefined) {
@@ -65,7 +65,7 @@ export class OrderSide {
   }
 
   // removes order from definite price level
-  remove = (order: Order): Order => {
+  remove = (order: LimitOrder): LimitOrder => {
     const price = order.price
     const strPrice = price.toString()
     if (this._prices[strPrice] === undefined) {
@@ -87,25 +87,30 @@ export class OrderSide {
 
   // Update the price of an order and return the order with the updated price
   updateOrderPrice = (
-    oldOrder: Order,
+    oldOrder: LimitOrder,
     orderUpdate: OrderUpdatePrice
-  ): Order => {
+  ): LimitOrder => {
     this.remove(oldOrder)
-    const newOrder = new Order(
-      oldOrder.id,
-      oldOrder.side,
-      orderUpdate.size !== undefined ? orderUpdate.size : oldOrder.size,
-      orderUpdate.price,
-      Date.now(),
-      oldOrder.isMaker,
-      oldOrder.origSize
-    )
+    const newOrder = OrderFactory.createOrder({
+      id: oldOrder.id,
+      type: oldOrder.type,
+      side: oldOrder.side,
+      size: orderUpdate.size !== undefined ? orderUpdate.size : oldOrder.size,
+      origSize: oldOrder.origSize,
+      price: orderUpdate.price,
+      time: Date.now(),
+      timeInForce: oldOrder.timeInForce,
+      isMaker: oldOrder.isMaker
+    })
     this.append(newOrder)
     return newOrder
   }
 
   // Update the price of an order and return the order with the updated price
-  updateOrderSize = (oldOrder: Order, orderUpdate: OrderUpdateSize): Order => {
+  updateOrderSize = (
+    oldOrder: LimitOrder,
+    orderUpdate: OrderUpdateSize
+  ): LimitOrder => {
     const newOrderPrice = orderUpdate.price ?? oldOrder.price
     this._volume += orderUpdate.size - oldOrder.size
     this._total +=
@@ -154,8 +159,8 @@ export class OrderSide {
   }
 
   // returns all orders
-  orders = (): Order[] => {
-    let orders: Order[] = []
+  orders = (): LimitOrder[] => {
+    let orders: LimitOrder[] = []
     for (const price in this._prices) {
       const allOrders = this._prices[price].toArray()
       orders = orders.concat(allOrders)

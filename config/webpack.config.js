@@ -1,3 +1,4 @@
+const webpack = require('webpack')
 const path = require('path')
 
 module.exports = {
@@ -25,6 +26,16 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.ts', '.js', '.tsx', '.jsx']
-  }
+    extensions: ['.ts', '.js', '.tsx', '.jsx'],
+    fallback: {
+      crypto: require.resolve('crypto-browserify'),
+      stream: require.resolve('stream-browserify'),
+      vm: require.resolve('vm-browserify')
+    }
+  },
+  plugins: [
+    new webpack.NormalModuleReplacementPlugin(/^node:/, (resource) => {
+      resource.request = resource.request.replace(/^node:/, '')
+    })
+  ]
 }
