@@ -1,17 +1,17 @@
 import Denque from 'denque'
-import { Order } from './order'
+import { LimitOrder } from './order'
 
 export class OrderQueue {
   private readonly _price: number
   private _volume: number
-  private readonly _orders: Denque<Order>
   // { orderID: index } index in denque
+  private readonly _orders: Denque<LimitOrder>
   private _ordersMap: { [key: string]: number } = {}
 
   constructor (price: number) {
     this._price = price
     this._volume = 0
-    this._orders = new Denque<Order>()
+    this._orders = new Denque<LimitOrder>()
   }
 
   // returns the number of orders in queue
@@ -19,7 +19,7 @@ export class OrderQueue {
     return this._orders.length
   }
 
-  toArray = (): Order[] => {
+  toArray = (): LimitOrder[] => {
     return this._orders.toArray()
   }
 
@@ -34,17 +34,17 @@ export class OrderQueue {
   }
 
   // returns top order in queue
-  head = (): Order | undefined => {
+  head = (): LimitOrder | undefined => {
     return this._orders.peekFront()
   }
 
   // returns bottom order in queue
-  tail = (): Order | undefined => {
+  tail = (): LimitOrder | undefined => {
     return this._orders.peekBack()
   }
 
   // adds order to tail of the queue
-  append = (order: Order): Order => {
+  append = (order: LimitOrder): LimitOrder => {
     this._volume += order.size
     this._orders.push(order)
     this._ordersMap[order.id] = this._orders.length - 1
@@ -52,7 +52,7 @@ export class OrderQueue {
   }
 
   // sets up new order to list value
-  update = (oldOrder: Order, newOrder: Order): void => {
+  update = (oldOrder: LimitOrder, newOrder: LimitOrder): void => {
     this._volume -= oldOrder.size
     this._volume += newOrder.size
     // Remove old order from head
@@ -65,7 +65,7 @@ export class OrderQueue {
   }
 
   // removes order from the queue
-  remove = (order: Order): void => {
+  remove = (order: LimitOrder): void => {
     this._volume -= order.size
     const deletedOrderIndex = this._ordersMap[order.id]
     this._orders.removeOne(deletedOrderIndex)
@@ -78,7 +78,7 @@ export class OrderQueue {
     }
   }
 
-  updateOrderSize = (order: Order, size: number): void => {
+  updateOrderSize = (order: LimitOrder, size: number): void => {
     this._volume += size - order.size // update volume
     order.size = size
     order.time = Date.now()

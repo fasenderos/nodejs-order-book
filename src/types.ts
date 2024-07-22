@@ -1,5 +1,145 @@
-import type { Order, TimeInForce } from './order'
+import { LimitOrder, StopLimitOrder, StopMarketOrder } from './order'
 import type { Side } from './side'
+
+export enum OrderType {
+  LIMIT = 'limit',
+  MARKET = 'market',
+  STOP_LIMIT = 'stop_limit',
+  STOP_MARKET = 'stop_market',
+}
+
+export enum TimeInForce {
+  GTC = 'GTC',
+  IOC = 'IOC',
+  FOK = 'FOK',
+}
+
+export type StopOrder = StopLimitOrder | StopMarketOrder
+export type Order = LimitOrder | StopOrder
+
+interface BaseOrderOptions {
+  id?: string
+  side: Side
+  size: number
+}
+interface InternalBaseOrderOptions extends BaseOrderOptions {
+  type: OrderType
+  time?: number
+  origSize?: number
+}
+/**
+ * Specific options for a market order.
+ */
+export interface MarketOrderOptions extends BaseOrderOptions {}
+interface IMarketOrderOptions extends InternalBaseOrderOptions {}
+export interface InternalMarketOrderOptions extends IMarketOrderOptions {
+  type: OrderType.MARKET
+}
+
+/**
+ * Specific options for a limit order.
+ */
+export interface LimitOrderOptions extends MarketOrderOptions {
+  id: string
+  price: number
+  timeInForce?: TimeInForce
+}
+interface ILimitOrderOptions extends InternalBaseOrderOptions {
+  id: string
+  price: number
+  timeInForce: TimeInForce
+  isMaker: boolean
+}
+export interface InternalLimitOrderOptions extends ILimitOrderOptions {
+  type: OrderType.LIMIT
+}
+
+/**
+ * Specific options for a stop market order.
+*/
+export interface StopMarketOrderOptions extends MarketOrderOptions {
+  stopPrice: number
+}
+export interface InternalStopMarketOrderOptions extends IMarketOrderOptions {
+  type: OrderType.STOP_MARKET
+  stopPrice: number
+}
+
+/**
+ * Specific options for a stop limit order.
+ */
+export interface StopLimitOrderOptions extends LimitOrderOptions {
+  stopPrice: number
+}
+export interface InternalStopLimitOrderOptions extends ILimitOrderOptions {
+  type: OrderType.STOP_LIMIT
+  stopPrice: number
+}
+
+/**
+ * Object object representation of a market order returned by the toObject() method.
+ */
+export interface IMarketOrder {
+  id: string
+  type: OrderType
+  side: Side
+  size: number
+  origSize: number
+  time: number
+}
+
+/**
+ * Object object representation of a limit order returned by the toObject() method.
+ */
+export interface ILimitOrder {
+  id: string
+  type: OrderType
+  side: Side
+  size: number
+  origSize: number
+  price: number
+  time: number
+  timeInForce: TimeInForce
+  isMaker: boolean
+}
+
+/**
+ * Object object representation of a stop market order returned by the toObject() method.
+ */
+export interface IStopMarketOrder {
+  id: string
+  type: OrderType
+  side: Side
+  size: number
+  origSize: number
+  stopPrice: number
+  time: number
+}
+
+/**
+ * Object object representation of a stop limit order returned by the toObject() method.
+ */
+export interface IStopLimitOrder {
+  id: string
+  type: OrderType
+  side: Side
+  size: number
+  origSize: number
+  price: number
+  stopPrice: number
+  timeInForce: TimeInForce
+  time: number
+  isMaker: boolean
+}
+
+/**
+ * Represents an order in the order book.
+ */
+export type OrderOptions =
+  | InternalMarketOrderOptions
+  | InternalLimitOrderOptions
+  | InternalStopLimitOrderOptions
+  | InternalStopMarketOrderOptions
 
 /**
  * Represents the result of processing an order.
@@ -7,8 +147,10 @@ import type { Side } from './side'
 export interface IProcessOrder {
   /** Array of fully processed orders. */
   done: Order[]
+  /** Array of activated (stop limit or stop market) orders */
+  activated: StopOrder[]
   /** The partially processed order, if any. */
-  partial: Order | null
+  partial: LimitOrder | null
   /** The quantity that has been processed in the partial order. */
   partialQuantityProcessed: number
   /** The remaining quantity that needs to be processed. */
@@ -19,11 +161,33 @@ export interface IProcessOrder {
   log?: JournalLog
 }
 
+export interface ConditionOrderOptions {
+  stopPrice: number
+}
+
+/**
+ * Specific options for modifying an order.
+ */
+export interface ModifyOrderOptions {
+  /** Unique identifier of the order. */
+  orderID: string
+  /** Details of the order update (price or size). */
+  orderUpdate: OrderUpdatePrice | OrderUpdateSize
+}
+
+/**
+ * Specific options for canceling an order.
+ */
+export interface CancelOrderOptions {
+  /** Unique identifier of the order. */
+  orderID: string
+}
+
 /**
  * Represents a cancel order operation.
  */
 export interface ICancelOrder {
-  order: Order
+  order: LimitOrder
   /** Optional log related to the order cancellation. */
   log?: CancelOrderJournalLog
 }
@@ -93,49 +257,11 @@ export type JournalLog =
   | ModifyOrderJournalLog
   | CancelOrderJournalLog
 
-/**
- * Specific options for a market order.
- */
-export interface MarketOrderOptions {
-  /** Side of the order (buy/sell). */
-  side: Side
-  /** Size of the order. */
-  size: number
-}
-
-/**
- * Specific options for a limit order.
- */
-export interface LimitOrderOptions {
-  /** Side of the order (buy/sell). */
-  side: Side
-  /** Unique identifier of the order. */
-  orderID: string
-  /** Size of the order. */
-  size: number
-  /** Price of the order. */
-  price: number
-  /** Time in force policy for the order. */
-  timeInForce: TimeInForce
-}
-
-/**
- * Specific options for modifying an order.
- */
-export interface ModifyOrderOptions {
-  /** Unique identifier of the order. */
-  orderID: string
-  /** Details of the order update (price or size). */
-  orderUpdate: OrderUpdatePrice | OrderUpdateSize
-}
-
-/**
- * Specific options for canceling an order.
- */
-export interface CancelOrderOptions {
-  /** Unique identifier of the order. */
-  orderID: string
-}
+export type CreateOrderOptions =
+  | { type: OrderType.MARKET } & MarketOrderOptions
+  | { type: OrderType.LIMIT } & LimitOrderOptions
+  | { type: OrderType.STOP_MARKET } & StopMarketOrderOptions
+  | { type: OrderType.STOP_LIMIT } & StopLimitOrderOptions
 
 /**
  * Options for configuring the order book.
@@ -150,26 +276,6 @@ export interface OrderBookOptions {
   enableJournaling?: boolean
   /** Array of journal logs. */
   journal?: JournalLog[]
-}
-
-/**
- * Represents an order in the order book.
- */
-export interface IOrder {
-  /** Unique identifier of the order. */
-  id: string
-  /** Side of the order (buy/sell). */
-  side: Side
-  /** Original size of the order. */
-  origSize: number
-  /** Size of the order. */
-  size: number
-  /** Price of the order. */
-  price: number
-  /** Timestamp of the order. */
-  time: number
-  /** Flag to indicate if the order is a maker order. */
-  isMaker: boolean
 }
 
 /**
@@ -201,14 +307,14 @@ export interface Snapshot {
     /** Price of the ask order */
     price: number
     /** List of orders associated with this price */
-    orders: Order[]
+    orders: LimitOrder[]
   }>
   /** List of bid orders, each with a price and a list of associated orders */
   bids: Array<{
     /** Price of the bid order */
     price: number
     /** List of orders associated with this price */
-    orders: Order[]
+    orders: LimitOrder[]
   }>
   /** Unix timestamp representing when the snapshot was taken */
   ts: number

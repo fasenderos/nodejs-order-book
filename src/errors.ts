@@ -7,6 +7,7 @@ export enum ERROR {
   ErrInvalidPriceOrQuantity = 'orderbook: invalid order price or quantity',
   ErrInvalidQuantity = 'orderbook: invalid order quantity',
   ErrInvalidSide = "orderbook: given neither 'bid' nor 'ask'",
+  ErrInvalidStopPrice = 'orderbook: Invalid Stop Price. For Stop-Limit Order (BUY: marketPrice < stopPrice <= price, SELL: marketPrice > stopPrice >= price). For Stop-Market Order (BUY: marketPrice < stopPrice, SELL: marketPrice > stopPrice)',
   ErrInvalidTimeInForce = "orderbook: supported time in force are 'GTC', 'IOC' and 'FOK'",
   ErrLimitFOKNotFillable = 'orderbook: limit FOK order not fillable',
   ErrOrderExists = 'orderbook: order already exists',
@@ -32,6 +33,8 @@ export const CustomError = (error?: ERROR | string): Error => {
       return new Error(ERROR.ErrOrderNotFound)
     case ERROR.ErrInvalidSide:
       return new Error(ERROR.ErrInvalidSide)
+    case ERROR.ErrInvalidStopPrice:
+      return new Error(ERROR.ErrInvalidStopPrice)
     case ERROR.ErrInvalidOrderType:
       return new Error(ERROR.ErrInvalidOrderType)
     case ERROR.ErrInvalidTimeInForce:
