@@ -1,6 +1,6 @@
 {
   "name": "hft-limit-order-book",
-  "version": "6.0.0",
+  "version": "6.1.0-beta.0",
   "description": "Node.js Lmit Order Book for high-frequency trading (HFT).",
   "author": "Andrea Fassina <andrea.fassina82@gmail.com>",
   "license": "MIT",
