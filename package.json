@@ -28,7 +28,6 @@
     "lint": "ts-standard | snazzy",
     "lint:fix": "ts-standard --fix | snazzy",
     "package": "npm run build && npm pack",
-    "postinstall": "husky install",
     "postpublish": "pinst --enable",
     "prepublishOnly": "pinst --disable",
     "release": "release-it --ci",
@@ -39,7 +38,7 @@
     "test": "tap",
     "test:dev": "tap repl w",
     "test:cov": "tap && tap report lcov",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "dependencies": {
     "denque": "2.1.0",
@@ -52,7 +51,7 @@
     "@types/functional-red-black-tree": "^1.0.6",
     "crypto-browserify": "^3.12.0",
     "gaussian": "^1.0.0",
-    "husky": "^9.0.6",
+    "husky": "^9.1.1",
     "nanobench": "^3.0.0",
     "pinst": "^3.0.0",
     "release-it": "^17.0.3",
