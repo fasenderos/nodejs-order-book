@@ -5,7 +5,7 @@ const gaussian = require('gaussian')
 /* New Limits */
 function spamLimitOrders (book, count) {
   for (let i = 0; i < count; i++) {
-    book.limit('buy', i.toString(), 50, i)
+    book.limit({ side: 'buy', id: i.toString(), size: 50, price: i })
   }
 }
 
@@ -54,7 +54,7 @@ bench('Spam 300000 new Limits', function (b) {
 /* New Orders */
 function spamOrders (book, count, variance = 5) {
   for (let i = 0; i < count; i++) {
-    book.limit('buy', i.toString(), 50, i % variance)
+    book.limit({ side: 'buy', id: i.toString(), size: 50, price: i % variance })
   }
 }
 
@@ -95,9 +95,9 @@ function spamOrdersRandomCancels (
   cancelEvery = 5
 ) {
   const priceDistribution = gaussian(mean, variance)
-  book.limit('buy', '0', 50, priceDistribution.ppf(Math.random()))
+  book.limit({ side: 'buy', id: '0', size: 50, price: priceDistribution.ppf(Math.random()) })
   for (let i = 1; i < count; i++) {
-    book.limit('buy', i.toString(), 50, priceDistribution.ppf(Math.random()))
+    book.limit({ side: 'buy', id: i.toString(), size: 50, price: priceDistribution.ppf(Math.random()) })
     if (i % cancelEvery === 0) book.cancel((i - cancelEvery).toString())
   }
 }
@@ -145,9 +145,9 @@ function spamLimitRandomOrders (
   for (let i = 1; i < count; i++) {
     const price_ = price.ppf(Math.random())
     const quantity_ = quantity.ppf(Math.random())
-    book.limit('buy', i.toString(), 100, price_)
+    book.limit({ side: 'buy', id: i.toString(), size: 100, price: price_ })
     // random submit a market order
-    if (i % orderEvery === 0) book.market('sell', quantity_)
+    if (i % orderEvery === 0) book.market({ side: 'sell', size: quantity_ })
   }
 }
 
@@ -186,8 +186,8 @@ function spamLimitManyMarketOrders (
   for (let i = 1; i < count; i++) {
     const price_ = price.ppf(Math.random())
     const quantity_ = quantity.ppf(Math.random())
-    book.limit('buy', i.toString(), 100, price_)
-    book.market('sell', quantity_)
+    book.limit({ side: 'buy', id: i.toString(), size: 100, price: price_ })
+    book.market({ side: 'sell', size: quantity_ })
   }
 }
 
