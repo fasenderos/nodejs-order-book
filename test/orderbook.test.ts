@@ -92,8 +92,8 @@ void test('test limit', ({ equal, end }) => {
   addDepth(ob, '', 2)
   equal(ob.marketPrice, 0)
   const process1 =
-     // { done, partial, partialQuantityProcessed, quantityLeft, err }
-     ob.limit({ side: Side.BUY, id: 'order-b100', size: 1, price: 100 })
+    // { done, partial, partialQuantityProcessed, quantityLeft, err }
+    ob.limit({ side: Side.BUY, id: 'order-b100', size: 1, price: 100 })
 
   equal(ob.marketPrice, 100)
   equal(process1.err === null, true)
@@ -103,8 +103,8 @@ void test('test limit', ({ equal, end }) => {
   equal(process1.partialQuantityProcessed, 1)
 
   const process2 =
-     // { done, partial, partialQuantityProcessed, quantityLeft, err } =
-     ob.limit({ side: Side.BUY, id: 'order-b150', size: 10, price: 150 })
+    // { done, partial, partialQuantityProcessed, quantityLeft, err } =
+    ob.limit({ side: Side.BUY, id: 'order-b150', size: 10, price: 150 })
   equal(process2.err === null, true)
   equal(process2.done.length, 5)
   equal(process2.partial?.id, 'order-b150')
@@ -135,7 +135,6 @@ void test('test limit', ({ equal, end }) => {
     price: 100
   })
   equal(process5.err?.message, ERROR.ErrInvalidSide)
-
   const removed = ob.cancel('order-b100')
   equal(removed === undefined, true)
   // Test also the createOrder method
@@ -287,8 +286,8 @@ void test('test market', ({ equal, end }) => {
   addDepth(ob, '', 2)
 
   const process1 =
-     // { done, partial, partialQuantityProcessed, quantityLeft, err }
-     ob.market({ side: Side.BUY, size: 3 })
+    // { done, partial, partialQuantityProcessed, quantityLeft, err }
+    ob.market({ side: Side.BUY, size: 3 })
 
   equal(process1.err === null, true)
   equal(process1.quantityLeft, 0)
@@ -296,8 +295,8 @@ void test('test market', ({ equal, end }) => {
 
   // Test also the createOrder method
   const process3 =
-     // { done, partial, partialQuantityProcessed, quantityLeft, err } =
-     ob.createOrder({ type: OrderType.MARKET, side: Side.SELL, size: 12 })
+    // { done, partial, partialQuantityProcessed, quantityLeft, err } =
+    ob.createOrder({ type: OrderType.MARKET, side: Side.SELL, size: 12 })
 
   equal(process3.done.length, 5)
   equal(process3.err === null, true)
@@ -347,10 +346,10 @@ void test('createOrder error', ({ equal, end }) => {
 })
 
 /**
-  * Stop-Market Order:
-  *    Buy: marketPrice < stopPrice
-  *    Sell: marketPrice > stopPrice
-  */
+ * Stop-Market Order:
+ *    Buy: marketPrice < stopPrice
+ *    Sell: marketPrice > stopPrice
+ */
 void test('test stop_market order', ({ equal, end }) => {
   const ob = new OrderBook()
 
@@ -374,8 +373,11 @@ void test('test stop_market order', ({ equal, end }) => {
       stopPrice: ob.marketPrice
     }) // Same as market price
     equal(wrongStopPrice2.err?.message, ERROR.ErrInvalidStopPrice)
-    // @ts-expect-error invalid side
-    const wrongOtherOrderOption1 = ob.stopMarket({ side: 'wrong-side', size: 1 })
+    const wrongOtherOrderOption1 = ob.stopMarket({
+      // @ts-expect-error invalid side
+      side: 'wrong-side',
+      size: 1
+    })
     equal(wrongOtherOrderOption1.err != null, true)
 
     // @ts-expect-error size must be greather than 0
@@ -496,16 +498,28 @@ void test('test stop_limit order', ({ equal, end }) => {
       price: ob.marketPrice
     }) // Same as market price
     equal(wrongStopPrice2.err?.message, ERROR.ErrInvalidStopPrice)
-    // @ts-expect-error invalid side
-    const wrongOtherOrderOption1 = ob.stopLimit({ side: 'wrong-side', size: 1, price: 10 })
+    const wrongOtherOrderOption1 = ob.stopLimit({
+      // @ts-expect-error invalid side
+      side: 'wrong-side',
+      size: 1,
+      price: 10
+    })
     equal(wrongOtherOrderOption1.err != null, true)
 
     // @ts-expect-error size must be greather than 0
-    const wrongOtherOrderOption2 = ob.stopLimit({ side: Side.BUY, size: 0, price: 10 })
+    const wrongOtherOrderOption2 = ob.stopLimit({
+      side: Side.BUY,
+      size: 0,
+      price: 10
+    })
     equal(wrongOtherOrderOption2.err != null, true)
 
     // @ts-expect-error price must be greather than 0
-    const wrongOtherOrderOption3 = ob.stopLimit({ side: Side.BUY, size: 1, price: 0 })
+    const wrongOtherOrderOption3 = ob.stopLimit({
+      side: Side.BUY,
+      size: 1,
+      price: 0
+    })
     equal(wrongOtherOrderOption3.err != null, true)
 
     // Add a stop limit BUY order

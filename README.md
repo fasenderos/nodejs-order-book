@@ -57,11 +57,15 @@ const lob = new OrderBook()
 Then you'll be able to use next primary functions:
 
 ```js
-lob.createOrder({ type: 'limit' | 'market', side: 'buy' | 'sell', size: number, price: number, id?: string, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+lob.createOrder({ type: 'limit' | 'market' | 'stop_limit' | 'stop_market', side: 'buy' | 'sell', size: number, price?: number, id?: string, stopPrice?: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
 lob.limit({ id: string, side: 'buy' | 'sell', size: number, price: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
 lob.market({ side: 'buy' | 'sell', size: number })
+
+lob.stopLimit({ id: string, side: 'buy' | 'sell', size: number, price: number, stopPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+
+lob.stopMarket({ side: 'buy' | 'sell', size: number, stopPrice: number })
 
 lob.modify(orderID: string, { side: 'buy' | 'sell', size: number, price: number })
 
@@ -189,6 +193,39 @@ bids: 90  -> 5      90  -> 5
 done         - 2 (or more orders)
 partial      - null
 quantityLeft - 4
+```
+
+### Create Stop Limit Order
+
+```js
+/**
+ * Create a stop limit order. See {@link StopLimitOrderOptions} for details.
+ *
+ * @param options
+ * @param options.side - `sell` or `buy`
+ * @param options.id - Unique order ID
+ * @param options.size - How much of currency you want to trade in units of base currency
+ * @param options.price - The price at which the order is to be fullfilled, in units of the quote currency
+ * @param options.stopPrice - The price at which the order will be triggered.
+ * @param options.timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
+ * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+ */
+stopLimit({ side: 'buy' | 'sell', id: string, size: number, price: number, stopPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+```
+
+### Create Stop Market Order
+
+```js
+/**
+ * Create a stop market order. See {@link StopMarketOrderOptions} for details.
+ *
+ * @param options
+ * @param options.side - `sell` or `buy`
+ * @param options.size - How much of currency you want to trade in units of base currency
+ * @param options.stopPrice - The price at which the order will be triggered.
+ * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+ */
+stopMarket({ side: 'buy' | 'sell', size: number, stopPrice: number })
 ```
 
 ### Modify an existing order

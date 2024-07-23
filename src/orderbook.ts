@@ -215,6 +215,15 @@ export class OrderBook {
     /* c8 ignore stop */
   }
 
+  /**
+   * Create a stop market order. See {@link StopMarketOrderOptions} for details.
+   *
+   * @param options
+   * @param options.side - `sell` or `buy`
+   * @param options.size - How much of currency you want to trade in units of base currency
+   * @param options.stopPrice - The price at which the order will be triggered.
+   * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+   */
   public stopMarket = (options: StopMarketOrderOptions): IProcessOrder => {
     return this._stopMarket(options)
   }
@@ -284,6 +293,18 @@ export class OrderBook {
     /* c8 ignore stop */
   }
 
+  /**
+   * Create a stop limit order. See {@link StopLimitOrderOptions} for details.
+   *
+   * @param options
+   * @param options.side - `sell` or `buy`
+   * @param options.id - Unique order ID
+   * @param options.size - How much of currency you want to trade in units of base currency
+   * @param options.price - The price at which the order is to be fullfilled, in units of the quote currency
+   * @param options.stopPrice - The price at which the order will be triggered.
+   * @param options.timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
+   * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+   */
   public stopLimit = (options: StopLimitOrderOptions): IProcessOrder => {
     return this._stopLimit(options)
   }
