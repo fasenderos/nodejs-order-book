@@ -583,24 +583,9 @@ export class OrderBook {
     if (order === undefined) return
     /* eslint-disable @typescript-eslint/no-dynamic-delete */
     delete this.orders[orderID]
-    if (order.side === Side.BUY) {
-      const response: ICancelOrder = {
-        order: this.bids.remove(order)
-      }
-      if (this.enableJournaling) {
-        response.log = {
-          opId: skipOpInc ? this._lastOp : ++this._lastOp,
-          ts: Date.now(),
-          op: 'd',
-          o: { orderID }
-        }
-      }
-      return response
-    }
-
-    // Side SELL
+    const side = order.side === Side.BUY ? this.bids : this.asks
     const response: ICancelOrder = {
-      order: this.asks.remove(order)
+      order: side.remove(order)
     }
     if (this.enableJournaling) {
       response.log = {

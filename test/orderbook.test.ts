@@ -1117,7 +1117,7 @@ void test('orderbook restore from snapshot', ({ equal, same, end }) => {
   end()
 })
 
-void test('orderbook test unreachable lines', ({ equal, same, end }) => {
+void test('orderbook test unreachable lines', ({ equal, end }) => {
   const ob = new OrderBook({ enableJournaling: true })
   addDepth(ob, '', 10)
 
