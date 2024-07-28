@@ -1,5 +1,32 @@
 # Changelog
 
+## [6.1.0-beta.1](https://github.com/fasenderos/hft-limit-order-book/compare/v6.1.0-beta.0...v6.1.0-beta.1) (2024-07-28)
+
+
+### Features
+
+* add support for OCO orders ([5b19318](https://github.com/fasenderos/hft-limit-order-book/commit/5b193185b5e32ba6d0ad9d0853876708e3c3e23c))
+
+
+### Bug Fixes
+
+* use new signatures in benchmark script ([313aefe](https://github.com/fasenderos/hft-limit-order-book/commit/313aefe3cebef6dd9876e7b9828cdfc54db33f1a))
+
+
+### Chore
+
+* update husky script ([2e7dd67](https://github.com/fasenderos/hft-limit-order-book/commit/2e7dd678975974a90ebb2921193b6c24b152d67e))
+
+
+### Documentation
+
+* add stop limit and stop market documentations ([41ef939](https://github.com/fasenderos/hft-limit-order-book/commit/41ef939d172ea7f1a93e1e481f1dcffcbca55640))
+
+
+### Refactoring
+
+* improve code readability on cancelOrder ([9f062c4](https://github.com/fasenderos/hft-limit-order-book/commit/9f062c44d9d490e872c4f8c16287a7140fd1481c))
+
 ## [6.1.0-beta.0](https://github.com/fasenderos/hft-limit-order-book/compare/v5.0.0...v6.1.0-beta.0) (2024-07-22)
 
 
