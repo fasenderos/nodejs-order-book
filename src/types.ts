@@ -4,6 +4,7 @@ import type { Side } from './side'
 export enum OrderType {
   LIMIT = 'limit',
   MARKET = 'market',
+  OCO = 'oco',
   STOP_LIMIT = 'stop_limit',
   STOP_MARKET = 'stop_market',
 }
@@ -52,11 +53,12 @@ interface ILimitOrderOptions extends InternalBaseOrderOptions {
 }
 export interface InternalLimitOrderOptions extends ILimitOrderOptions {
   type: OrderType.LIMIT
+  ocoStopPrice?: number
 }
 
 /**
  * Specific options for a stop market order.
-*/
+ */
 export interface StopMarketOrderOptions extends MarketOrderOptions {
   stopPrice: number
 }
@@ -74,6 +76,16 @@ export interface StopLimitOrderOptions extends LimitOrderOptions {
 export interface InternalStopLimitOrderOptions extends ILimitOrderOptions {
   type: OrderType.STOP_LIMIT
   stopPrice: number
+  isOCO?: boolean
+}
+
+/**
+ * Specific options for oco order.
+ */
+export interface OCOOrderOptions extends StopLimitOrderOptions {
+  stopPrice: number
+  stopLimitPrice: number
+  stopLimitTimeInForce?: TimeInForce
 }
 
 /**
@@ -141,6 +153,10 @@ export type OrderOptions =
   | InternalStopLimitOrderOptions
   | InternalStopMarketOrderOptions
 
+export type StopOrderOptions =
+  | StopMarketOrderOptions
+  | StopLimitOrderOptions
+  | OCOOrderOptions
 /**
  * Represents the result of processing an order.
  */
@@ -188,6 +204,7 @@ export interface CancelOrderOptions {
  */
 export interface ICancelOrder {
   order: LimitOrder
+  stopOrder?: StopOrder
   /** Optional log related to the order cancellation. */
   log?: CancelOrderJournalLog
 }
@@ -258,10 +275,11 @@ export type JournalLog =
   | CancelOrderJournalLog
 
 export type CreateOrderOptions =
-  | { type: OrderType.MARKET } & MarketOrderOptions
-  | { type: OrderType.LIMIT } & LimitOrderOptions
-  | { type: OrderType.STOP_MARKET } & StopMarketOrderOptions
-  | { type: OrderType.STOP_LIMIT } & StopLimitOrderOptions
+  | ({ type: OrderType.MARKET } & MarketOrderOptions)
+  | ({ type: OrderType.LIMIT } & LimitOrderOptions)
+  | ({ type: OrderType.STOP_MARKET } & StopMarketOrderOptions)
+  | ({ type: OrderType.STOP_LIMIT } & StopLimitOrderOptions)
+  | ({ type: OrderType.OCO } & OCOOrderOptions)
 
 /**
  * Options for configuring the order book.

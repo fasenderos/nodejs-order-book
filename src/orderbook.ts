@@ -24,7 +24,9 @@ import {
   MarketOrderOptions,
   StopMarketOrderOptions,
   LimitOrderOptions,
-  StopLimitOrderOptions
+  StopLimitOrderOptions,
+  OCOOrderOptions,
+  StopOrder
 } from './types'
 
 const validTimeInForce = Object.values(TimeInForce)
@@ -86,8 +88,10 @@ export class OrderBook {
    *  @param options.size - How much of currency you want to trade in units of base currency
    *  @param options.price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
    *  @param options.orderID - Unique order ID. Param only for limit order
-   *  @param options.timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
    *  @param options.stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   *  @param options.stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   *  @param options.timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
+   *  @param options.stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
    *  @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */
   public createOrder (options: CreateOrderOptions): IProcessOrder
@@ -104,6 +108,8 @@ export class OrderBook {
    *  @param orderID - Unique order ID. Param only for limit order
    *  @param timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
    *  @param stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   *  @param stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   *  @param stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
    *  @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */
   public createOrder (
@@ -115,7 +121,9 @@ export class OrderBook {
     price?: number,
     orderID?: string,
     timeInForce?: TimeInForce,
-    stopPrice?: number
+    stopPrice?: number,
+    stopLimitPrice?: number,
+    stopLimitTimeInForce?: TimeInForce
   ): IProcessOrder
 
   public createOrder (
@@ -125,7 +133,9 @@ export class OrderBook {
     price?: number,
     orderID?: string,
     timeInForce = TimeInForce.GTC,
-    stopPrice?: number
+    stopPrice?: number,
+    stopLimitPrice?: number,
+    stopLimitTimeInForce = TimeInForce.GTC
   ): IProcessOrder {
     let options: CreateOrderOptions
     // We don't want to test the deprecated signature.
@@ -144,7 +154,10 @@ export class OrderBook {
         id: orderID,
         timeInForce,
         // @ts-expect-error
-        stopPrice
+        stopPrice,
+        // @ts-expect-error
+        stopLimitPrice,
+        stopLimitTimeInForce
       }
       /* c8 ignore stop */
     } else if (typeof typeOrOptions === 'object') {
@@ -164,6 +177,8 @@ export class OrderBook {
         return this.stopMarket(options)
       case OrderType.STOP_LIMIT:
         return this.stopLimit(options)
+      case OrderType.OCO:
+        return this.oco(options)
       default:
         return {
           done: [],
@@ -277,9 +292,9 @@ export class OrderBook {
       price !== undefined
     ) {
       return this._limit({
+        id: orderID,
         side: sideOrOptions,
         size,
-        id: orderID,
         price,
         timeInForce
       })
@@ -307,6 +322,33 @@ export class OrderBook {
    */
   public stopLimit = (options: StopLimitOrderOptions): IProcessOrder => {
     return this._stopLimit(options)
+  }
+
+  /**
+   * Create an OCO (One-Cancels-the-Other) order.
+   * OCO order combines a `stop_limit` order and a `limit` order, where if stop price
+   * is triggered or limit order is fully or partially fulfilled, the other is canceled.
+   * Both orders have the same `side` and `size`. If you cancel one of the orders, the
+   * entire OCO order pair will be canceled.
+   *
+   * For BUY orders the `stopPrice` must be above the current price and the `price` below the current price
+   * For SELL orders the `stopPrice` must be below the current price and the `price` above the current price
+   *
+   * See {@link OCOOrderOptions} for details.
+   *
+   * @param options
+   * @param options.side - `sell` or `buy`
+   * @param options.id - Unique order ID
+   * @param options.size - How much of currency you want to trade in units of base currency
+   * @param options.price - The price of the `limit` order at which the order is to be fullfilled, in units of the quote currency
+   * @param options.stopPrice - The price at which the `stop_limit` order will be triggered.
+   * @param options.stopLimitPrice - The price of the `stop_limit` order at which the order is to be fullfilled, in units of the quote currency.
+   * @param options.timeInForce - Time-in-force of the `limit` order. Type supported are: GTC, FOK, IOC. Default is GTC
+   * @param options.stopLimitTimeInForce - Time-in-force of the `stop_limit` order. Type supported are: GTC, FOK, IOC. Default is GTC
+   * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+   */
+  public oco = (options: OCOOrderOptions): IProcessOrder => {
+    return this._oco(options)
   }
 
   /**
@@ -475,15 +517,12 @@ export class OrderBook {
     let quantityToTrade = options.size
     let iter
     let sideToProcess: OrderSide
-    let oppositeSide: Side
     if (options.side === Side.BUY) {
       iter = this.asks.minPriceQueue
       sideToProcess = this.asks
-      oppositeSide = Side.SELL
     } else {
       iter = this.bids.maxPriceQueue
       sideToProcess = this.bids
-      oppositeSide = Side.BUY
     }
     const priceBefore = this._marketPrice
     while (quantityToTrade > 0 && sideToProcess.len() > 0) {
@@ -497,7 +536,9 @@ export class OrderBook {
       quantityToTrade = quantityLeft
     }
     response.quantityLeft = quantityToTrade
-    this.executeConditionalOrder(oppositeSide, priceBefore, response)
+
+    this.executeConditionalOrder(options.side, priceBefore, response)
+
     if (this.enableJournaling) {
       response.log = {
         opId: ++this._lastOp,
@@ -510,7 +551,7 @@ export class OrderBook {
   }
 
   private readonly _limit = (
-    options: LimitOrderOptions,
+    options: LimitOrderOptions & { ocoStopPrice?: number },
     incomingResponse?: IProcessOrder
   ): IProcessOrder => {
     const response = incomingResponse ?? this.validateLimitOrder(options)
@@ -521,7 +562,8 @@ export class OrderBook {
       options.id,
       options.size,
       options.price,
-      options.timeInForce ?? TimeInForce.GTC
+      options.timeInForce ?? TimeInForce.GTC,
+      options.ocoStopPrice
     )
     if (this.enableJournaling && order != null) {
       response.log = {
@@ -566,6 +608,46 @@ export class OrderBook {
     return this._stopOrder(stopLimit, response)
   }
 
+  private readonly _oco = (options: OCOOrderOptions): IProcessOrder => {
+    const response = this.validateLimitOrder(options)
+    /* c8 ignore next already validated with limit test */
+    if (response.err != null) return response
+    if (this.validateOCOOrder(options)) {
+      // We use the same ID for Stop Limit and Limit Order, since
+      // we check only on limit order for duplicated ids
+      this._limit(
+        {
+          id: options.id,
+          side: options.side,
+          size: options.size,
+          price: options.price,
+          timeInForce: options.timeInForce,
+          ocoStopPrice: options.stopPrice
+        },
+        response
+      )
+      /* c8 ignore next already validated with limit test */
+      if (response.err != null) return response
+
+      const stopLimit = OrderFactory.createOrder({
+        type: OrderType.STOP_LIMIT,
+        id: options.id,
+        side: options.side,
+        size: options.size,
+        price: options.stopLimitPrice,
+        stopPrice: options.stopPrice,
+        isMaker: true,
+        timeInForce: options.stopLimitTimeInForce ?? TimeInForce.GTC,
+        isOCO: true
+      })
+      this.stopBook.add(stopLimit)
+      response.done.push(stopLimit)
+    } else {
+      response.err = CustomError(ERROR.ErrInvalidConditionalOrder)
+    }
+    return response
+  }
+
   private readonly _stopOrder = (
     stopOrder: StopMarketOrder | StopLimitOrder,
     response: IProcessOrder
@@ -574,7 +656,7 @@ export class OrderBook {
       this.stopBook.add(stopOrder)
       response.done.push(stopOrder)
     } else {
-      response.err = CustomError(ERROR.ErrInvalidStopPrice)
+      response.err = CustomError(ERROR.ErrInvalidConditionalOrder)
     }
     return response
   }
@@ -596,9 +678,15 @@ export class OrderBook {
     }
   }
 
+  /**
+   * Remove an existing order with given ID from the order book
+   * @param orderID The id of the order to be deleted
+   * @param internalDeletion Set to true when the delete comes from internal operations
+   * @returns The removed order if exists or `undefined`
+   */
   private readonly _cancelOrder = (
     orderID: string,
-    skipOpInc: boolean = false
+    internalDeletion: boolean = false
   ): ICancelOrder | undefined => {
     const order = this.orders[orderID]
     if (order === undefined) return
@@ -608,9 +696,15 @@ export class OrderBook {
     const response: ICancelOrder = {
       order: side.remove(order)
     }
+
+    // Delete OCO Order only when the delete request comes from user
+    if (!internalDeletion && order.ocoStopPrice !== undefined) {
+      response.stopOrder = this.stopBook.remove(order.side, orderID, order.ocoStopPrice)
+    }
+
     if (this.enableJournaling) {
       response.log = {
-        opId: skipOpInc ? this._lastOp : ++this._lastOp,
+        opId: internalDeletion ? this._lastOp : ++this._lastOp,
         ts: Date.now(),
         op: 'd',
         o: { orderID }
@@ -636,26 +730,24 @@ export class OrderBook {
     orderID: string,
     size: number,
     price: number,
-    timeInForce: TimeInForce
+    timeInForce: TimeInForce,
+    ocoStopPrice?: number
   ): LimitOrder | undefined => {
     let quantityToTrade = size
     let sideToProcess: OrderSide
     let sideToAdd: OrderSide
     let comparator
     let iter
-    let oppositeSide: Side
     if (side === Side.BUY) {
       sideToAdd = this.bids
       sideToProcess = this.asks
       comparator = this.greaterThanOrEqual
       iter = this.asks.minPriceQueue
-      oppositeSide = Side.SELL
     } else {
       sideToAdd = this.asks
       sideToProcess = this.bids
       comparator = this.lowerThanOrEqual
       iter = this.bids.maxPriceQueue
-      oppositeSide = Side.BUY
     }
 
     if (timeInForce === TimeInForce.FOK) {
@@ -665,7 +757,6 @@ export class OrderBook {
         return
       }
     }
-
     let bestPrice = iter()
     const priceBefore = this._marketPrice
     while (
@@ -684,7 +775,7 @@ export class OrderBook {
       bestPrice = iter()
     }
 
-    this.executeConditionalOrder(oppositeSide, priceBefore, response)
+    this.executeConditionalOrder(side, priceBefore, response)
 
     let order: LimitOrder
     if (quantityToTrade > 0) {
@@ -696,7 +787,8 @@ export class OrderBook {
         price,
         time: Date.now(),
         timeInForce,
-        isMaker: true
+        isMaker: true,
+        ...(ocoStopPrice !== undefined ? { ocoStopPrice } : {})
       })
       if (response.done.length > 0) {
         response.partialQuantityProcessed = size - quantityToTrade
@@ -738,44 +830,54 @@ export class OrderBook {
   }
 
   private readonly executeConditionalOrder = (
-    oppositeSide: Side,
+    side: Side,
     priceBefore: number,
     response: IProcessOrder
   ): void => {
     const pendingOrders = this.stopBook.getConditionalOrders(
-      oppositeSide,
+      side,
       priceBefore,
       this._marketPrice
     )
     if (pendingOrders.length > 0) {
+      const toBeExecuted: StopOrder[] = []
+      // Before get all orders to be executed and clean up the stop queue
+      // in order to avoid that an executed limit/market order run against
+      // the same stop order queue
       pendingOrders.forEach((queue) => {
         while (queue.len() > 0) {
           const headOrder = queue.removeFromHead()
-          if (headOrder !== undefined) {
-            if (headOrder.type === OrderType.STOP_MARKET) {
-              this._market(
-                {
-                  id: headOrder.id,
-                  side: headOrder.side,
-                  size: headOrder.size
-                },
-                response
-              )
-            } else {
-              this._limit(
-                {
-                  id: headOrder.id,
-                  side: headOrder.side,
-                  size: headOrder.size,
-                  price: headOrder.price,
-                  timeInForce: headOrder.timeInForce
-                },
-                response
-              )
-            }
-            response.activated.push(headOrder)
-          }
+          if (headOrder !== undefined) toBeExecuted.push(headOrder)
         }
+        // Queue is empty now so remove the priceLevel
+        this.stopBook.removePriceLevel(side, queue.price)
+      })
+      toBeExecuted.forEach((stopOrder) => {
+        if (stopOrder.type === OrderType.STOP_MARKET) {
+          this._market(
+            {
+              id: stopOrder.id,
+              side: stopOrder.side,
+              size: stopOrder.size
+            },
+            response
+          )
+        } else {
+          if (stopOrder.isOCO) {
+            this._cancelOrder(stopOrder.id, true)
+          }
+          this._limit(
+            {
+              id: stopOrder.id,
+              side: stopOrder.side,
+              size: stopOrder.size,
+              price: stopOrder.price,
+              timeInForce: stopOrder.timeInForce
+            },
+            response
+          )
+        }
+        response.activated.push(stopOrder)
       })
     }
   }
@@ -819,6 +921,30 @@ export class OrderBook {
           throw CustomError(ERROR.ErrJournalLog)
       }
     }
+  }
+
+  /**
+   * OCO Order:
+   *    Buy: price < marketPrice < stopPrice
+   *    Sell: price > marketPrice > stopPrice
+   */
+  private readonly validateOCOOrder = (options: OCOOrderOptions): boolean => {
+    let response = false
+    if (
+      options.side === Side.BUY &&
+      options.price < this._marketPrice &&
+      this._marketPrice < options.stopPrice
+    ) {
+      response = true
+    }
+    if (
+      options.side === Side.SELL &&
+      options.price > this._marketPrice &&
+      this._marketPrice > options.stopPrice
+    ) {
+      response = true
+    }
+    return response
   }
 
   private readonly greaterThanOrEqual = (a: number, b: number): boolean => {
@@ -868,6 +994,14 @@ export class OrderBook {
             if (canceledOrder?.order !== undefined) {
               response.done.push(canceledOrder.order)
             }
+          }
+          // Remove linked OCO Stop Order if any
+          if (headOrder.ocoStopPrice !== undefined) {
+            this.stopBook.remove(
+              headOrder.side,
+              headOrder.id,
+              headOrder.ocoStopPrice
+            )
           }
           this._marketPrice = headOrder.price
         }

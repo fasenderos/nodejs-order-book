@@ -18,53 +18,31 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
   const price = 100
   const time = Date.now()
   const timeInForce = TimeInForce.IOC
-  const order = OrderFactory.createOrder({
-    id,
-    type,
-    side,
-    size,
-    price,
-    time,
-    timeInForce,
-    isMaker: false
-  })
 
-  equal(order instanceof LimitOrder, true)
-  equal(order.id, id)
-  equal(order.type, type)
-  equal(order.side, side)
-  equal(order.size, size)
-  equal(order.origSize, size)
-  equal(order.price, price)
-  equal(order.time, time)
-  equal(order.timeInForce, timeInForce)
-  equal(order.isMaker, false)
-  same(order.toObject(), {
-    id,
-    type,
-    side,
-    size,
-    origSize: size,
-    price,
-    time,
-    timeInForce,
-    isMaker: order.isMaker
-  })
-  equal(
-    order.toString(),
-    `${id}:
-    type: ${type}
-    side: ${side}
-    size: ${size}
-    origSize: ${size}
-    price: ${price}
-    time: ${time}
-    timeInForce: ${timeInForce}
-    isMaker: ${false as unknown as string}`
-  )
-  equal(
-    order.toJSON(),
-    JSON.stringify({
+  {
+    const order = OrderFactory.createOrder({
+      id,
+      type,
+      side,
+      size,
+      price,
+      time,
+      timeInForce,
+      isMaker: false
+    })
+
+    equal(order instanceof LimitOrder, true)
+    equal(order.id, id)
+    equal(order.type, type)
+    equal(order.side, side)
+    equal(order.size, size)
+    equal(order.origSize, size)
+    equal(order.price, price)
+    equal(order.time, time)
+    equal(order.timeInForce, timeInForce)
+    equal(order.isMaker, false)
+    equal(order.ocoStopPrice, undefined)
+    same(order.toObject(), {
       id,
       type,
       side,
@@ -73,9 +51,99 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
       price,
       time,
       timeInForce,
-      isMaker: false
+      isMaker: order.isMaker
     })
-  )
+    equal(
+      order.toString(),
+      `${id}:
+    type: ${type}
+    side: ${side}
+    size: ${size}
+    origSize: ${size}
+    price: ${price}
+    time: ${time}
+    timeInForce: ${timeInForce}
+    isMaker: ${false as unknown as string}`
+    )
+    equal(
+      order.toJSON(),
+      JSON.stringify({
+        id,
+        type,
+        side,
+        size,
+        origSize: size,
+        price,
+        time,
+        timeInForce,
+        isMaker: false
+      })
+    )
+  }
+
+  {
+    // Limit Order with ocoStopPrice
+    const ocoStopPrice = 10
+    const order = OrderFactory.createOrder({
+      id,
+      type,
+      side,
+      size,
+      price,
+      time,
+      timeInForce,
+      isMaker: false,
+      ocoStopPrice
+    })
+    equal(order instanceof LimitOrder, true)
+    equal(order.id, id)
+    equal(order.type, type)
+    equal(order.side, side)
+    equal(order.size, size)
+    equal(order.origSize, size)
+    equal(order.price, price)
+    equal(order.time, time)
+    equal(order.timeInForce, timeInForce)
+    equal(order.isMaker, false)
+    equal(order.ocoStopPrice, ocoStopPrice)
+    same(order.toObject(), {
+      id,
+      type,
+      side,
+      size,
+      origSize: size,
+      price,
+      time,
+      timeInForce,
+      isMaker: order.isMaker
+    })
+    equal(
+      order.toString(),
+      `${id}:
+    type: ${type}
+    side: ${side}
+    size: ${size}
+    origSize: ${size}
+    price: ${price}
+    time: ${time}
+    timeInForce: ${timeInForce}
+    isMaker: ${false as unknown as string}`
+    )
+    equal(
+      order.toJSON(),
+      JSON.stringify({
+        id,
+        type,
+        side,
+        size,
+        origSize: size,
+        price,
+        time,
+        timeInForce,
+        isMaker: false
+      })
+    )
+  }
   end()
 })
 
@@ -146,57 +214,32 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
   const stopPrice = 4
   const time = Date.now()
   const timeInForce = TimeInForce.IOC
-  const order = OrderFactory.createOrder({
-    id,
-    type,
-    side,
-    size,
-    price,
-    time,
-    stopPrice,
-    timeInForce,
-    isMaker: true
-  })
+  {
+    const order = OrderFactory.createOrder({
+      id,
+      type,
+      side,
+      size,
+      price,
+      time,
+      stopPrice,
+      timeInForce,
+      isMaker: true
+    })
 
-  equal(order instanceof StopLimitOrder, true)
-  equal(order.id, id)
-  equal(order.type, type)
-  equal(order.side, side)
-  equal(order.size, size)
-  equal(order.price, price)
-  equal(order.origSize, size)
-  equal(order.stopPrice, stopPrice)
-  equal(order.timeInForce, timeInForce)
-  equal(order.isMaker, true)
-  equal(order.time, time)
-  same(order.toObject(), {
-    id,
-    type,
-    side,
-    size,
-    origSize: size,
-    price,
-    stopPrice,
-    timeInForce,
-    time,
-    isMaker: true
-  })
-  equal(
-    order.toString(),
-    `${id}:
-    type: ${type}
-    side: ${side}
-    size: ${size}
-    origSize: ${size}
-    price: ${price}
-    stopPrice: ${stopPrice}
-    timeInForce: ${timeInForce}
-    time: ${time}
-    isMaker: ${true as unknown as string}`
-  )
-  equal(
-    order.toJSON(),
-    JSON.stringify({
+    equal(order instanceof StopLimitOrder, true)
+    equal(order.id, id)
+    equal(order.type, type)
+    equal(order.side, side)
+    equal(order.size, size)
+    equal(order.price, price)
+    equal(order.origSize, size)
+    equal(order.stopPrice, stopPrice)
+    equal(order.timeInForce, timeInForce)
+    equal(order.isMaker, true)
+    equal(order.time, time)
+    equal(order.isOCO, false)
+    same(order.toObject(), {
       id,
       type,
       side,
@@ -208,11 +251,112 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
       time,
       isMaker: true
     })
-  )
-  // Price setter
-  const newPrice = 120
-  order.price = newPrice
-  equal(order.price, newPrice)
+    equal(
+      order.toString(),
+      `${id}:
+    type: ${type}
+    side: ${side}
+    size: ${size}
+    origSize: ${size}
+    price: ${price}
+    stopPrice: ${stopPrice}
+    timeInForce: ${timeInForce}
+    time: ${time}
+    isMaker: ${true as unknown as string}`
+    )
+    equal(
+      order.toJSON(),
+      JSON.stringify({
+        id,
+        type,
+        side,
+        size,
+        origSize: size,
+        price,
+        stopPrice,
+        timeInForce,
+        time,
+        isMaker: true
+      })
+    )
+    // Price setter
+    const newPrice = 120
+    order.price = newPrice
+    equal(order.price, newPrice)
+  }
+
+  {
+    // Stop Limit Order created by OCO order
+    const order = OrderFactory.createOrder({
+      id,
+      type,
+      side,
+      size,
+      price,
+      time,
+      stopPrice,
+      timeInForce,
+      isMaker: true,
+      isOCO: true
+    })
+
+    equal(order instanceof StopLimitOrder, true)
+    equal(order.id, id)
+    equal(order.type, type)
+    equal(order.side, side)
+    equal(order.size, size)
+    equal(order.price, price)
+    equal(order.origSize, size)
+    equal(order.stopPrice, stopPrice)
+    equal(order.timeInForce, timeInForce)
+    equal(order.isMaker, true)
+    equal(order.time, time)
+    equal(order.isOCO, true)
+    same(order.toObject(), {
+      id,
+      type,
+      side,
+      size,
+      origSize: size,
+      price,
+      stopPrice,
+      timeInForce,
+      time,
+      isMaker: true
+    })
+    equal(
+      order.toString(),
+      `${id}:
+    type: ${type}
+    side: ${side}
+    size: ${size}
+    origSize: ${size}
+    price: ${price}
+    stopPrice: ${stopPrice}
+    timeInForce: ${timeInForce}
+    time: ${time}
+    isMaker: ${true as unknown as string}`
+    )
+    equal(
+      order.toJSON(),
+      JSON.stringify({
+        id,
+        type,
+        side,
+        size,
+        origSize: size,
+        price,
+        stopPrice,
+        timeInForce,
+        time,
+        isMaker: true
+      })
+    )
+    // Price setter
+    const newPrice = 120
+    order.price = newPrice
+    equal(order.price, newPrice)
+  }
   end()
 })
 
@@ -230,12 +374,12 @@ void test('it should create order without passing a date or id', ({
   teardown(() => (Date.now = now))
   // @ts-expect-error cannot assign because is readonly
   // eslint-disable-next-line
-  teardown(() => (randomUUID = originalRandomUUID))
+  teardown(() => (randomUUID = originalRandomUUID));
 
   Date.now = (...m) => fakeTimestamp
   // @ts-expect-error cannot assign because is readonly
   // eslint-disable-next-line
-  randomUUID = () => fakeId
+  randomUUID = () => fakeId;
 
   const type = OrderType.STOP_MARKET
   const side = Side.BUY

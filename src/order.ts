@@ -75,12 +75,15 @@ export class LimitOrder extends BaseOrder {
   private _price: number
   private readonly _timeInForce: TimeInForce
   private readonly _isMaker: boolean
+  // Refers to the linked Stop Limit order stopPrice
+  private readonly _ocoStopPrice?: number
   constructor (options: InternalLimitOrderOptions) {
     super(options)
     this._type = options.type
     this._price = options.price
     this._timeInForce = options.timeInForce
     this._isMaker = options.isMaker
+    this._ocoStopPrice = options.ocoStopPrice
   }
 
   // Getter for order type
@@ -106,6 +109,10 @@ export class LimitOrder extends BaseOrder {
   // Getter for order isMaker
   get isMaker (): boolean {
     return this._isMaker
+  }
+
+  get ocoStopPrice (): number | undefined {
+    return this._ocoStopPrice
   }
 
   toString = (): string =>
@@ -170,7 +177,7 @@ export class StopMarketOrder extends BaseOrder {
     side: this._side,
     size: this._size,
     origSize: this._origSize,
-    stopPrice: this.stopPrice,
+    stopPrice: this._stopPrice,
     time: this._time
   })
 }
@@ -181,6 +188,8 @@ export class StopLimitOrder extends BaseOrder {
   private readonly _stopPrice: number
   private readonly _timeInForce: TimeInForce
   private readonly _isMaker: boolean
+  // It's true when there is a linked Limit Order
+  private readonly _isOCO: boolean
   constructor (options: InternalStopLimitOrderOptions) {
     super(options)
     this._type = options.type
@@ -188,6 +197,7 @@ export class StopLimitOrder extends BaseOrder {
     this._stopPrice = options.stopPrice
     this._timeInForce = options.timeInForce
     this._isMaker = options.isMaker
+    this._isOCO = options.isOCO ?? false
   }
 
   // Getter for order type
@@ -220,6 +230,11 @@ export class StopLimitOrder extends BaseOrder {
     return this._isMaker
   }
 
+  // Getter for order isOCO
+  get isOCO (): boolean {
+    return this._isOCO
+  }
+
   toString = (): string =>
     `${this._id}:
     type: ${this.type}
@@ -241,8 +256,8 @@ export class StopLimitOrder extends BaseOrder {
     size: this._size,
     origSize: this._origSize,
     price: this._price,
-    stopPrice: this.stopPrice,
-    timeInForce: this.timeInForce,
+    stopPrice: this._stopPrice,
+    timeInForce: this._timeInForce,
     time: this._time,
     isMaker: this._isMaker
   })

@@ -19,7 +19,7 @@ Ultra-fast matching engine written in TypeScript
 
 - Standard price-time priority
 - Supports both market and limit orders
-- Supports conditional orders (Stop Market and Stop Limit)
+- Supports conditional orders (Stop Market, Stop Limit and OCO)
 - Supports time in force GTC, FOK and IOC
 - Supports order cancelling
 - Supports order price and/or size updating
@@ -57,13 +57,15 @@ const lob = new OrderBook()
 Then you'll be able to use next primary functions:
 
 ```js
-lob.createOrder({ type: 'limit' | 'market' | 'stop_limit' | 'stop_market', side: 'buy' | 'sell', size: number, price?: number, id?: string, stopPrice?: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+lob.createOrder({ type: 'limit' | 'market' | 'stop_limit' | 'stop_market' | 'oco', side: 'buy' | 'sell', size: number, price?: number, id?: string, stopPrice?: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
 lob.limit({ id: string, side: 'buy' | 'sell', size: number, price: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
 lob.market({ side: 'buy' | 'sell', size: number })
 
 lob.stopLimit({ id: string, side: 'buy' | 'sell', size: number, price: number, stopPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+
+lob.oco({ id: string, side: 'buy' | 'sell', size: number, price: number, stopPrice: number, stopLimitPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC', stopLimitTimeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
 lob.stopMarket({ side: 'buy' | 'sell', size: number, stopPrice: number })
 
@@ -79,17 +81,20 @@ To add an order to the order book you can call the general `createOrder()` funct
 ### Create Order
 
 ```js
-// Create a limit order
+// Create limit order
 createOrder({ type: 'limit', side: 'buy' | 'sell', size: number, price: number, id: string, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
-// Create a market order
+// Create market order
 createOrder({ type: 'market', side: 'buy' | 'sell', size: number })
 
-// Create a stop limit order
+// Create stop limit order
 createOrder({ type: 'stop_limit', side: 'buy' | 'sell', size: number, price: number, id: string, stopPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
-// Create a stop market order
+// Create stop market order
 createOrder({ type: 'stop_market', side: 'buy' | 'sell', size: number, stopPrice: number })
+
+// Create OCO order
+createOrder({ type: 'oco', side: 'buy' | 'sell', size: number, stopPrice: number, stopLimitPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC', stopLimitTimeInForce?: 'GTC' | 'FOK' | 'IOC' })
 ```
 
 ### Create Limit Order
@@ -226,6 +231,35 @@ stopLimit({ side: 'buy' | 'sell', id: string, size: number, price: number, stopP
  * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
  */
 stopMarket({ side: 'buy' | 'sell', size: number, stopPrice: number })
+```
+
+### Create OCO (One-Cancels-the-Other) Order
+
+```js
+/**
+ * Create an OCO (One-Cancels-the-Other) order.
+ * OCO order combines a `stop_limit` order and a `limit` order, where if stop price
+ * is triggered or limit order is fully or partially fulfilled, the other is canceled.
+ * Both orders have the same `side` and `size`. If you cancel one of the orders, the
+ * entire OCO order pair will be canceled.
+ *
+ * For BUY orders the `stopPrice` must be above the current price and the `price` below the current price
+ * For SELL orders the `stopPrice` must be below the current price and the `price` above the current price
+ *
+ * See {@link OCOOrderOptions} for details.
+ *
+ * @param options
+ * @param options.side - `sell` or `buy`
+ * @param options.id - Unique order ID
+ * @param options.size - How much of currency you want to trade in units of base currency
+ * @param options.price - The price of the `limit` order at which the order is to be fullfilled, in units of the quote currency
+ * @param options.stopPrice - The price at which the `stop_limit` order will be triggered.
+ * @param options.stopLimitPrice - The price of the `stop_limit` order at which the order is to be fullfilled, in units of the quote currency.
+ * @param options.timeInForce - Time-in-force of the `limit` order. Type supported are: GTC, FOK, IOC. Default is GTC
+ * @param options.stopLimitTimeInForce - Time-in-force of the `stop_limit` order. Type supported are: GTC, FOK, IOC. Default is GTC
+ * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+ */
+oco({ side: 'buy' | 'sell', id: string, size: number, price: number, stopPrice: number, stopLimitPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC', stopLimitTimeInForce?: 'GTC' | 'FOK' | 'IOC' })
 ```
 
 ### Modify an existing order

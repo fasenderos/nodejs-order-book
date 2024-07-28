@@ -2,7 +2,12 @@ import { test } from 'tap'
 import { Side } from '../src/side'
 import { OrderBook } from '../src/orderbook'
 import { ERROR } from '../src/errors'
-import { JournalLog, OrderType, TimeInForce } from '../src/types'
+import {
+  IProcessOrder,
+  JournalLog,
+  OrderType,
+  TimeInForce
+} from '../src/types'
 import { OrderQueue } from '../src/orderqueue'
 import { LimitOrder, StopLimitOrder, StopMarketOrder } from '../src/order'
 
@@ -366,13 +371,13 @@ void test('test stop_market order', ({ equal, end }) => {
       size: 1,
       stopPrice: ob.marketPrice - 10
     }) // Below market price
-    equal(wrongStopPrice.err?.message, ERROR.ErrInvalidStopPrice)
+    equal(wrongStopPrice.err?.message, ERROR.ErrInvalidConditionalOrder)
     const wrongStopPrice2 = ob.stopMarket({
       side: Side.BUY,
       size: 1,
       stopPrice: ob.marketPrice
     }) // Same as market price
-    equal(wrongStopPrice2.err?.message, ERROR.ErrInvalidStopPrice)
+    equal(wrongStopPrice2.err?.message, ERROR.ErrInvalidConditionalOrder)
     const wrongOtherOrderOption1 = ob.stopMarket({
       // @ts-expect-error invalid side
       side: 'wrong-side',
@@ -415,13 +420,13 @@ void test('test stop_market order', ({ equal, end }) => {
       size: 1,
       stopPrice: ob.marketPrice + 10
     }) // Above market price
-    equal(wrongStopPrice.err?.message, ERROR.ErrInvalidStopPrice)
+    equal(wrongStopPrice.err?.message, ERROR.ErrInvalidConditionalOrder)
     const wrongStopPrice2 = ob.stopMarket({
       side: Side.SELL,
       size: 1,
       stopPrice: ob.marketPrice
     }) // Same as market price
-    equal(wrongStopPrice2.err?.message, ERROR.ErrInvalidStopPrice)
+    equal(wrongStopPrice2.err?.message, ERROR.ErrInvalidConditionalOrder)
 
     // Add a stop market SELL order
     const beforeMarketPrice = ob.marketPrice
@@ -489,7 +494,7 @@ void test('test stop_limit order', ({ equal, end }) => {
       stopPrice: ob.marketPrice - 10, // Below market price
       price: ob.marketPrice
     })
-    equal(wrongStopPrice.err?.message, ERROR.ErrInvalidStopPrice)
+    equal(wrongStopPrice.err?.message, ERROR.ErrInvalidConditionalOrder)
     const wrongStopPrice2 = ob.stopLimit({
       id: 'fake-id',
       side: Side.BUY,
@@ -497,7 +502,7 @@ void test('test stop_limit order', ({ equal, end }) => {
       stopPrice: ob.marketPrice,
       price: ob.marketPrice
     }) // Same as market price
-    equal(wrongStopPrice2.err?.message, ERROR.ErrInvalidStopPrice)
+    equal(wrongStopPrice2.err?.message, ERROR.ErrInvalidConditionalOrder)
     const wrongOtherOrderOption1 = ob.stopLimit({
       // @ts-expect-error invalid side
       side: 'wrong-side',
@@ -569,7 +574,7 @@ void test('test stop_limit order', ({ equal, end }) => {
       stopPrice: ob.marketPrice + 10, // Above market price
       price: ob.marketPrice
     })
-    equal(wrongStopPrice.err?.message, ERROR.ErrInvalidStopPrice)
+    equal(wrongStopPrice.err?.message, ERROR.ErrInvalidConditionalOrder)
     const wrongStopPrice2 = ob.stopLimit({
       id: 'fake-id',
       side: Side.SELL,
@@ -577,7 +582,7 @@ void test('test stop_limit order', ({ equal, end }) => {
       stopPrice: ob.marketPrice,
       price: ob.marketPrice
     }) // Same as market price
-    equal(wrongStopPrice2.err?.message, ERROR.ErrInvalidStopPrice)
+    equal(wrongStopPrice2.err?.message, ERROR.ErrInvalidConditionalOrder)
 
     // Add a stop limit BUY order
     const beforeMarketPrice = ob.marketPrice
@@ -628,6 +633,193 @@ void test('test stop_limit order', ({ equal, end }) => {
     equal(stopOrder.quantityLeft, 2)
   }
 
+  end()
+})
+
+/**
+ * OCO Order:
+ *    Buy: price < marketPrice < stopPrice
+ *    Sell: price > marketPrice > stopPrice
+ */
+void test('test oco order', ({ equal, end }) => {
+  const ob = new OrderBook()
+
+  addDepth(ob, '', 2)
+  // We need to create at least on maket order in order to set
+  // the market price
+  ob.market({ side: Side.BUY, size: 3, id: 'che-cazz' })
+  equal(ob.marketPrice, 110)
+
+  const validate = (
+    orderId: string,
+    side: Side,
+    price: number,
+    stopPrice: number,
+    stopLimitPrice: number,
+    expect: boolean | ERROR | ((response: IProcessOrder) => void)
+  ): void => {
+    const order = ob.oco({
+      id: orderId,
+      side,
+      size: 1,
+      price,
+      stopPrice,
+      stopLimitPrice,
+      stopLimitTimeInForce: TimeInForce.GTC
+    })
+    if (typeof expect === 'function') {
+      expect(order)
+    } else {
+      const toValidate =
+        typeof expect === 'boolean' ? order : order.err?.message
+      equal(toValidate, expect)
+    }
+  }
+
+  // Test OCO Buy
+  // wrong stopPrice
+  validate(
+    'fake-id',
+    Side.BUY,
+    ob.marketPrice - 10,
+    ob.marketPrice - 10,
+    ob.marketPrice,
+    ERROR.ErrInvalidConditionalOrder
+  )
+  // wrong price
+  validate(
+    'fake-id',
+    Side.BUY,
+    ob.marketPrice + 10,
+    ob.marketPrice + 10,
+    ob.marketPrice,
+    ERROR.ErrInvalidConditionalOrder
+  )
+
+  // Here marketPrice is 110, lowest sell is 110 and highest buy is 90
+  // valid OCO with limit to 100 and stopLimit to 120
+  validate('oco-buy-1', Side.BUY, 100, 120, 121, (response) => {
+    const order = response.done[0] as StopLimitOrder
+    equal(order instanceof StopLimitOrder, true)
+    equal(order.stopPrice === 120, true)
+    equal(order.price === 121, true)
+    equal(order.isOCO, true)
+    // The limit oco must be the only one inserted in the price level 100
+    // @ts-expect-error bids is private
+    equal(ob.bids.maxPriceQueue()?.price(), 100)
+    // @ts-expect-error bids is private
+    equal(ob.bids.maxPriceQueue()?.tail()?.id, 'oco-buy-1')
+  })
+
+  // Here marketPrice is 110, lowest sell is 110 and highest buy is 90
+  // valid OCO with limit to 100 and stopLimit to 120
+  validate('oco-buy-2', Side.BUY, 100, 120, 121, (response) => {
+    const order = response.done[0] as StopLimitOrder
+    equal(order instanceof StopLimitOrder, true)
+    equal(order.stopPrice === 120, true)
+    equal(order.price === 121, true)
+    equal(order.isOCO, true)
+    // The limit oco must be the only one inserted in the price level 100
+    // @ts-expect-error bids is private
+    equal(ob.bids.maxPriceQueue()?.price(), 100)
+    // @ts-expect-error bids is private
+    equal(ob.bids.maxPriceQueue()?.tail()?.id, 'oco-buy-2')
+  })
+
+  // Test OCO Sell
+  // wrong stopPrice
+  validate(
+    'fake-id',
+    Side.SELL,
+    ob.marketPrice + 10,
+    ob.marketPrice + 10,
+    ob.marketPrice,
+    ERROR.ErrInvalidConditionalOrder
+  )
+  // wrong price
+  validate(
+    'fake-id',
+    Side.SELL,
+    ob.marketPrice - 10,
+    ob.marketPrice - 10,
+    ob.marketPrice,
+    ERROR.ErrInvalidConditionalOrder
+  )
+
+  // Here marketPrice is 110, lowest sell is 110 and highest buy is 100
+  // valid OCO with limit to 120 and stopLimit to 100
+  validate('oco-sell-1', Side.SELL, 120, 100, 99, (response) => {
+    const order = response.done[0] as StopLimitOrder
+    equal(order instanceof StopLimitOrder, true)
+    equal(order.stopPrice === 100, true)
+    equal(order.price === 99, true)
+    equal(order.isOCO, true)
+    // The limit oco must be in the tail of the price level 120
+    // @ts-expect-error bids is private
+    equal(ob.asks._prices[120].tail()?.id === 'oco-sell-1', true)
+  })
+
+  //  Here marketPrice is 110, lowest sell is 110 and highest buy is 90
+  //  valid OCO with limit to 120 and stopLimit to 100
+  validate('oco-sell-2', Side.SELL, 120, 100, 99, (response) => {
+    const order = response.done[0] as StopLimitOrder
+    equal(order instanceof StopLimitOrder, true)
+    equal(order.stopPrice === 100, true)
+    equal(order.price === 99, true)
+    equal(order.isOCO, true)
+    // The limit oco must be in the tail of the price level 120
+    // @ts-expect-error bids is private
+    equal(ob.asks._prices[120].tail()?.id === 'oco-sell-2', true)
+  })
+
+  // Removing the limit order should remove also the stop limit
+  const response = ob.cancel('oco-sell-2')
+  equal(response?.order.id, 'oco-sell-2')
+  equal(response?.stopOrder?.id, 'oco-sell-2')
+
+  // Recreate the same OCO with the createOrder method
+  {
+    const response = ob.createOrder({
+      id: 'oco-sell-2',
+      type: OrderType.OCO,
+      size: 1,
+      side: Side.SELL,
+      price: 120,
+      stopPrice: 100,
+      stopLimitPrice: 99
+    })
+    const order = response.done[0] as StopLimitOrder
+    equal(order instanceof StopLimitOrder, true)
+    equal(order.stopPrice === 100, true)
+    equal(order.price === 99, true)
+    equal(order.isOCO, true)
+    // The limit oco must be in the tail of the price level 120
+    // @ts-expect-error bids is private
+    equal(ob.asks._prices[120].tail()?.id === 'oco-sell-2', true)
+  }
+
+  {
+    const response = ob.market({ side: Side.SELL, size: 1 })
+    // market order match against the limit order oco-buy-1 and activate the two stop limit
+    // orders of the oco sell.
+    equal(response.done[0]?.id === 'oco-buy-1', true)
+    equal(response.activated[0]?.id === 'oco-sell-1', true)
+    equal(response.activated[1]?.id === 'oco-sell-2', true)
+
+    // The first stop limit oco-sell-1 match against the limit oco-buy-2
+    equal(response.done[1]?.id === 'oco-buy-2', true)
+    equal(response.done[2]?.id === 'oco-sell-1', true)
+
+    // While the second stop limit oco-sell-2 go to the order book
+    equal(response.partial?._id === 'oco-sell-2', true)
+    equal(response.partialQuantityProcessed, 0)
+
+    // Both the side of the stop book must be empty
+    // @ts-expect-error stopBook is private
+    equal(ob.stopBook.asks._priceTree.length, 0)
+    // @ts-expect-error stopBook is private
+    equal(ob.stopBook.bids._priceTree.length, 0)
+  }
   end()
 })
 

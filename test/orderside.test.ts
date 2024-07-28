@@ -139,6 +139,15 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   equal(updateOrder1.price, 25)
   equal(os.toString(), '\n25 -> 10\n20 -> 5')
 
+  // @ts-expect-error _priceTree is private property
+  os._priceTree.values.reduce((previousPrice, curr) => {
+    // BUY side are in descending order bigger to lower
+    // @ts-expect-error _price is private property
+    const currPrice = curr._price
+    equal(currPrice < previousPrice, true)
+    return currPrice
+  }, Infinity)
+
   // Remove the updated order
   os.remove(updatedOrder)
 
@@ -286,6 +295,15 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 25)
   equal(os.toString(), '\n25 -> 10\n20 -> 5')
+
+  // @ts-expect-error _priceTree is private property
+  os._priceTree.values.reduce((previousPrice, curr) => {
+    // SELL side are in ascending order lower to bigger
+    // @ts-expect-error _price is private property
+    const currPrice = curr._price
+    equal(currPrice > previousPrice, true)
+    return currPrice
+  }, 0)
 
   // Remove the updated order
   os.remove(updatedOrder)

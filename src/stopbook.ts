@@ -17,13 +17,27 @@ export class StopBook {
     stopSide.append(order)
   }
 
+  remove = (
+    side: Side,
+    id: string,
+    stopPrice: number
+  ): StopOrder | undefined => {
+    const stopSide = side === Side.BUY ? this.bids : this.asks
+    return stopSide.remove(id, stopPrice)
+  }
+
+  removePriceLevel = (side: Side, priceLevel: number): void => {
+    const stopSide = side === Side.BUY ? this.bids : this.asks
+    return stopSide.removePriceLevel(priceLevel)
+  }
+
   getConditionalOrders = (
-    oppositeSide: Side,
-    upperBound: number,
-    lowerBound: number
+    side: Side,
+    priceBefore: number,
+    marketPrice: number
   ): StopQueue[] => {
-    const stopSide = oppositeSide === Side.BUY ? this.asks : this.bids
-    return stopSide.between(upperBound, lowerBound)
+    const stopSide = side === Side.BUY ? this.bids : this.asks
+    return stopSide.between(priceBefore, marketPrice)
   }
 
   /**
@@ -38,6 +52,7 @@ export class StopBook {
     let response = false
     const { type, side, stopPrice } = order
     if (type === OrderType.STOP_LIMIT) {
+      // Buy: marketPrice < stopPrice <= price
       if (
         side === Side.BUY &&
         marketPrice < stopPrice &&
@@ -45,6 +60,7 @@ export class StopBook {
       ) {
         response = true
       }
+      // Sell: marketPrice > stopPrice >= price
       if (
         side === Side.SELL &&
         marketPrice > stopPrice &&
@@ -53,7 +69,9 @@ export class StopBook {
         response = true
       }
     } else {
+      // Buy: marketPrice < stopPrice
       if (side === Side.BUY && marketPrice < stopPrice) response = true
+      // Sell: marketPrice > stopPrice
       if (side === Side.SELL && marketPrice > stopPrice) response = true
     }
     return response
