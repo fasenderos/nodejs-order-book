@@ -1,5 +1,18 @@
 # Changelog
 
+## [6.1.1](https://github.com/fasenderos/hft-limit-order-book/compare/v6.1.0...v6.1.1) (2024-08-01)
+
+
+### Chore
+
+* **deps-dev:** bump @commitlint/config-conventional ([ef84160](https://github.com/fasenderos/hft-limit-order-book/commit/ef84160c64203943f383d20b8b43b81342731a02))
+* **deps-dev:** bump tap from 19.2.5 to 21.0.0 ([d759984](https://github.com/fasenderos/hft-limit-order-book/commit/d759984f18827b617320341e4d0373d4aa6df2bd))
+
+
+### Documentation
+
+* improved visibility of experimental features ([6a7efb8](https://github.com/fasenderos/hft-limit-order-book/commit/6a7efb82d251994697ed1785732205216cb61185))
+
 ## [6.1.0](https://github.com/fasenderos/hft-limit-order-book/compare/v6.1.0-beta.1...v6.1.0) (2024-08-01)
 
 
