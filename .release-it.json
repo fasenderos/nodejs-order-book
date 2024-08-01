@@ -15,9 +15,6 @@
   "npm": {
     "publish": false
   },
-  "preRelease": {
-    "suffix": "beta"
-  },
   "plugins": {
     "@release-it/conventional-changelog": {
       "header": "# Changelog",
