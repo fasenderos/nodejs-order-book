@@ -17,7 +17,7 @@ Ultra-fast matching engine written in TypeScript
 
 - Standard price-time priority
 - Supports both market and limit orders
-- Supports conditional orders [**Stop Limit, Stop Market and OCO**](#Conditional_Orders) ![Static Badge](https://img.shields.io/badge/Experimental-blue)
+- Supports conditional orders [**Stop Limit, Stop Market and OCO**](#conditional-orders-static-badge) ![Static Badge](https://img.shields.io/badge/Experimental-blue)
 - Supports time in force GTC, FOK and IOC
 - Supports order cancelling
 - Supports order price and/or size updating
