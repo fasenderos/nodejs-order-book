@@ -1,8 +1,9 @@
 import { test } from 'tap'
-import { Order } from '../src/order'
+import { OrderFactory } from '../src/order'
 import { Side } from '../src/side'
 import { OrderSide } from '../src/orderside'
 import { ERROR } from '../src/errors'
+import { OrderType, TimeInForce } from '../src/types'
 
 void test('it should append/update/remove orders from queue on BUY side', ({
   equal,
@@ -10,8 +11,24 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   end
 }) => {
   const os = new OrderSide(Side.BUY)
-  const order1 = new Order('order1', Side.BUY, 5, 10)
-  const order2 = new Order('order2', Side.BUY, 5, 20)
+  const order1 = OrderFactory.createOrder({
+    type: OrderType.LIMIT,
+    id: 'order1',
+    side: Side.BUY,
+    size: 5,
+    price: 10,
+    timeInForce: TimeInForce.GTC,
+    isMaker: true
+  })
+  const order2 = OrderFactory.createOrder({
+    type: OrderType.LIMIT,
+    id: 'order2',
+    side: Side.BUY,
+    size: 5,
+    price: 20,
+    timeInForce: TimeInForce.GTC,
+    isMaker: true
+  })
 
   equal(os.minPriceQueue() === undefined, true)
   equal(os.maxPriceQueue() === undefined, true)
@@ -25,11 +42,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   os.append(order2)
   equal(os.depth(), 2)
   equal(os.volume(), 10)
-  equal(
-    os.total(),
-    order1.price * order1.size +
-      order2.price * order2.size
-  )
+  equal(os.total(), order1.price * order1.size + order2.price * order2.size)
   equal(os.len(), 2)
   equal(os.priceTree().length, 2)
   same(os.orders()[0], order1)
@@ -126,6 +139,15 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   equal(updateOrder1.price, 25)
   equal(os.toString(), '\n25 -> 10\n20 -> 5')
 
+  // @ts-expect-error _priceTree is private property
+  os._priceTree.values.reduce((previousPrice, curr) => {
+    // BUY side are in descending order bigger to lower
+    // @ts-expect-error _price is private property
+    const currPrice = curr._price
+    equal(currPrice < previousPrice, true)
+    return currPrice
+  }, Infinity)
+
   // Remove the updated order
   os.remove(updatedOrder)
 
@@ -154,8 +176,24 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   end
 }) => {
   const os = new OrderSide(Side.SELL)
-  const order1 = new Order('order1', Side.SELL, 5, 10)
-  const order2 = new Order('order2', Side.SELL, 5, 20)
+  const order1 = OrderFactory.createOrder({
+    type: OrderType.LIMIT,
+    id: 'order1',
+    side: Side.SELL,
+    size: 5,
+    price: 10,
+    timeInForce: TimeInForce.GTC,
+    isMaker: true
+  })
+  const order2 = OrderFactory.createOrder({
+    type: OrderType.LIMIT,
+    id: 'order2',
+    side: Side.SELL,
+    size: 5,
+    price: 20,
+    timeInForce: TimeInForce.GTC,
+    isMaker: true
+  })
 
   equal(os.minPriceQueue() === undefined, true)
   equal(os.maxPriceQueue() === undefined, true)
@@ -170,11 +208,7 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   os.append(order2)
   equal(os.depth(), 2)
   equal(os.volume(), 10)
-  equal(
-    os.total(),
-    order1.price * order1.size +
-      order2.price * order2.size
-  )
+  equal(os.total(), order1.price * order1.size + order2.price * order2.size)
   equal(os.len(), 2)
   equal(os.priceTree().length, 2)
   same(os.orders()[0], order1)
@@ -261,6 +295,15 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   equal(updateOrder1.size, 10)
   equal(updateOrder1.price, 25)
   equal(os.toString(), '\n25 -> 10\n20 -> 5')
+
+  // @ts-expect-error _priceTree is private property
+  os._priceTree.values.reduce((previousPrice, curr) => {
+    // SELL side are in ascending order lower to bigger
+    // @ts-expect-error _price is private property
+    const currPrice = curr._price
+    equal(currPrice > previousPrice, true)
+    return currPrice
+  }, 0)
 
   // Remove the updated order
   os.remove(updatedOrder)

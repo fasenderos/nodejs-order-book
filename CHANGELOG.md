@@ -1,5 +1,71 @@
 # Changelog
 
+## [6.1.0-beta.1](https://github.com/fasenderos/hft-limit-order-book/compare/v6.1.0-beta.0...v6.1.0-beta.1) (2024-07-28)
+
+
+### Features
+
+* add support for OCO orders ([5b19318](https://github.com/fasenderos/hft-limit-order-book/commit/5b193185b5e32ba6d0ad9d0853876708e3c3e23c))
+
+
+### Bug Fixes
+
+* use new signatures in benchmark script ([313aefe](https://github.com/fasenderos/hft-limit-order-book/commit/313aefe3cebef6dd9876e7b9828cdfc54db33f1a))
+
+
+### Chore
+
+* update husky script ([2e7dd67](https://github.com/fasenderos/hft-limit-order-book/commit/2e7dd678975974a90ebb2921193b6c24b152d67e))
+
+
+### Documentation
+
+* add stop limit and stop market documentations ([41ef939](https://github.com/fasenderos/hft-limit-order-book/commit/41ef939d172ea7f1a93e1e481f1dcffcbca55640))
+
+
+### Refactoring
+
+* improve code readability on cancelOrder ([9f062c4](https://github.com/fasenderos/hft-limit-order-book/commit/9f062c44d9d490e872c4f8c16287a7140fd1481c))
+
+## [6.1.0-beta.0](https://github.com/fasenderos/hft-limit-order-book/compare/v5.0.0...v6.1.0-beta.0) (2024-07-22)
+
+
+### Features
+
+* add getter for market price ([9f4b315](https://github.com/fasenderos/hft-limit-order-book/commit/9f4b315fac7b94325fa4f13bc6eb7d30afee2058))
+* add support for stop limit and stop market order ([92f9441](https://github.com/fasenderos/hft-limit-order-book/commit/92f9441b18593073b146cbe1456d77f8d06e1e20))
+* refactor limit and market options ([794c71a](https://github.com/fasenderos/hft-limit-order-book/commit/794c71ac4c3eda212cb11b36c32b5f9f60c99caa))
+
+
+### Chore
+
+* **deps-dev:** bump @commitlint/cli from 18.6.1 to 19.3.0 ([8695b5b](https://github.com/fasenderos/hft-limit-order-book/commit/8695b5b4ec49d60d4fb1c00aa55968402ebc7ac2))
+* **deps-dev:** bump husky from 9.0.11 to 9.1.0 ([c8da2e2](https://github.com/fasenderos/hft-limit-order-book/commit/c8da2e202bd0782a656e430c02e0925b547e7f9d))
+* **deps-dev:** bump husky from 9.1.0 to 9.1.1 ([47bb2f8](https://github.com/fasenderos/hft-limit-order-book/commit/47bb2f8225fb66d01632f635b04165de06467713))
+* **deps-dev:** bump release-it from 17.3.0 to 17.4.0 ([ec5349b](https://github.com/fasenderos/hft-limit-order-book/commit/ec5349b6521a28e65026209a3e18f7cf72ceb92a))
+* **deps-dev:** bump release-it from 17.4.0 to 17.4.1 ([beac954](https://github.com/fasenderos/hft-limit-order-book/commit/beac954283422f539c13d1ec4735e13dd028b3bd))
+* **deps-dev:** bump release-it from 17.4.1 to 17.4.2 ([ddad1df](https://github.com/fasenderos/hft-limit-order-book/commit/ddad1df79fe300b44b8c350b1a8daa12fd8e1187))
+* **deps-dev:** bump release-it from 17.4.2 to 17.5.0 ([4d8f10e](https://github.com/fasenderos/hft-limit-order-book/commit/4d8f10e0fa30e85a50b93a4a2466a1e9e4441580))
+* **deps-dev:** bump release-it from 17.5.0 to 17.6.0 ([a6f7ba3](https://github.com/fasenderos/hft-limit-order-book/commit/a6f7ba3758150131b5a1f39fb9919ef380b7fb06))
+* **deps-dev:** bump tap from 18.7.3 to 19.2.5 ([f09af63](https://github.com/fasenderos/hft-limit-order-book/commit/f09af6399c83a7a6880802bc72514ad29364ba8b))
+* **deps-dev:** bump typescript from 5.4.5 to 5.5.2 ([999dfca](https://github.com/fasenderos/hft-limit-order-book/commit/999dfcaec02be747731b16c109b310269599cd23))
+* **deps-dev:** bump typescript from 5.5.2 to 5.5.3 ([8402f83](https://github.com/fasenderos/hft-limit-order-book/commit/8402f83b4f98924c26ed69f39aab75c625426529))
+* **deps-dev:** bump webpack from 5.92.1 to 5.93.0 ([8468d06](https://github.com/fasenderos/hft-limit-order-book/commit/8468d066a61201364fb4cb18723a2af1fc9b271e))
+* **release:** hft-limit-order-book@5.1.0-beta.0 ([770721b](https://github.com/fasenderos/hft-limit-order-book/commit/770721b06d75c9255827e3bc06ce570c953986da))
+
+
+### Documentation
+
+* fix snapshot example ([073ca07](https://github.com/fasenderos/hft-limit-order-book/commit/073ca075ce673959808932f4adc26629b9641535))
+* improve snapshot and journal documentation ([3ba2d05](https://github.com/fasenderos/hft-limit-order-book/commit/3ba2d057ed14f979a287508434e3f7c83725b119))
+* new features snapshot and journaling ([442dc43](https://github.com/fasenderos/hft-limit-order-book/commit/442dc4314e637632554369e8e4af0a425b591a82))
+* update new signatures method + add stop limit and stop market ([96408a0](https://github.com/fasenderos/hft-limit-order-book/commit/96408a05b988b8597168e1b2c99b5e45fc88204d))
+
+
+### Test
+
+* add test for stop limit and stop market order ([47e6f5e](https://github.com/fasenderos/hft-limit-order-book/commit/47e6f5e9deaaf4ade4289955ef456884f53d506e))
+
 ## [5.0.0](https://github.com/fasenderos/hft-limit-order-book/compare/v4.0.0...v5.0.0) (2024-06-19)
 
 
