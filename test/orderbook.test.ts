@@ -356,7 +356,7 @@ void test('createOrder error', ({ equal, end }) => {
  *    Sell: marketPrice > stopPrice
  */
 void test('test stop_market order', ({ equal, end }) => {
-  const ob = new OrderBook()
+  const ob = new OrderBook({ experimentalConditionalOrders: true })
 
   addDepth(ob, '', 2)
   // We need to create at least on maket order in order to set
@@ -477,7 +477,7 @@ void test('test stop_market order', ({ equal, end }) => {
  *    Sell: marketPrice > stopPrice >= price
  */
 void test('test stop_limit order', ({ equal, end }) => {
-  const ob = new OrderBook()
+  const ob = new OrderBook({ experimentalConditionalOrders: true })
 
   addDepth(ob, '', 2)
   // We need to create at least on maket order in order to set
@@ -642,7 +642,7 @@ void test('test stop_limit order', ({ equal, end }) => {
  *    Sell: price > marketPrice > stopPrice
  */
 void test('test oco order', ({ equal, end }) => {
-  const ob = new OrderBook()
+  const ob = new OrderBook({ experimentalConditionalOrders: true })
 
   addDepth(ob, '', 2)
   // We need to create at least on maket order in order to set
