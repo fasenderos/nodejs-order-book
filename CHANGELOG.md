@@ -1,5 +1,25 @@
 # Changelog
 
+## [6.1.0](https://github.com/fasenderos/hft-limit-order-book/compare/v6.1.0-beta.1...v6.1.0) (2024-08-01)
+
+
+### Features
+
+* new experimentalConditionalOrders order book option ([55d3e11](https://github.com/fasenderos/hft-limit-order-book/commit/55d3e11b4b486391c4f9f4647d90d14af3712623))
+
+
+### Chore
+
+* **deps-dev:** bump husky from 9.1.1 to 9.1.2 ([282843a](https://github.com/fasenderos/hft-limit-order-book/commit/282843ac5aa18f1875e0f0c3c189557910cfd0f8))
+* **deps-dev:** bump husky from 9.1.2 to 9.1.3 ([5f82ba5](https://github.com/fasenderos/hft-limit-order-book/commit/5f82ba5e732987ac05315822002291461ffb966b))
+* **deps-dev:** bump husky from 9.1.3 to 9.1.4 ([5d5fbc5](https://github.com/fasenderos/hft-limit-order-book/commit/5d5fbc5d30ec809b041580b02e2ed30b4ed6a219))
+* **deps-dev:** bump typescript from 5.5.3 to 5.5.4 ([809a7ab](https://github.com/fasenderos/hft-limit-order-book/commit/809a7abb3beef55ee034d1b07ba26e4ffdabf674))
+
+
+### Documentation
+
+* update readme ([95dcf42](https://github.com/fasenderos/hft-limit-order-book/commit/95dcf429f05defcdf5ad45b2877fc10311fc7041))
+
 ## [6.1.0-beta.1](https://github.com/fasenderos/hft-limit-order-book/compare/v6.1.0-beta.0...v6.1.0-beta.1) (2024-07-28)
 
 
