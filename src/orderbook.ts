@@ -84,37 +84,38 @@ export class OrderBook {
     return this._lastOp
   }
   /**
-   *  Create new order. See {@link CreateOrderOptions} for details.
+   * Create new order. See {@link CreateOrderOptions} for details.
    *
-   *  @param options
-   *  @param options.type - `limit` or `market`
-   *  @param options.side - `sell` or `buy`
-   *  @param options.size - How much of currency you want to trade in units of base currency
-   *  @param options.price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
-   *  @param options.orderID - Unique order ID. Param only for limit order
-   *  @param options.stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
-   *  @param options.stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
-   *  @param options.timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
-   *  @param options.stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
-   *  @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+   * @param options
+   * @param options.type - `limit` or `market`
+   * @param options.side - `sell` or `buy`
+   * @param options.size - How much of currency you want to trade in units of base currency
+   * @param options.price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
+   * @param options.orderID - Unique order ID. Param only for limit order
+   * @param options.postOnly - When `true` the order will be rejected if immediately matches and trades as a taker. Default is `false`
+   * @param options.stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   * @param options.stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   * @param options.timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
+   * @param options.stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
+   * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */
   public createOrder (options: CreateOrderOptions): IProcessOrder
   /**
-   *  @deprecated This implementation has been deprecated and will be removed on v7.0.0.
-   *  Use createOrder({ type, side, size, price, id, timeInForce }) instead.
+   * @deprecated This implementation has been deprecated and will be removed on v7.0.0.
+   * Use createOrder({ type, side, size, price, id, timeInForce }) instead.
    *
-   *  Create a trade order
+   * Create a trade order
    *
-   *  @param type - `limit` or `market`
-   *  @param side - `sell` or `buy`
-   *  @param size - How much of currency you want to trade in units of base currency
-   *  @param price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
-   *  @param orderID - Unique order ID. Param only for limit order
-   *  @param timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
-   *  @param stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
-   *  @param stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
-   *  @param stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
-   *  @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+   * @param type - `limit` or `market`
+   * @param side - `sell` or `buy`
+   * @param size - How much of currency you want to trade in units of base currency
+   * @param price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
+   * @param orderID - Unique order ID. Param only for limit order
+   * @param timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
+   * @param stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   * @param stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   * @param stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
+   * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */
   public createOrder (
     // Common for all order types
@@ -257,6 +258,7 @@ export class OrderBook {
    * @param options.id - Unique order ID
    * @param options.size - How much of currency you want to trade in units of base currency
    * @param options.price - The price at which the order is to be fullfilled, in units of the quote currency
+   * @param options.postOnly - When `true` the order will be rejected if immediately matches and trades as a taker. Default is `false`
    * @param options.timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
    * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */

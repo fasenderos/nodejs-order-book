@@ -89,7 +89,7 @@ To add an order to the order book you can call the general `createOrder()` funct
 
 ```js
 // Create limit order
-ob.createOrder({ type: 'limit', side: 'buy' | 'sell', size: number, price: number, id: string, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.createOrder({ type: 'limit', side: 'buy' | 'sell', size: number, price: number, id: string, postOnly?: boolean, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
 // Create market order
 ob.createOrder({ type: 'market', side: 'buy' | 'sell', size: number })
@@ -115,10 +115,11 @@ ob.createOrder({ type: 'oco', side: 'buy' | 'sell', size: number, stopPrice: num
  * @param options.id - Unique order ID
  * @param options.size - How much of currency you want to trade in units of base currency
  * @param options.price - The price at which the order is to be fullfilled, in units of the quote currency
+ * @param options.postOnly - When `true` the order will be rejected if immediately matches and trades as a taker. Default is `false`
  * @param options.timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
  * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
  */
-ob.limit({ side: 'buy' | 'sell', id: string, size: number, price: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.limit({ side: 'buy' | 'sell', id: string, size: number, price: number, postOnly?: boolean, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 ```
 
 For example:
