@@ -1,5 +1,18 @@
 # Changelog
 
+## [7.0.1](https://github.com/fasenderos/hft-limit-order-book/compare/v7.0.0...v7.0.1) (2024-08-02)
+
+
+### Features
+
+* add error codes ([5a538d5](https://github.com/fasenderos/hft-limit-order-book/commit/5a538d59160e608cb7bffb245295a5543a8aacb3))
+* add postOnly option on deprecated createOrder signature ([e1b5825](https://github.com/fasenderos/hft-limit-order-book/commit/e1b5825e6f061e7cfc5c99800f564879cb84862e))
+
+
+### Documentation
+
+* improve post-only documentation ([1383eef](https://github.com/fasenderos/hft-limit-order-book/commit/1383eef5a7b8797f3c0998bff01b5f870508c642))
+
 ## [7.0.0](https://github.com/fasenderos/hft-limit-order-book/compare/v6.1.1...v7.0.0) (2024-08-02)
 
 
