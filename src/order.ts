@@ -1,5 +1,4 @@
 import { CustomError, ERROR } from './errors'
-import type { Side } from './side'
 import {
   ILimitOrder,
   IStopLimitOrder,
@@ -9,9 +8,9 @@ import {
   InternalStopLimitOrderOptions,
   InternalStopMarketOrderOptions,
   TimeInForce,
-  OrderType
+  OrderType,
+  type Side
 } from './types'
-
 import { randomUUID } from 'node:crypto'
 
 abstract class BaseOrder {
@@ -284,6 +283,7 @@ export const OrderFactory = {
       case OrderType.STOP_MARKET:
         return new StopMarketOrder(options) as any
       default:
+        // eslint-disable-next-line @typescript-eslint/no-throw-literal
         throw CustomError(ERROR.INVALID_ORDER_TYPE)
     }
   }

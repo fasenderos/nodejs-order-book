@@ -1,8 +1,7 @@
 import { test } from 'tap'
 import { OrderFactory, StopLimitOrder } from '../src/order'
-import { Side } from '../src/side'
 import { StopQueue } from '../src/stopqueue'
-import { OrderType, TimeInForce } from '../src/types'
+import { OrderType, Side, TimeInForce } from '../src/types'
 
 void test('it should append/remove orders from queue', ({
   equal,

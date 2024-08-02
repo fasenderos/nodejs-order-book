@@ -1,11 +1,11 @@
 import { test } from 'tap'
-import { Side } from '../src/side'
 import { OrderBook } from '../src/orderbook'
-import { ErrorMessages } from '../src/errors'
+import { ERROR, ErrorCodes, ErrorMessages } from '../src/errors'
 import {
   IProcessOrder,
   JournalLog,
   OrderType,
+  Side,
   TimeInForce
 } from '../src/types'
 import { OrderQueue } from '../src/orderqueue'
@@ -140,6 +140,7 @@ void test('test limit', ({ equal, end }) => {
     price: 40
   })
   equal(process3.err?.message, ErrorMessages.ORDER_ALREDY_EXISTS)
+  equal(process3.err?.code, ErrorCodes.ORDER_ALREDY_EXISTS)
 
   const process4 = ob.limit({
     side: Side.SELL,
@@ -148,6 +149,7 @@ void test('test limit', ({ equal, end }) => {
     price: 40
   })
   equal(process4.err?.message, ErrorMessages.INVALID_QUANTITY)
+  equal(process4.err?.code, ErrorCodes.INVALID_QUANTITY)
 
   const process5 = ob.limit({
     // @ts-expect-error invalid side
@@ -157,6 +159,8 @@ void test('test limit', ({ equal, end }) => {
     price: 100
   })
   equal(process5.err?.message, ErrorMessages.INVALID_SIDE)
+  equal(process5.err?.code, ErrorCodes.INVALID_SIDE)
+
   const removed = ob.cancel('order-b100')
   equal(removed === undefined, true)
   // Test also the createOrder method
@@ -182,6 +186,7 @@ void test('test limit', ({ equal, end }) => {
     price: 40
   })
   equal(process7.err?.message, ErrorMessages.INVALID_QUANTITY)
+  equal(process7.err?.code, ErrorCodes.INVALID_QUANTITY)
 
   const process8 = ob.limit({
     side: Side.SELL,
@@ -191,6 +196,7 @@ void test('test limit', ({ equal, end }) => {
     price: 40
   })
   equal(process8.err?.message, ErrorMessages.INVALID_QUANTITY)
+  equal(process8.err?.code, ErrorCodes.INVALID_QUANTITY)
 
   const process9 = ob.limit({
     side: Side.SELL,
@@ -200,6 +206,7 @@ void test('test limit', ({ equal, end }) => {
     price: '40'
   })
   equal(process9.err?.message, ErrorMessages.INVALID_PRICE)
+  equal(process9.err?.code, ErrorCodes.INVALID_PRICE)
 
   // @ts-expect-error missing price
   const process10 = ob.limit({
@@ -208,6 +215,7 @@ void test('test limit', ({ equal, end }) => {
     size: 10
   })
   equal(process10.err?.message, ErrorMessages.INVALID_PRICE)
+  equal(process10.err?.code, ErrorCodes.INVALID_PRICE)
 
   const process11 = ob.limit({
     side: Side.SELL,
@@ -218,6 +226,8 @@ void test('test limit', ({ equal, end }) => {
     timeInForce: 'FAKE'
   })
   equal(process11.err?.message, ErrorMessages.INVALID_TIF)
+  equal(process11.err?.code, ErrorCodes.INVALID_TIF)
+
   end()
 })
 
@@ -232,6 +242,8 @@ void test('test limit with postOnly', ({ equal, end }) => {
 
   const process2 = ob.limit({ side: Side.BUY, id: 'order-b100', size: 3, price: 100, postOnly: true })
   equal(process2.err?.message, ErrorMessages.LIMIT_ORDER_POST_ONLY)
+  equal(process2.err?.code, ErrorCodes.LIMIT_ORDER_POST_ONLY)
+
   equal(process2.quantityLeft, 3)
 
   end()
@@ -248,6 +260,7 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     timeInForce: TimeInForce.FOK
   })
   equal(process1.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  equal(process1.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
 
   const process2 = ob.limit({
     side: Side.SELL,
@@ -257,6 +270,7 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     timeInForce: TimeInForce.FOK
   })
   equal(process2.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  equal(process2.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
 
   const process3 = ob.limit({
     side: Side.BUY,
@@ -266,6 +280,7 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     timeInForce: TimeInForce.FOK
   })
   equal(process3.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  equal(process3.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
 
   const process4 = ob.limit({
     side: Side.SELL,
@@ -275,6 +290,7 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     timeInForce: TimeInForce.FOK
   })
   equal(process4.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  equal(process4.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
 
   ob.limit({
     side: Side.BUY,
@@ -345,14 +361,18 @@ void test('test market', ({ equal, end }) => {
   // @ts-expect-error size must be a number
   const process4 = ob.market({ side: Side.SELL, size: '0' })
   equal(process4.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
+  equal(process4.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
 
   // @ts-expect-error missing size
   const process5 = ob.market({ side: Side.SELL })
   equal(process5.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
+  equal(process5.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
 
   // @ts-expect-error invalid side
   const process6 = ob.market({ side: 'unsupported-side', size: 100 })
   equal(process6.err?.message, ErrorMessages.INVALID_SIDE)
+  equal(process6.err?.code, ErrorCodes.INVALID_SIDE)
+
   end()
 })
 
@@ -366,6 +386,7 @@ void test('createOrder error', ({ equal, end }) => {
     size: 10
   })
   equal(result.err?.message, ErrorMessages.INVALID_ORDER_TYPE)
+  equal(result.err?.code, ErrorCodes.INVALID_ORDER_TYPE)
 
   // Added for testing with default timeOnForce when not provided
   const process1 = ob.createOrder({
@@ -405,12 +426,14 @@ void test('test stop_market order', ({ equal, end }) => {
       stopPrice: ob.marketPrice - 10
     }) // Below market price
     equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongStopPrice2 = ob.stopMarket({
       side: Side.BUY,
       size: 1,
       stopPrice: ob.marketPrice
     }) // Same as market price
     equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongOtherOrderOption1 = ob.stopMarket({
       // @ts-expect-error invalid side
       side: 'wrong-side',
@@ -454,12 +477,14 @@ void test('test stop_market order', ({ equal, end }) => {
       stopPrice: ob.marketPrice + 10
     }) // Above market price
     equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongStopPrice2 = ob.stopMarket({
       side: Side.SELL,
       size: 1,
       stopPrice: ob.marketPrice
     }) // Same as market price
     equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
 
     // Add a stop market SELL order
     const beforeMarketPrice = ob.marketPrice
@@ -528,6 +553,7 @@ void test('test stop_limit order', ({ equal, end }) => {
       price: ob.marketPrice
     })
     equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongStopPrice2 = ob.stopLimit({
       id: 'fake-id',
       side: Side.BUY,
@@ -536,6 +562,7 @@ void test('test stop_limit order', ({ equal, end }) => {
       price: ob.marketPrice
     }) // Same as market price
     equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongOtherOrderOption1 = ob.stopLimit({
       // @ts-expect-error invalid side
       side: 'wrong-side',
@@ -608,6 +635,7 @@ void test('test stop_limit order', ({ equal, end }) => {
       price: ob.marketPrice
     })
     equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongStopPrice2 = ob.stopLimit({
       id: 'fake-id',
       side: Side.SELL,
@@ -616,6 +644,7 @@ void test('test stop_limit order', ({ equal, end }) => {
       price: ob.marketPrice
     }) // Same as market price
     equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
 
     // Add a stop limit BUY order
     const beforeMarketPrice = ob.marketPrice
@@ -674,7 +703,7 @@ void test('test stop_limit order', ({ equal, end }) => {
  *    Buy: price < marketPrice < stopPrice
  *    Sell: price > marketPrice > stopPrice
  */
-void test('test oco order', ({ equal, end }) => {
+void test('test oco order', ({ equal, same, end }) => {
   const ob = new OrderBook({ experimentalConditionalOrders: true })
 
   addDepth(ob, '', 2)
@@ -689,7 +718,7 @@ void test('test oco order', ({ equal, end }) => {
     price: number,
     stopPrice: number,
     stopLimitPrice: number,
-    expect: boolean | string | ((response: IProcessOrder) => void)
+    expect: ERROR | ((response: IProcessOrder) => void)
   ): void => {
     const order = ob.oco({
       id: orderId,
@@ -703,9 +732,7 @@ void test('test oco order', ({ equal, end }) => {
     if (typeof expect === 'function') {
       expect(order)
     } else {
-      const toValidate =
-        typeof expect === 'boolean' ? order : order.err?.message
-      equal(toValidate, expect)
+      same(order.err, { code: ErrorCodes[expect], message: ErrorMessages[expect] })
     }
   }
 
@@ -717,7 +744,7 @@ void test('test oco order', ({ equal, end }) => {
     ob.marketPrice - 10,
     ob.marketPrice - 10,
     ob.marketPrice,
-    ErrorMessages.INVALID_CONDITIONAL_ORDER
+    ERROR.INVALID_CONDITIONAL_ORDER
   )
   // wrong price
   validate(
@@ -726,7 +753,7 @@ void test('test oco order', ({ equal, end }) => {
     ob.marketPrice + 10,
     ob.marketPrice + 10,
     ob.marketPrice,
-    ErrorMessages.INVALID_CONDITIONAL_ORDER
+    ERROR.INVALID_CONDITIONAL_ORDER
   )
 
   // Here marketPrice is 110, lowest sell is 110 and highest buy is 90
@@ -767,7 +794,7 @@ void test('test oco order', ({ equal, end }) => {
     ob.marketPrice + 10,
     ob.marketPrice + 10,
     ob.marketPrice,
-    ErrorMessages.INVALID_CONDITIONAL_ORDER
+    ERROR.INVALID_CONDITIONAL_ORDER
   )
   // wrong price
   validate(
@@ -776,7 +803,7 @@ void test('test oco order', ({ equal, end }) => {
     ob.marketPrice - 10,
     ob.marketPrice - 10,
     ob.marketPrice,
-    ErrorMessages.INVALID_CONDITIONAL_ORDER
+    ERROR.INVALID_CONDITIONAL_ORDER
   )
 
   // Here marketPrice is 110, lowest sell is 110 and highest buy is 100
@@ -890,27 +917,33 @@ void test('test modify', ({ equal, end }) => {
     // Test passing an invalid price
     response = ob.modify('first-order', { price: 0 })
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size
     response = ob.modify('first-order', { size: -1 })
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size and price
     response = ob.modify('first-order', { size: -1, price: 0 })
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid price
     response = ob.modify('first-order', { price: 0 })
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size
     response = ob.modify('first-order', { size: -1 })
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test modify without passing size and price
     // @ts-expect-error missing size and/or price
     response = ob.modify('first-order')
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test update price
     const newPrice = 82
@@ -955,27 +988,33 @@ void test('test modify', ({ equal, end }) => {
     // Test passing an invalid price
     response = ob.modify('second-order', { price: 0 })
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size
     response = ob.modify('second-order', { size: -1 })
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size and price
     response = ob.modify('second-order', { size: -1, price: 0 })
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid price
     response = ob.modify('second-order', { price: 0 })
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size
     response = ob.modify('second-order', { size: -1 })
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test modify without passing size and price
     // @ts-expect-error missing size and/or price
     response = ob.modify('second-order')
     equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test update price
     const newPrice = 250
@@ -1008,6 +1047,7 @@ void test('test modify', ({ equal, end }) => {
   // Test modify a non-existent order without passing size
   const resp = ob.modify('non-existent-order', { price: 123 })
   equal(resp.err?.message, ErrorMessages.ORDER_NOT_FOUND)
+  equal(resp.err?.code, ErrorCodes.ORDER_NOT_FOUND)
   equal(resp.quantityLeft, 0)
   end()
 })
@@ -1027,6 +1067,7 @@ void test('test priceCalculation', ({ equal, end }) => {
   const calc2 = ob.calculateMarketPrice(Side.BUY, 200)
 
   equal(calc2.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
+  equal(calc2.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
   equal(calc2.price, 18000)
 
   const calc3 = ob.calculateMarketPrice(Side.SELL, 115)
@@ -1037,6 +1078,7 @@ void test('test priceCalculation', ({ equal, end }) => {
   const calc4 = ob.calculateMarketPrice(Side.SELL, 200)
 
   equal(calc4.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
+  equal(calc4.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
   equal(calc4.price, 10500)
   end()
 })
@@ -1146,10 +1188,8 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: journalLog })
   } catch (error) {
-    if (error instanceof Error) {
-      // TypeScript knows err is Error
-      equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    }
+    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
 
   // Test wrong op in journal log
@@ -1165,10 +1205,8 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: wrongOp })
   } catch (error) {
-    if (error instanceof Error) {
-      // TypeScript knows err is Error
-      equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    }
+    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
 
   // Test wrong market order journal log
@@ -1184,10 +1222,8 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: wrongOp })
   } catch (error) {
-    if (error instanceof Error) {
-      // TypeScript knows err is Error
-      equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    }
+    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
 
   // Test wrong limit order journal log
@@ -1203,10 +1239,8 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: wrongOp })
   } catch (error) {
-    if (error instanceof Error) {
-      // TypeScript knows err is Error
-      equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    }
+    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
 
   // Test wrong update order journal log
@@ -1222,10 +1256,8 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: wrongOp })
   } catch (error) {
-    if (error instanceof Error) {
-      // TypeScript knows err is Error
-      equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    }
+    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
 
   // Test wrong delete order journal log
@@ -1241,10 +1273,8 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: wrongOp })
   } catch (error) {
-    if (error instanceof Error) {
-      // TypeScript knows err is Error
-      equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    }
+    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
   end()
 })

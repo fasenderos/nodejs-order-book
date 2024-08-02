@@ -1,7 +1,6 @@
 import { test } from 'tap'
 import { OrderFactory } from '../src/order'
-import { OrderType, StopOrder, TimeInForce } from '../src/types'
-import { Side } from '../src/side'
+import { OrderType, Side, StopOrder, TimeInForce } from '../src/types'
 import { StopBook } from '../src/stopbook'
 
 void test('it should add/remove/get order to stop book', ({ equal, same, end }) => {

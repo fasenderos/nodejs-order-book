@@ -1,5 +1,10 @@
+import { OrderBookError } from './errors'
 import { LimitOrder, StopLimitOrder, StopMarketOrder } from './order'
-import type { Side } from './side'
+
+export enum Side {
+  BUY = 'buy',
+  SELL = 'sell',
+}
 
 export enum OrderType {
   LIMIT = 'limit',
@@ -13,6 +18,11 @@ export enum TimeInForce {
   GTC = 'GTC',
   IOC = 'IOC',
   FOK = 'FOK',
+}
+
+export interface IError {
+  code: number
+  message: string
 }
 
 export type StopOrder = StopLimitOrder | StopMarketOrder
@@ -158,6 +168,7 @@ export type StopOrderOptions =
   | StopMarketOrderOptions
   | StopLimitOrderOptions
   | OCOOrderOptions
+
 /**
  * Represents the result of processing an order.
  */
@@ -173,7 +184,7 @@ export interface IProcessOrder {
   /** The remaining quantity that needs to be processed. */
   quantityLeft: number
   /** The error encountered during order processing, if any. */
-  err: Error | null
+  err: OrderBookError | null
   /** Optional journal log entry related to the order processing. */
   log?: JournalLog
 }

@@ -1,9 +1,8 @@
 import { test } from 'tap'
 import { OrderFactory } from '../src/order'
-import { Side } from '../src/side'
 import { OrderSide } from '../src/orderside'
-import { ErrorMessages } from '../src/errors'
-import { OrderType, TimeInForce } from '../src/types'
+import { ErrorCodes, ErrorMessages } from '../src/errors'
+import { OrderType, Side, TimeInForce } from '../src/types'
 
 void test('it should append/update/remove orders from queue on BUY side', ({
   equal,
@@ -108,10 +107,8 @@ void test('it should append/update/remove orders from queue on BUY side', ({
       price: 20
     })
   } catch (error) {
-    if (error instanceof Error) {
-      // TypeScript knows err is Error
-      equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
-    }
+    equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
+    equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL)
   }
 
   // Update price of order1 == price order2, without providind size (the original order size is used)
@@ -268,10 +265,8 @@ void test('it should append/update/remove orders from queue on SELL side', ({
       price: 20
     })
   } catch (error) {
-    if (error instanceof Error) {
-      // TypeScript knows err is Error
-      equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
-    }
+    equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
+    equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL)
   }
 
   // Update price of order1 == price order2

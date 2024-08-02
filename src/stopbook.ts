@@ -1,7 +1,6 @@
-import { Side } from './side'
 import { StopQueue } from './stopqueue'
 import { StopSide } from './stopside'
-import { OrderType, StopOrder } from './types'
+import { OrderType, Side, StopOrder } from './types'
 
 export class StopBook {
   private readonly bids: StopSide

@@ -2,8 +2,11 @@ import createRBTree from 'functional-red-black-tree'
 import { CustomError, ERROR } from './errors'
 import { LimitOrder, OrderFactory } from './order'
 import { OrderQueue } from './orderqueue'
-import { Side } from './side'
-import type { OrderUpdatePrice, OrderUpdateSize } from './types'
+import {
+  Side,
+  type OrderUpdatePrice,
+  type OrderUpdateSize
+} from './types'
 
 export class OrderSide {
   private _priceTree: createRBTree.Tree<number, OrderQueue>
@@ -69,6 +72,7 @@ export class OrderSide {
     const price = order.price
     const strPrice = price.toString()
     if (this._prices[strPrice] === undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-throw-literal
       throw CustomError(ERROR.INVALID_PRICE_LEVEL)
     }
     this._prices[strPrice].remove(order)

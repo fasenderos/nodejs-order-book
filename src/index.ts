@@ -1,6 +1,5 @@
 import { OrderBook } from './orderbook'
-import { Side } from './side'
-import { OrderType } from './types'
+import { OrderType, Side } from './types'
 import type {
   CreateOrderOptions,
   ICancelOrder,

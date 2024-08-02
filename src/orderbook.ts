@@ -1,4 +1,4 @@
-import { ERROR, CustomError } from './errors'
+import { ERROR, CustomError, type OrderBookError } from './errors'
 import {
   LimitOrder,
   OrderFactory,
@@ -7,7 +7,6 @@ import {
 } from './order'
 import { OrderQueue } from './orderqueue'
 import { OrderSide } from './orderside'
-import { Side } from './side'
 import { StopBook } from './stopbook'
 import {
   Order,
@@ -26,7 +25,8 @@ import {
   LimitOrderOptions,
   StopLimitOrderOptions,
   OCOOrderOptions,
-  StopOrder
+  StopOrder,
+  Side
 } from './types'
 
 const validTimeInForce = Object.values(TimeInForce)
@@ -65,6 +65,7 @@ export class OrderBook {
     }
     // Than replay from journal log
     if (journal != null) {
+      // eslint-disable-next-line @typescript-eslint/no-throw-literal
       if (!Array.isArray(journal)) throw CustomError(ERROR.INVALID_JOURNAL_LOG)
       // If a snapshot is available be sure to remove logs before the last restored operation
       if (snapshot != null && snapshot.lastOp > 0) {
@@ -477,7 +478,7 @@ export class OrderBook {
     size: number
   ): {
     price: number
-    err: null | Error
+    err: null | OrderBookError
   } => {
     let price = 0
     let err = null
@@ -918,6 +919,7 @@ export class OrderBook {
         case 'm': {
           const { side, size } = log.o
           if (side == null || size == null) {
+            // eslint-disable-next-line @typescript-eslint/no-throw-literal
             throw CustomError(ERROR.INVALID_JOURNAL_LOG)
           }
           this.market({ side, size })
@@ -926,6 +928,7 @@ export class OrderBook {
         case 'l': {
           const { side, id, size, price, timeInForce } = log.o
           if (side == null || id == null || size == null || price == null) {
+            // eslint-disable-next-line @typescript-eslint/no-throw-literal
             throw CustomError(ERROR.INVALID_JOURNAL_LOG)
           }
           this.limit({
@@ -938,16 +941,19 @@ export class OrderBook {
           break
         }
         case 'd':
+          // eslint-disable-next-line @typescript-eslint/no-throw-literal
           if (log.o.orderID == null) throw CustomError(ERROR.INVALID_JOURNAL_LOG)
           this.cancel(log.o.orderID)
           break
         case 'u':
           if (log.o.orderID == null || log.o.orderUpdate == null) {
+            // eslint-disable-next-line @typescript-eslint/no-throw-literal
             throw CustomError(ERROR.INVALID_JOURNAL_LOG)
           }
           this.modify(log.o.orderID, log.o.orderUpdate)
           break
         default:
+          // eslint-disable-next-line @typescript-eslint/no-throw-literal
           throw CustomError(ERROR.INVALID_JOURNAL_LOG)
       }
     }

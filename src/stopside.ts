@@ -1,7 +1,6 @@
 import createRBTree from 'functional-red-black-tree'
-import { Side } from './side'
 import { StopQueue } from './stopqueue'
-import { StopOrder } from './types'
+import { Side, StopOrder } from './types'
 import { CustomError, ERROR } from './errors'
 
 export class StopSide {
@@ -34,6 +33,7 @@ export class StopSide {
   remove = (id: string, stopPrice: number): StopOrder | undefined => {
     const strPrice = stopPrice.toString()
     if (this._prices[strPrice] === undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-throw-literal
       throw CustomError(ERROR.INVALID_PRICE_LEVEL)
     }
     const deletedOrder = this._prices[strPrice].remove(id)
