@@ -1,4 +1,3 @@
-// Define the error enum using an object with keys and values
 export enum ERROR {
   DEFAULT = 'DEFAULT',
   INSUFFICIENT_QUANTITY = 'INSUFFICIENT_QUANTITY',
