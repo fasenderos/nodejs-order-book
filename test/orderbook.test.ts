@@ -103,9 +103,18 @@ void test('test limit', ({ equal, end }) => {
   equal(ob.marketPrice, 100)
   equal(process1.err === null, true)
   equal(process1.done[0].id, 'order-b100')
+  equal((process1.done[0] as LimitOrder).makerQty, 0)
+  equal((process1.done[0] as LimitOrder).takerQty, 1)
+  equal((process1.done[0] as LimitOrder).makerQty + (process1.done[0] as LimitOrder).takerQty, (process1.done[0] as LimitOrder).origSize)
+
   equal(process1.partial?.id, 'sell-100')
-  equal((process1.partial as LimitOrder)?.isMaker, true)
+  equal(process1.partial?.origSize, 2)
+  equal(process1.partial?.size, 1)
+  equal(process1.partial?.takerQty, 0)
+  equal(process1.partial?.makerQty, 2)
   equal(process1.partialQuantityProcessed, 1)
+  equal(process1.quantityLeft, 0)
+  equal(process1.partialQuantityProcessed + process1.quantityLeft, (process1.done[0] as LimitOrder).origSize)
 
   const process2 =
     // { done, partial, partialQuantityProcessed, quantityLeft, err } =
@@ -113,8 +122,16 @@ void test('test limit', ({ equal, end }) => {
   equal(process2.err === null, true)
   equal(process2.done.length, 5)
   equal(process2.partial?.id, 'order-b150')
-  equal((process2.partial as LimitOrder)?.isMaker, false)
+  equal((process2.partial as LimitOrder)?.origSize, 10)
+  equal((process2.partial as LimitOrder)?.size, 1)
+  equal((process2.partial as LimitOrder)?.takerQty, 9)
+  equal((process2.partial as LimitOrder)?.makerQty, 1)
+  equal(
+    (process2.partial as LimitOrder)?.takerQty + (process2.partial as LimitOrder)?.makerQty, (process2.partial as LimitOrder)?.origSize
+  )
   equal(process2.partialQuantityProcessed, 9)
+  equal(process2.quantityLeft, 1)
+  equal(process2.partialQuantityProcessed + process2.quantityLeft, (process2.partial as LimitOrder)?.origSize)
 
   const process3 = ob.limit({
     side: Side.SELL,

@@ -22,8 +22,7 @@ void test('it should append/remove orders from queue', ({
     size: 5,
     price,
     stopPrice,
-    timeInForce: TimeInForce.GTC,
-    isMaker: true
+    timeInForce: TimeInForce.GTC
   })
   const order2 = OrderFactory.createOrder({
     type: OrderType.STOP_LIMIT,
@@ -32,8 +31,7 @@ void test('it should append/remove orders from queue', ({
     size: 5,
     price,
     stopPrice,
-    timeInForce: TimeInForce.GTC,
-    isMaker: true
+    timeInForce: TimeInForce.GTC
   })
 
   const head = oq.append(order1)
@@ -52,8 +50,7 @@ void test('it should append/remove orders from queue', ({
     size: 10,
     price,
     stopPrice,
-    timeInForce: TimeInForce.GTC,
-    isMaker: true
+    timeInForce: TimeInForce.GTC
   })
   oq.append(order3)
   equal(oq.len(), 3)
@@ -65,8 +62,7 @@ void test('it should append/remove orders from queue', ({
     size: 10,
     price,
     stopPrice,
-    timeInForce: TimeInForce.GTC,
-    isMaker: true
+    timeInForce: TimeInForce.GTC
   })
   oq.append(order4)
   equal(oq.len(), 4)

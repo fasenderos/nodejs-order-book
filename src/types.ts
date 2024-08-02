@@ -26,7 +26,6 @@ interface BaseOrderOptions {
 interface InternalBaseOrderOptions extends BaseOrderOptions {
   type: OrderType
   time?: number
-  origSize?: number
 }
 /**
  * Specific options for a market order.
@@ -50,10 +49,12 @@ interface ILimitOrderOptions extends InternalBaseOrderOptions {
   id: string
   price: number
   timeInForce: TimeInForce
-  isMaker: boolean
 }
 export interface InternalLimitOrderOptions extends ILimitOrderOptions {
   type: OrderType.LIMIT
+  origSize: number
+  makerQty: number
+  takerQty: number
   postOnly?: boolean
   ocoStopPrice?: number
 }
@@ -107,14 +108,15 @@ export interface IMarketOrder {
  */
 export interface ILimitOrder {
   id: string
-  type: OrderType
+  type: OrderType.LIMIT
   side: Side
   size: number
   origSize: number
   price: number
   time: number
   timeInForce: TimeInForce
-  isMaker: boolean
+  takerQty: number
+  makerQty: number
 }
 
 /**
@@ -125,7 +127,6 @@ export interface IStopMarketOrder {
   type: OrderType
   side: Side
   size: number
-  origSize: number
   stopPrice: number
   time: number
 }
@@ -138,12 +139,10 @@ export interface IStopLimitOrder {
   type: OrderType
   side: Side
   size: number
-  origSize: number
   price: number
   stopPrice: number
   timeInForce: TimeInForce
   time: number
-  isMaker: boolean
 }
 
 /**

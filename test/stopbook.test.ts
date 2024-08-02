@@ -19,7 +19,6 @@ void test('it should add/remove/get order to stop book', ({ equal, same, end }) 
       size: 5,
       price: stopPrice,
       stopPrice,
-      isMaker: true,
       timeInForce: TimeInForce.GTC
     })
     ob.add(order)
@@ -115,7 +114,6 @@ void test('it should validate conditional order', ({ equal, end }) => {
       size: 5,
       ...(price !== null ? { price } : {}),
       stopPrice,
-      isMaker: true,
       timeInForce: TimeInForce.GTC
     }) as StopOrder
     equal(ob.validConditionalOrder(marketPrice, order), expect)

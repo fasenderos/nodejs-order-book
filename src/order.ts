@@ -18,13 +18,11 @@ abstract class BaseOrder {
   readonly _id: string
   readonly _side: Side
   _size: number
-  readonly _origSize: number
   _time: number
   constructor (options: OrderOptions) {
     this._id = options.id ?? randomUUID()
     this._side = options.side
     this._size = options.size
-    this._origSize = options.origSize ?? options.size
     this._time = options.time ?? Date.now()
   }
 
@@ -48,11 +46,6 @@ abstract class BaseOrder {
     this._size = size
   }
 
-  // Getter for the original size of the order
-  get origSize (): number {
-    return this._origSize
-  }
-
   // Getter for order timestamp
   get time (): number {
     return this._time
@@ -72,18 +65,22 @@ abstract class BaseOrder {
 }
 export class LimitOrder extends BaseOrder {
   private readonly _type: OrderType.LIMIT
+  readonly _origSize: number
   private _price: number
   private readonly _timeInForce: TimeInForce
-  private readonly _isMaker: boolean
+  private readonly _makerQty: number
+  private readonly _takerQty: number
   private readonly _postOnly: boolean
   // Refers to the linked Stop Limit order stopPrice
   private readonly _ocoStopPrice?: number
   constructor (options: InternalLimitOrderOptions) {
     super(options)
     this._type = options.type
+    this._origSize = options.origSize
     this._price = options.price
     this._timeInForce = options.timeInForce
-    this._isMaker = options.isMaker
+    this._makerQty = options.makerQty
+    this._takerQty = options.takerQty
     this._postOnly = options.postOnly ?? false
     this._ocoStopPrice = options.ocoStopPrice
   }
@@ -113,9 +110,19 @@ export class LimitOrder extends BaseOrder {
     return this._postOnly
   }
 
-  // Getter for order isMaker
-  get isMaker (): boolean {
-    return this._isMaker
+  // Getter for the original size of the order
+  get origSize (): number {
+    return this._origSize
+  }
+
+  // Getter for order makerQty
+  get makerQty (): number {
+    return this._makerQty
+  }
+
+  // Getter for order takerQty
+  get takerQty (): number {
+    return this._takerQty
   }
 
   get ocoStopPrice (): number | undefined {
@@ -131,7 +138,8 @@ export class LimitOrder extends BaseOrder {
     price: ${this._price}
     time: ${this._time}
     timeInForce: ${this._timeInForce}
-    isMaker: ${this._isMaker as unknown as string}`
+    makerQty: ${this._makerQty}
+    takerQty: ${this._takerQty}`
 
   toJSON = (): string => JSON.stringify(this.toObject())
 
@@ -144,7 +152,8 @@ export class LimitOrder extends BaseOrder {
     price: this._price,
     time: this._time,
     timeInForce: this._timeInForce,
-    isMaker: this._isMaker
+    makerQty: this._makerQty,
+    takerQty: this._takerQty
   })
 }
 
@@ -172,7 +181,6 @@ export class StopMarketOrder extends BaseOrder {
     type: ${this.type}
     side: ${this._side}
     size: ${this._size}
-    origSize: ${this._origSize}
     stopPrice: ${this._stopPrice}
     time: ${this._time}`
 
@@ -183,7 +191,6 @@ export class StopMarketOrder extends BaseOrder {
     type: this.type,
     side: this._side,
     size: this._size,
-    origSize: this._origSize,
     stopPrice: this._stopPrice,
     time: this._time
   })
@@ -194,7 +201,6 @@ export class StopLimitOrder extends BaseOrder {
   private _price: number
   private readonly _stopPrice: number
   private readonly _timeInForce: TimeInForce
-  private readonly _isMaker: boolean
   // It's true when there is a linked Limit Order
   private readonly _isOCO: boolean
   constructor (options: InternalStopLimitOrderOptions) {
@@ -203,7 +209,6 @@ export class StopLimitOrder extends BaseOrder {
     this._price = options.price
     this._stopPrice = options.stopPrice
     this._timeInForce = options.timeInForce
-    this._isMaker = options.isMaker
     this._isOCO = options.isOCO ?? false
   }
 
@@ -232,11 +237,6 @@ export class StopLimitOrder extends BaseOrder {
     return this._timeInForce
   }
 
-  // Getter for order isMaker
-  get isMaker (): boolean {
-    return this._isMaker
-  }
-
   // Getter for order isOCO
   get isOCO (): boolean {
     return this._isOCO
@@ -247,12 +247,10 @@ export class StopLimitOrder extends BaseOrder {
     type: ${this.type}
     side: ${this._side}
     size: ${this._size}
-    origSize: ${this._origSize}
     price: ${this._price}
     stopPrice: ${this._stopPrice}
     timeInForce: ${this._timeInForce}
-    time: ${this._time}
-    isMaker: ${this._isMaker as unknown as string}`
+    time: ${this._time}`
 
   toJSON = (): string => JSON.stringify(this.toObject())
 
@@ -261,12 +259,10 @@ export class StopLimitOrder extends BaseOrder {
     type: this.type,
     side: this._side,
     size: this._size,
-    origSize: this._origSize,
     price: this._price,
     stopPrice: this._stopPrice,
     timeInForce: this._timeInForce,
-    time: this._time,
-    isMaker: this._isMaker
+    time: this._time
   })
 }
 

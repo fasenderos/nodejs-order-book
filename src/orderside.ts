@@ -92,16 +92,10 @@ export class OrderSide {
   ): LimitOrder => {
     this.remove(oldOrder)
     const newOrder = OrderFactory.createOrder({
-      id: oldOrder.id,
-      type: oldOrder.type,
-      side: oldOrder.side,
+      ...oldOrder.toObject(),
       size: orderUpdate.size !== undefined ? orderUpdate.size : oldOrder.size,
-      origSize: oldOrder.origSize,
       price: orderUpdate.price,
-      time: Date.now(),
-      timeInForce: oldOrder.timeInForce,
-      postOnly: oldOrder.postOnly,
-      isMaker: oldOrder.isMaker
+      time: Date.now()
     })
     this.append(newOrder)
     return newOrder
