@@ -17,6 +17,7 @@ Ultra-fast matching engine written in TypeScript
 
 - Standard price-time priority
 - Supports both market and limit orders
+- Supports `post-only` limit order
 - Supports conditional orders [**Stop Limit, Stop Market and OCO**](#conditional-orders-) <img src="https://img.shields.io/badge/Experimental-blue" alt="Experimental">
 - Supports time in force GTC, FOK and IOC
 - Supports order cancelling
@@ -55,9 +56,9 @@ const ob = new OrderBook()
 Then you'll be able to use next primary functions:
 
 ```js
-ob.createOrder({ type: 'limit' | 'market', side: 'buy' | 'sell', size: number, price?: number, id?: string, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.createOrder({ type: 'limit' | 'market', side: 'buy' | 'sell', size: number, price?: number, id?: string, postOnly?: boolean, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
-ob.limit({ id: string, side: 'buy' | 'sell', size: number, price: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.limit({ id: string, side: 'buy' | 'sell', size: number, price: number, postOnly?: boolean, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
 
 ob.market({ side: 'buy' | 'sell', size: number })
 
