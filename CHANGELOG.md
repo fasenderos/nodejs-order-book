@@ -1,5 +1,31 @@
 # Changelog
 
+## [7.0.0](https://github.com/fasenderos/hft-limit-order-book/compare/v6.1.1...v7.0.0) (2024-08-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* - The `isMaker` property has been removed from the limit order object.
+- New properties `takerQty` and `makerQty` have been added to the limit order objecct.
+
+### Features
+
+* add postOnly limit order option ([4dd8d69](https://github.com/fasenderos/hft-limit-order-book/commit/4dd8d693c84cd6ebb5285f8f5be84864bcb8f001))
+* taker and maker support + fix origSize on limit order ([74f5907](https://github.com/fasenderos/hft-limit-order-book/commit/74f59077913a25c7ff742c0a0e3a1f87f3799191))
+
+
+### Documentation
+
+* add postOnly documentation ([a9758cf](https://github.com/fasenderos/hft-limit-order-book/commit/a9758cf66c0520b42ce4ea612838a3b3b10b1d91))
+* fix link in readme ([def26de](https://github.com/fasenderos/hft-limit-order-book/commit/def26dedc4f8c33bf4629fe7bdcac3496836fb7b))
+* fix link in readme ([663f9b2](https://github.com/fasenderos/hft-limit-order-book/commit/663f9b2f2e513b48d119e6fb3c0eb652b4a08417))
+* fix link in readme ([c32bed1](https://github.com/fasenderos/hft-limit-order-book/commit/c32bed12594e5e3ed691de8b78f4d74fb0379885))
+
+
+### Refactoring
+
+* custom error factory ([e99766e](https://github.com/fasenderos/hft-limit-order-book/commit/e99766e79c372276adbca90db37a36a87a47bcd7))
+
 ## [6.1.1](https://github.com/fasenderos/hft-limit-order-book/compare/v6.1.0...v6.1.1) (2024-08-01)
 
 
