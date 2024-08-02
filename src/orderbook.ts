@@ -87,12 +87,12 @@ export class OrderBook {
    * Create new order. See {@link CreateOrderOptions} for details.
    *
    * @param options
-   * @param options.type - `limit` or `market`
+   * @param options.type - `limit` | `market` | 'stop_limit' | 'stop_market' | 'oco'
    * @param options.side - `sell` or `buy`
    * @param options.size - How much of currency you want to trade in units of base currency
    * @param options.price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
    * @param options.orderID - Unique order ID. Param only for limit order
-   * @param options.postOnly - When `true` the order will be rejected if immediately matches and trades as a taker. Default is `false`
+   * @param options.postOnly - Can be used with 'limit' order and when it's `true` the order will be rejected if immediately matches and trades as a taker. Default is `false`
    * @param options.stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
    * @param options.stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
    * @param options.timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
@@ -106,7 +106,7 @@ export class OrderBook {
    *
    * Create a trade order
    *
-   * @param type - `limit` or `market`
+   * @param type - `limit` | `market` | 'stop_limit' | 'stop_market' | 'oco'
    * @param side - `sell` or `buy`
    * @param size - How much of currency you want to trade in units of base currency
    * @param price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
@@ -115,6 +115,7 @@ export class OrderBook {
    * @param stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
    * @param stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
    * @param stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
+   * @param postOnly - Can be used with 'limit' order and when it's `true` the order will be rejected if immediately matches and trades as a taker. Default is `false`
    * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */
   public createOrder (
@@ -128,7 +129,8 @@ export class OrderBook {
     timeInForce?: TimeInForce,
     stopPrice?: number,
     stopLimitPrice?: number,
-    stopLimitTimeInForce?: TimeInForce
+    stopLimitTimeInForce?: TimeInForce,
+    postOnly?: boolean
   ): IProcessOrder
 
   public createOrder (
@@ -140,7 +142,8 @@ export class OrderBook {
     timeInForce = TimeInForce.GTC,
     stopPrice?: number,
     stopLimitPrice?: number,
-    stopLimitTimeInForce = TimeInForce.GTC
+    stopLimitTimeInForce = TimeInForce.GTC,
+    postOnly?: boolean
   ): IProcessOrder {
     let options: CreateOrderOptions
     // We don't want to test the deprecated signature.
@@ -162,7 +165,8 @@ export class OrderBook {
         stopPrice,
         // @ts-expect-error
         stopLimitPrice,
-        stopLimitTimeInForce
+        stopLimitTimeInForce,
+        postOnly
       }
       /* c8 ignore stop */
     } else if (typeof typeOrOptions === 'object') {
