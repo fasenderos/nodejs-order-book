@@ -17,8 +17,10 @@ void test('it should append/update/remove orders from queue on BUY side', ({
     side: Side.BUY,
     size: 5,
     price: 10,
+    origSize: 5,
     timeInForce: TimeInForce.GTC,
-    isMaker: true
+    makerQty: 5,
+    takerQty: 0
   })
   const order2 = OrderFactory.createOrder({
     type: OrderType.LIMIT,
@@ -26,8 +28,10 @@ void test('it should append/update/remove orders from queue on BUY side', ({
     side: Side.BUY,
     size: 5,
     price: 20,
+    origSize: 5,
     timeInForce: TimeInForce.GTC,
-    isMaker: true
+    makerQty: 5,
+    takerQty: 0
   })
 
   equal(os.minPriceQueue() === undefined, true)
@@ -182,8 +186,10 @@ void test('it should append/update/remove orders from queue on SELL side', ({
     side: Side.SELL,
     size: 5,
     price: 10,
+    origSize: 5,
     timeInForce: TimeInForce.GTC,
-    isMaker: true
+    makerQty: 5,
+    takerQty: 0
   })
   const order2 = OrderFactory.createOrder({
     type: OrderType.LIMIT,
@@ -191,8 +197,10 @@ void test('it should append/update/remove orders from queue on SELL side', ({
     side: Side.SELL,
     size: 5,
     price: 20,
+    origSize: 5,
     timeInForce: TimeInForce.GTC,
-    isMaker: true
+    makerQty: 5,
+    takerQty: 0
   })
 
   equal(os.minPriceQueue() === undefined, true)

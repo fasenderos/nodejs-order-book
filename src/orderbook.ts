@@ -616,7 +616,6 @@ export class OrderBook {
     const stopLimit = OrderFactory.createOrder({
       ...options,
       type: OrderType.STOP_LIMIT,
-      isMaker: true,
       timeInForce: options.timeInForce ?? TimeInForce.GTC
     })
     return this._stopOrder(stopLimit, response)
@@ -650,7 +649,6 @@ export class OrderBook {
         size: options.size,
         price: options.stopLimitPrice,
         stopPrice: options.stopPrice,
-        isMaker: true,
         timeInForce: options.stopLimitTimeInForce ?? TimeInForce.GTC,
         isOCO: true
       })
@@ -797,17 +795,21 @@ export class OrderBook {
     this.executeConditionalOrder(side, priceBefore, response)
 
     let order: LimitOrder
+    const takerQty = size - quantityToTrade
+    const makerQty = quantityToTrade
     if (quantityToTrade > 0) {
       order = OrderFactory.createOrder({
         type: OrderType.LIMIT,
         id: orderID,
         side,
         size: quantityToTrade,
+        origSize: size,
         price,
         time: Date.now(),
         timeInForce,
         postOnly,
-        isMaker: quantityToTrade === size,
+        takerQty,
+        makerQty,
         ...(ocoStopPrice !== undefined ? { ocoStopPrice } : {})
       })
       if (response.done.length > 0) {
@@ -834,11 +836,13 @@ export class OrderBook {
         type: OrderType.LIMIT,
         side,
         size,
+        origSize: size,
         price: totalPrice / totalQuantity,
         time: Date.now(),
         timeInForce,
         postOnly,
-        isMaker: false
+        takerQty,
+        makerQty
       })
       response.done.push(order)
     }
@@ -995,16 +999,8 @@ export class OrderBook {
         if (headOrder !== undefined) {
           if (response.quantityLeft < headOrder.size) {
             response.partial = OrderFactory.createOrder({
-              type: OrderType.LIMIT,
-              id: headOrder.id,
-              side: headOrder.side,
-              size: headOrder.size - response.quantityLeft,
-              origSize: headOrder.origSize,
-              price: headOrder.price,
-              time: headOrder.time,
-              timeInForce: headOrder.timeInForce,
-              postOnly: headOrder.postOnly,
-              isMaker: true
+              ...headOrder.toObject(),
+              size: headOrder.size - response.quantityLeft
             })
             this.orders[headOrder.id] = response.partial
             response.partialQuantityProcessed = response.quantityLeft

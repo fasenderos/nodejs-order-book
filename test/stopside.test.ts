@@ -22,7 +22,6 @@ void test('it should append/remove orders from queue on BUY side', ({
       size: 5,
       price: 10,
       timeInForce: TimeInForce.GTC,
-      isMaker: true,
       stopPrice: 10
     })
     os.append(order)
@@ -40,7 +39,6 @@ void test('it should append/remove orders from queue on BUY side', ({
       size: 5,
       price: 10,
       timeInForce: TimeInForce.GTC,
-      isMaker: true,
       stopPrice: 10 // same stopPrice as before, so same price level
     })
     os.append(order)
@@ -56,8 +54,7 @@ void test('it should append/remove orders from queue on BUY side', ({
       side: Side.BUY,
       size: 5,
       stopPrice: 20,
-      timeInForce: TimeInForce.GTC,
-      isMaker: true
+      timeInForce: TimeInForce.GTC
     })
 
     os.append(order)
@@ -139,7 +136,6 @@ void test('it should append/remove orders from queue on SELL side', ({
       size: 5,
       price: 10,
       timeInForce: TimeInForce.GTC,
-      isMaker: true,
       stopPrice: 10
     })
     os.append(order)
@@ -157,7 +153,6 @@ void test('it should append/remove orders from queue on SELL side', ({
       size: 5,
       price: 10,
       timeInForce: TimeInForce.GTC,
-      isMaker: true,
       stopPrice: 10 // same stopPrice as before, so same price level
     })
     os.append(order)
@@ -173,8 +168,7 @@ void test('it should append/remove orders from queue on SELL side', ({
       side: Side.SELL,
       size: 5,
       stopPrice: 20,
-      timeInForce: TimeInForce.GTC,
-      isMaker: true
+      timeInForce: TimeInForce.GTC
     })
 
     os.append(order)
@@ -251,7 +245,6 @@ void test('it should find all queue between upper and lower bound', ({
       size: 5,
       price: 10,
       timeInForce: TimeInForce.GTC,
-      isMaker: true,
       stopPrice
     })
     os.append(order)

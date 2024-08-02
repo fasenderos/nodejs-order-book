@@ -17,8 +17,10 @@ void test('it should append/update/remove orders from queue', ({
     side: Side.SELL,
     size: 5,
     price,
+    origSize: 5,
     timeInForce: TimeInForce.GTC,
-    isMaker: true
+    makerQty: 5,
+    takerQty: 0
   })
   const order2 = OrderFactory.createOrder({
     type: OrderType.LIMIT,
@@ -26,8 +28,10 @@ void test('it should append/update/remove orders from queue', ({
     side: Side.SELL,
     size: 5,
     price,
+    origSize: 5,
     timeInForce: TimeInForce.GTC,
-    isMaker: true
+    makerQty: 5,
+    takerQty: 0
   })
 
   const head = oq.append(order1)
@@ -50,8 +54,10 @@ void test('it should append/update/remove orders from queue', ({
     side: Side.SELL,
     size: 10,
     price,
+    origSize: 10,
     timeInForce: TimeInForce.GTC,
-    isMaker: true
+    makerQty: 10,
+    takerQty: 0
   })
 
   // Test update. Number of orders is always 2
@@ -86,8 +92,10 @@ void test('it should update order size and the volume', ({ equal, end }) => {
     side: Side.SELL,
     size: 5,
     price,
+    origSize: 5,
     timeInForce: TimeInForce.GTC,
-    isMaker: true
+    makerQty: 5,
+    takerQty: 0
   })
   const order2 = OrderFactory.createOrder({
     type: OrderType.LIMIT,
@@ -95,8 +103,10 @@ void test('it should update order size and the volume', ({ equal, end }) => {
     side: Side.SELL,
     size: 5,
     price,
+    origSize: 5,
     timeInForce: TimeInForce.GTC,
-    isMaker: true
+    makerQty: 5,
+    takerQty: 0
   })
 
   oq.append(order1)

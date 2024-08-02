@@ -26,9 +26,11 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
       side,
       size,
       price,
+      origSize: size,
       time,
       timeInForce,
-      isMaker: false
+      makerQty: size,
+      takerQty: 0
     })
 
     equal(order instanceof LimitOrder, true)
@@ -40,7 +42,8 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
     equal(order.price, price)
     equal(order.time, time)
     equal(order.timeInForce, timeInForce)
-    equal(order.isMaker, false)
+    equal(order.makerQty, size)
+    equal(order.takerQty, 0)
     equal(order.ocoStopPrice, undefined)
     same(order.toObject(), {
       id,
@@ -51,7 +54,8 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
       price,
       time,
       timeInForce,
-      isMaker: order.isMaker
+      makerQty: size,
+      takerQty: 0
     })
     equal(
       order.toString(),
@@ -63,7 +67,8 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
     price: ${price}
     time: ${time}
     timeInForce: ${timeInForce}
-    isMaker: ${false as unknown as string}`
+    makerQty: ${size}
+    takerQty: 0`
     )
     equal(
       order.toJSON(),
@@ -76,7 +81,8 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
         price,
         time,
         timeInForce,
-        isMaker: false
+        makerQty: size,
+        takerQty: 0
       })
     )
   }
@@ -90,9 +96,11 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
       side,
       size,
       price,
+      origSize: size,
       time,
       timeInForce,
-      isMaker: false,
+      makerQty: size,
+      takerQty: 0,
       ocoStopPrice
     })
     equal(order instanceof LimitOrder, true)
@@ -104,7 +112,8 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
     equal(order.price, price)
     equal(order.time, time)
     equal(order.timeInForce, timeInForce)
-    equal(order.isMaker, false)
+    equal(order.makerQty, size)
+    equal(order.takerQty, 0)
     equal(order.ocoStopPrice, ocoStopPrice)
     same(order.toObject(), {
       id,
@@ -115,7 +124,8 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
       price,
       time,
       timeInForce,
-      isMaker: order.isMaker
+      makerQty: size,
+      takerQty: 0
     })
     equal(
       order.toString(),
@@ -127,7 +137,8 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
     price: ${price}
     time: ${time}
     timeInForce: ${timeInForce}
-    isMaker: ${false as unknown as string}`
+    makerQty: ${size}
+    takerQty: 0`
     )
     equal(
       order.toJSON(),
@@ -140,7 +151,8 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
         price,
         time,
         timeInForce,
-        isMaker: false
+        makerQty: size,
+        takerQty: 0
       })
     )
   }
@@ -168,7 +180,6 @@ void test('it should create StopMarketOrder', ({ equal, same, end }) => {
   equal(order.type, type)
   equal(order.side, side)
   equal(order.size, size)
-  equal(order.origSize, size)
   equal(order.stopPrice, stopPrice)
   equal(order.time, time)
   same(order.toObject(), {
@@ -176,7 +187,6 @@ void test('it should create StopMarketOrder', ({ equal, same, end }) => {
     type,
     side,
     size,
-    origSize: size,
     stopPrice,
     time
   })
@@ -186,7 +196,6 @@ void test('it should create StopMarketOrder', ({ equal, same, end }) => {
     type: ${type}
     side: ${side}
     size: ${size}
-    origSize: ${size}
     stopPrice: ${stopPrice}
     time: ${time}`
   )
@@ -197,7 +206,6 @@ void test('it should create StopMarketOrder', ({ equal, same, end }) => {
       type,
       side,
       size,
-      origSize: size,
       stopPrice,
       time
     })
@@ -223,8 +231,7 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
       price,
       time,
       stopPrice,
-      timeInForce,
-      isMaker: true
+      timeInForce
     })
 
     equal(order instanceof StopLimitOrder, true)
@@ -233,10 +240,8 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
     equal(order.side, side)
     equal(order.size, size)
     equal(order.price, price)
-    equal(order.origSize, size)
     equal(order.stopPrice, stopPrice)
     equal(order.timeInForce, timeInForce)
-    equal(order.isMaker, true)
     equal(order.time, time)
     equal(order.isOCO, false)
     same(order.toObject(), {
@@ -244,12 +249,10 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
       type,
       side,
       size,
-      origSize: size,
       price,
       stopPrice,
       timeInForce,
-      time,
-      isMaker: true
+      time
     })
     equal(
       order.toString(),
@@ -257,12 +260,10 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
     type: ${type}
     side: ${side}
     size: ${size}
-    origSize: ${size}
     price: ${price}
     stopPrice: ${stopPrice}
     timeInForce: ${timeInForce}
-    time: ${time}
-    isMaker: ${true as unknown as string}`
+    time: ${time}`
     )
     equal(
       order.toJSON(),
@@ -271,12 +272,10 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
         type,
         side,
         size,
-        origSize: size,
         price,
         stopPrice,
         timeInForce,
-        time,
-        isMaker: true
+        time
       })
     )
     // Price setter
@@ -296,7 +295,6 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
       time,
       stopPrice,
       timeInForce,
-      isMaker: true,
       isOCO: true
     })
 
@@ -306,10 +304,8 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
     equal(order.side, side)
     equal(order.size, size)
     equal(order.price, price)
-    equal(order.origSize, size)
     equal(order.stopPrice, stopPrice)
     equal(order.timeInForce, timeInForce)
-    equal(order.isMaker, true)
     equal(order.time, time)
     equal(order.isOCO, true)
     same(order.toObject(), {
@@ -317,12 +313,10 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
       type,
       side,
       size,
-      origSize: size,
       price,
       stopPrice,
       timeInForce,
-      time,
-      isMaker: true
+      time
     })
     equal(
       order.toString(),
@@ -330,12 +324,10 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
     type: ${type}
     side: ${side}
     size: ${size}
-    origSize: ${size}
     price: ${price}
     stopPrice: ${stopPrice}
     timeInForce: ${timeInForce}
-    time: ${time}
-    isMaker: ${true as unknown as string}`
+    time: ${time}`
     )
     equal(
       order.toJSON(),
@@ -344,12 +336,10 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
         type,
         side,
         size,
-        origSize: size,
         price,
         stopPrice,
         timeInForce,
-        time,
-        isMaker: true
+        time
       })
     )
     // Price setter
@@ -398,7 +388,6 @@ void test('it should create order without passing a date or id', ({
     type,
     side,
     size,
-    origSize: size,
     stopPrice,
     time: fakeTimestamp
   })
@@ -408,7 +397,6 @@ void test('it should create order without passing a date or id', ({
     type: ${type}
     side: ${side}
     size: ${size}
-    origSize: ${size}
     stopPrice: ${stopPrice}
     time: ${fakeTimestamp}`
   )
@@ -420,7 +408,6 @@ void test('it should create order without passing a date or id', ({
       type,
       side,
       size,
-      origSize: size,
       stopPrice,
       time: fakeTimestamp
     })
@@ -442,9 +429,11 @@ void test('test orders setters', (t) => {
     side,
     size,
     price,
+    origSize: size,
     time,
     timeInForce,
-    isMaker: false
+    makerQty: size,
+    takerQty: 0
   })
 
   // Price setter
@@ -485,8 +474,7 @@ void test('test invalid order type', (t) => {
       size,
       price,
       time,
-      timeInForce,
-      isMaker: false
+      timeInForce
     })
   } catch (error) {
     if (error instanceof Error) {
