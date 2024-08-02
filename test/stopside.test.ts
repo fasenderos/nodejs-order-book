@@ -3,7 +3,7 @@ import { OrderFactory } from '../src/order'
 import { Side } from '../src/side'
 import { StopSide } from '../src/stopside'
 import { OrderType, TimeInForce } from '../src/types'
-import { ERROR } from '../src/errors'
+import { ErrorMessages } from '../src/errors'
 
 void test('it should append/remove orders from queue on BUY side', ({
   equal,
@@ -110,12 +110,12 @@ void test('it should append/remove orders from queue on BUY side', ({
 
   // Test for error when price level not exists
   try {
-    // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type ErrInvalidPriceLevel
+    // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type INVALID_PRICE_LEVEL
     os.remove('some-id', 100)
   } catch (error) {
     if (error instanceof Error) {
       // TypeScript knows err is Error
-      equal(error?.message, ERROR.ErrInvalidPriceLevel)
+      equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
     }
   }
 
@@ -227,12 +227,12 @@ void test('it should append/remove orders from queue on SELL side', ({
 
   // Test for error when price level not exists
   try {
-    // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type ErrInvalidPriceLevel
+    // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type INVALID_PRICE_LEVEL
     os.remove('some-id', 100)
   } catch (error) {
     if (error instanceof Error) {
       // TypeScript knows err is Error
-      equal(error?.message, ERROR.ErrInvalidPriceLevel)
+      equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
     }
   }
 

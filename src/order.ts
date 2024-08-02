@@ -84,7 +84,7 @@ export class LimitOrder extends BaseOrder {
     this._price = options.price
     this._timeInForce = options.timeInForce
     this._isMaker = options.isMaker
-    this._postOnly = options.postOnly
+    this._postOnly = options.postOnly ?? false
     this._ocoStopPrice = options.ocoStopPrice
   }
 
@@ -288,7 +288,7 @@ export const OrderFactory = {
       case OrderType.STOP_MARKET:
         return new StopMarketOrder(options) as any
       default:
-        throw CustomError(ERROR.ErrInvalidOrderType)
+        throw CustomError(ERROR.INVALID_ORDER_TYPE)
     }
   }
 }

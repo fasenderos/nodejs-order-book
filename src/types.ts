@@ -54,7 +54,7 @@ interface ILimitOrderOptions extends InternalBaseOrderOptions {
 }
 export interface InternalLimitOrderOptions extends ILimitOrderOptions {
   type: OrderType.LIMIT
-  postOnly: boolean
+  postOnly?: boolean
   ocoStopPrice?: number
 }
 

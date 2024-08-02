@@ -69,7 +69,7 @@ export class OrderSide {
     const price = order.price
     const strPrice = price.toString()
     if (this._prices[strPrice] === undefined) {
-      throw CustomError(ERROR.ErrInvalidPriceLevel)
+      throw CustomError(ERROR.INVALID_PRICE_LEVEL)
     }
     this._prices[strPrice].remove(order)
     if (this._prices[strPrice].len() === 0) {

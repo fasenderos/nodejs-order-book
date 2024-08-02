@@ -2,7 +2,7 @@ import { test } from 'tap'
 import { OrderFactory } from '../src/order'
 import { Side } from '../src/side'
 import { OrderSide } from '../src/orderside'
-import { ERROR } from '../src/errors'
+import { ErrorMessages } from '../src/errors'
 import { OrderType, TimeInForce } from '../src/types'
 
 void test('it should append/update/remove orders from queue on BUY side', ({
@@ -98,7 +98,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
 
   // Test for error when price level not exists
   try {
-    // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type ErrInvalidPriceLevel
+    // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type INVALID_PRICE_LEVEL
     os.updateOrderPrice(order1, {
       size: 10,
       price: 20
@@ -106,7 +106,7 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   } catch (error) {
     if (error instanceof Error) {
       // TypeScript knows err is Error
-      equal(error?.message, ERROR.ErrInvalidPriceLevel)
+      equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
     }
   }
 
@@ -254,7 +254,7 @@ void test('it should append/update/remove orders from queue on SELL side', ({
 
   // Test for error when price level not exists
   try {
-    // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type ErrInvalidPriceLevel
+    // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type INVALID_PRICE_LEVEL
     os.updateOrderPrice(order1, {
       size: 10,
       price: 20
@@ -262,7 +262,7 @@ void test('it should append/update/remove orders from queue on SELL side', ({
   } catch (error) {
     if (error instanceof Error) {
       // TypeScript knows err is Error
-      equal(error?.message, ERROR.ErrInvalidPriceLevel)
+      equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
     }
   }
 
