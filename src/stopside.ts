@@ -34,7 +34,7 @@ export class StopSide {
   remove = (id: string, stopPrice: number): StopOrder | undefined => {
     const strPrice = stopPrice.toString()
     if (this._prices[strPrice] === undefined) {
-      throw CustomError(ERROR.ErrInvalidPriceLevel)
+      throw CustomError(ERROR.INVALID_PRICE_LEVEL)
     }
     const deletedOrder = this._prices[strPrice].remove(id)
     if (this._prices[strPrice].len() === 0) {

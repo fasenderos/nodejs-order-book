@@ -65,7 +65,7 @@ export class OrderBook {
     }
     // Than replay from journal log
     if (journal != null) {
-      if (!Array.isArray(journal)) throw CustomError(ERROR.ErrJournalLog)
+      if (!Array.isArray(journal)) throw CustomError(ERROR.INVALID_JOURNAL_LOG)
       // If a snapshot is available be sure to remove logs before the last restored operation
       if (snapshot != null && snapshot.lastOp > 0) {
         journal = journal.filter((log) => log.opId > snapshot.lastOp)
@@ -84,37 +84,38 @@ export class OrderBook {
     return this._lastOp
   }
   /**
-   *  Create new order. See {@link CreateOrderOptions} for details.
+   * Create new order. See {@link CreateOrderOptions} for details.
    *
-   *  @param options
-   *  @param options.type - `limit` or `market`
-   *  @param options.side - `sell` or `buy`
-   *  @param options.size - How much of currency you want to trade in units of base currency
-   *  @param options.price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
-   *  @param options.orderID - Unique order ID. Param only for limit order
-   *  @param options.stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
-   *  @param options.stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
-   *  @param options.timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
-   *  @param options.stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
-   *  @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+   * @param options
+   * @param options.type - `limit` or `market`
+   * @param options.side - `sell` or `buy`
+   * @param options.size - How much of currency you want to trade in units of base currency
+   * @param options.price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
+   * @param options.orderID - Unique order ID. Param only for limit order
+   * @param options.postOnly - When `true` the order will be rejected if immediately matches and trades as a taker. Default is `false`
+   * @param options.stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   * @param options.stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   * @param options.timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
+   * @param options.stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
+   * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */
   public createOrder (options: CreateOrderOptions): IProcessOrder
   /**
-   *  @deprecated This implementation has been deprecated and will be removed on v7.0.0.
-   *  Use createOrder({ type, side, size, price, id, timeInForce }) instead.
+   * @deprecated This implementation has been deprecated and will be removed on v7.0.0.
+   * Use createOrder({ type, side, size, price, id, timeInForce }) instead.
    *
-   *  Create a trade order
+   * Create a trade order
    *
-   *  @param type - `limit` or `market`
-   *  @param side - `sell` or `buy`
-   *  @param size - How much of currency you want to trade in units of base currency
-   *  @param price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
-   *  @param orderID - Unique order ID. Param only for limit order
-   *  @param timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
-   *  @param stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
-   *  @param stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
-   *  @param stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
-   *  @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+   * @param type - `limit` or `market`
+   * @param side - `sell` or `buy`
+   * @param size - How much of currency you want to trade in units of base currency
+   * @param price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
+   * @param orderID - Unique order ID. Param only for limit order
+   * @param timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
+   * @param stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   * @param stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
+   * @param stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
+   * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */
   public createOrder (
     // Common for all order types
@@ -190,7 +191,7 @@ export class OrderBook {
           partial: null,
           partialQuantityProcessed: 0,
           quantityLeft: 0,
-          err: CustomError(ERROR.ErrInvalidOrderType)
+          err: CustomError(ERROR.INVALID_ORDER_TYPE)
         }
     }
   }
@@ -257,6 +258,7 @@ export class OrderBook {
    * @param options.id - Unique order ID
    * @param options.size - How much of currency you want to trade in units of base currency
    * @param options.price - The price at which the order is to be fullfilled, in units of the quote currency
+   * @param options.postOnly - When `true` the order will be rejected if immediately matches and trades as a taker. Default is `false`
    * @param options.timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
    * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */
@@ -383,7 +385,7 @@ export class OrderBook {
         partial: null,
         partialQuantityProcessed: 0,
         quantityLeft: 0,
-        err: CustomError(ERROR.ErrOrderNotFound)
+        err: CustomError(ERROR.ORDER_NOT_FOUND)
       }
     }
     if (orderUpdate?.price !== undefined || orderUpdate?.size !== undefined) {
@@ -398,6 +400,7 @@ export class OrderBook {
           order.id,
           newSize,
           newPrice,
+          order.postOnly,
           TimeInForce.GTC
         )
         if (this.enableJournaling) {
@@ -418,7 +421,7 @@ export class OrderBook {
       partial: null,
       partialQuantityProcessed: 0,
       quantityLeft: orderUpdate?.size ?? 0,
-      err: CustomError(ERROR.ErrInvalidPriceOrQuantity)
+      err: CustomError(ERROR.INVALID_PRICE_OR_QUANTITY)
     }
   }
 
@@ -499,7 +502,7 @@ export class OrderBook {
     }
 
     if (size > 0) {
-      err = CustomError(ERROR.ErrInsufficientQuantity)
+      err = CustomError(ERROR.INSUFFICIENT_QUANTITY)
     }
 
     return { price, err }
@@ -572,6 +575,7 @@ export class OrderBook {
       options.id,
       options.size,
       options.price,
+      options.postOnly ?? false,
       options.timeInForce ?? TimeInForce.GTC,
       options.ocoStopPrice
     )
@@ -653,7 +657,7 @@ export class OrderBook {
       this.stopBook.add(stopLimit)
       response.done.push(stopLimit)
     } else {
-      response.err = CustomError(ERROR.ErrInvalidConditionalOrder)
+      response.err = CustomError(ERROR.INVALID_CONDITIONAL_ORDER)
     }
     return response
   }
@@ -666,7 +670,7 @@ export class OrderBook {
       this.stopBook.add(stopOrder)
       response.done.push(stopOrder)
     } else {
-      response.err = CustomError(ERROR.ErrInvalidConditionalOrder)
+      response.err = CustomError(ERROR.INVALID_CONDITIONAL_ORDER)
     }
     return response
   }
@@ -740,6 +744,7 @@ export class OrderBook {
     orderID: string,
     size: number,
     price: number,
+    postOnly: boolean,
     timeInForce: TimeInForce,
     ocoStopPrice?: number
   ): LimitOrder | undefined => {
@@ -763,7 +768,7 @@ export class OrderBook {
     if (timeInForce === TimeInForce.FOK) {
       const fillable = this.canFillOrder(sideToProcess, side, size, price)
       if (!fillable) {
-        response.err = CustomError(ERROR.ErrLimitFOKNotFillable)
+        response.err = CustomError(ERROR.LIMIT_ORDER_FOK_NOT_FILLABLE)
         return
       }
     }
@@ -775,6 +780,10 @@ export class OrderBook {
       bestPrice !== undefined &&
       comparator(price, bestPrice.price())
     ) {
+      if (postOnly) {
+        response.err = CustomError(ERROR.LIMIT_ORDER_POST_ONLY)
+        return
+      }
       const { done, partial, partialQuantityProcessed, quantityLeft } =
         this.processQueue(bestPrice, quantityToTrade)
       response.done = response.done.concat(done)
@@ -797,7 +806,8 @@ export class OrderBook {
         price,
         time: Date.now(),
         timeInForce,
-        isMaker: true,
+        postOnly,
+        isMaker: quantityToTrade === size,
         ...(ocoStopPrice !== undefined ? { ocoStopPrice } : {})
       })
       if (response.done.length > 0) {
@@ -827,6 +837,7 @@ export class OrderBook {
         price: totalPrice / totalQuantity,
         time: Date.now(),
         timeInForce,
+        postOnly,
         isMaker: false
       })
       response.done.push(order)
@@ -899,7 +910,7 @@ export class OrderBook {
         case 'm': {
           const { side, size } = log.o
           if (side == null || size == null) {
-            throw CustomError(ERROR.ErrJournalLog)
+            throw CustomError(ERROR.INVALID_JOURNAL_LOG)
           }
           this.market({ side, size })
           break
@@ -907,7 +918,7 @@ export class OrderBook {
         case 'l': {
           const { side, id, size, price, timeInForce } = log.o
           if (side == null || id == null || size == null || price == null) {
-            throw CustomError(ERROR.ErrJournalLog)
+            throw CustomError(ERROR.INVALID_JOURNAL_LOG)
           }
           this.limit({
             side,
@@ -919,17 +930,17 @@ export class OrderBook {
           break
         }
         case 'd':
-          if (log.o.orderID == null) throw CustomError(ERROR.ErrJournalLog)
+          if (log.o.orderID == null) throw CustomError(ERROR.INVALID_JOURNAL_LOG)
           this.cancel(log.o.orderID)
           break
         case 'u':
           if (log.o.orderID == null || log.o.orderUpdate == null) {
-            throw CustomError(ERROR.ErrJournalLog)
+            throw CustomError(ERROR.INVALID_JOURNAL_LOG)
           }
           this.modify(log.o.orderID, log.o.orderUpdate)
           break
         default:
-          throw CustomError(ERROR.ErrJournalLog)
+          throw CustomError(ERROR.INVALID_JOURNAL_LOG)
       }
     }
   }
@@ -992,6 +1003,7 @@ export class OrderBook {
               price: headOrder.price,
               time: headOrder.time,
               timeInForce: headOrder.timeInForce,
+              postOnly: headOrder.postOnly,
               isMaker: true
             })
             this.orders[headOrder.id] = response.partial
@@ -1078,12 +1090,12 @@ export class OrderBook {
     const response = this.getProcessOrderResponse(order.size)
 
     if (![Side.SELL, Side.BUY].includes(order.side)) {
-      response.err = CustomError(ERROR.ErrInvalidSide)
+      response.err = CustomError(ERROR.INVALID_SIDE)
       return response
     }
 
     if (typeof order.size !== 'number' || order.size <= 0) {
-      response.err = CustomError(ERROR.ErrInsufficientQuantity)
+      response.err = CustomError(ERROR.INSUFFICIENT_QUANTITY)
       return response
     }
     return response
@@ -1095,22 +1107,22 @@ export class OrderBook {
     const response = this.getProcessOrderResponse(options.size)
 
     if (![Side.SELL, Side.BUY].includes(options.side)) {
-      response.err = CustomError(ERROR.ErrInvalidSide)
+      response.err = CustomError(ERROR.INVALID_SIDE)
       return response
     }
 
     if (this.orders[options.id] !== undefined) {
-      response.err = CustomError(ERROR.ErrOrderExists)
+      response.err = CustomError(ERROR.ORDER_ALREDY_EXISTS)
       return response
     }
 
     if (typeof options.size !== 'number' || options.size <= 0) {
-      response.err = CustomError(ERROR.ErrInvalidQuantity)
+      response.err = CustomError(ERROR.INVALID_QUANTITY)
       return response
     }
 
     if (typeof options.price !== 'number' || options.price <= 0) {
-      response.err = CustomError(ERROR.ErrInvalidPrice)
+      response.err = CustomError(ERROR.INVALID_PRICE)
       return response
     }
 
@@ -1118,7 +1130,7 @@ export class OrderBook {
       options.timeInForce &&
       !validTimeInForce.includes(options.timeInForce)
     ) {
-      response.err = CustomError(ERROR.ErrInvalidTimeInForce)
+      response.err = CustomError(ERROR.INVALID_TIF)
       return response
     }
     return response

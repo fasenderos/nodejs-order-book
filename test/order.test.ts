@@ -8,7 +8,7 @@ import {
 } from '../src/order'
 import { Side } from '../src/side'
 import { OrderType, TimeInForce } from '../src/types'
-import { ERROR } from '../src/errors'
+import { ErrorMessages } from '../src/errors'
 
 void test('it should create LimitOrder', ({ equal, same, end }) => {
   const id = 'fakeId'
@@ -490,7 +490,7 @@ void test('test invalid order type', (t) => {
     })
   } catch (error) {
     if (error instanceof Error) {
-      t.equal(error?.message, ERROR.ErrInvalidOrderType)
+      t.equal(error?.message, ErrorMessages.INVALID_ORDER_TYPE)
     }
   }
   t.end()

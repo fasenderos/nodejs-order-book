@@ -69,7 +69,7 @@ export class OrderSide {
     const price = order.price
     const strPrice = price.toString()
     if (this._prices[strPrice] === undefined) {
-      throw CustomError(ERROR.ErrInvalidPriceLevel)
+      throw CustomError(ERROR.INVALID_PRICE_LEVEL)
     }
     this._prices[strPrice].remove(order)
     if (this._prices[strPrice].len() === 0) {
@@ -100,6 +100,7 @@ export class OrderSide {
       price: orderUpdate.price,
       time: Date.now(),
       timeInForce: oldOrder.timeInForce,
+      postOnly: oldOrder.postOnly,
       isMaker: oldOrder.isMaker
     })
     this.append(newOrder)

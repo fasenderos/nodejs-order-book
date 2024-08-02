@@ -1,10 +1,10 @@
 import { test } from 'tap'
-import { CustomError, ERROR } from '../src/errors'
+import { CustomError, ErrorMessages } from '../src/errors'
 
 void test('Test default CustomError', ({ equal, end }) => {
   const a = CustomError()
-  equal(a.message, ERROR.Default)
+  equal(a.message, ErrorMessages.DEFAULT)
   const b = CustomError('foo')
-  equal(b.message, `${ERROR.Default}: foo`)
+  equal(b.message, `${ErrorMessages.DEFAULT}: foo`)
   end()
 })

@@ -75,6 +75,7 @@ export class LimitOrder extends BaseOrder {
   private _price: number
   private readonly _timeInForce: TimeInForce
   private readonly _isMaker: boolean
+  private readonly _postOnly: boolean
   // Refers to the linked Stop Limit order stopPrice
   private readonly _ocoStopPrice?: number
   constructor (options: InternalLimitOrderOptions) {
@@ -83,6 +84,7 @@ export class LimitOrder extends BaseOrder {
     this._price = options.price
     this._timeInForce = options.timeInForce
     this._isMaker = options.isMaker
+    this._postOnly = options.postOnly ?? false
     this._ocoStopPrice = options.ocoStopPrice
   }
 
@@ -104,6 +106,11 @@ export class LimitOrder extends BaseOrder {
   // Getter for timeInForce price
   get timeInForce (): TimeInForce {
     return this._timeInForce
+  }
+
+  // Getter for order postOnly
+  get postOnly (): boolean {
+    return this._postOnly
   }
 
   // Getter for order isMaker
@@ -281,7 +288,7 @@ export const OrderFactory = {
       case OrderType.STOP_MARKET:
         return new StopMarketOrder(options) as any
       default:
-        throw CustomError(ERROR.ErrInvalidOrderType)
+        throw CustomError(ERROR.INVALID_ORDER_TYPE)
     }
   }
 }
