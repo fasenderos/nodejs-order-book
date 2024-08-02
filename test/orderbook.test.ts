@@ -113,7 +113,7 @@ void test('test limit', ({ equal, end }) => {
   equal(process2.err === null, true)
   equal(process2.done.length, 5)
   equal(process2.partial?.id, 'order-b150')
-  equal((process2.partial as LimitOrder)?.isMaker, true)
+  equal((process2.partial as LimitOrder)?.isMaker, false)
   equal(process2.partialQuantityProcessed, 9)
 
   const process3 = ob.limit({
@@ -201,6 +201,22 @@ void test('test limit', ({ equal, end }) => {
     timeInForce: 'FAKE'
   })
   equal(process11.err?.message, ERROR.ErrInvalidTimeInForce)
+  end()
+})
+
+void test('test limit with postOnly', ({ equal, end }) => {
+  const ob = new OrderBook()
+
+  addDepth(ob, '', 2)
+  equal(ob.marketPrice, 0)
+  const process1 = ob.limit({ side: Side.BUY, id: 'order-b90', size: 2, price: 90, postOnly: true })
+  equal(process1.err, null)
+  equal(process1.quantityLeft, 2)
+
+  const process2 = ob.limit({ side: Side.BUY, id: 'order-b100', size: 3, price: 100, postOnly: true })
+  equal(process2.err?.message, ERROR.ErrLimitOrderPostOnly)
+  equal(process2.quantityLeft, 3)
+
   end()
 })
 

@@ -398,6 +398,7 @@ export class OrderBook {
           order.id,
           newSize,
           newPrice,
+          order.postOnly,
           TimeInForce.GTC
         )
         if (this.enableJournaling) {
@@ -572,6 +573,7 @@ export class OrderBook {
       options.id,
       options.size,
       options.price,
+      options.postOnly ?? false,
       options.timeInForce ?? TimeInForce.GTC,
       options.ocoStopPrice
     )
@@ -740,6 +742,7 @@ export class OrderBook {
     orderID: string,
     size: number,
     price: number,
+    postOnly: boolean,
     timeInForce: TimeInForce,
     ocoStopPrice?: number
   ): LimitOrder | undefined => {
@@ -775,6 +778,10 @@ export class OrderBook {
       bestPrice !== undefined &&
       comparator(price, bestPrice.price())
     ) {
+      if (postOnly) {
+        response.err = CustomError(ERROR.ErrLimitOrderPostOnly)
+        return
+      }
       const { done, partial, partialQuantityProcessed, quantityLeft } =
         this.processQueue(bestPrice, quantityToTrade)
       response.done = response.done.concat(done)
@@ -797,7 +804,8 @@ export class OrderBook {
         price,
         time: Date.now(),
         timeInForce,
-        isMaker: true,
+        postOnly,
+        isMaker: quantityToTrade === size,
         ...(ocoStopPrice !== undefined ? { ocoStopPrice } : {})
       })
       if (response.done.length > 0) {
@@ -827,6 +835,7 @@ export class OrderBook {
         price: totalPrice / totalQuantity,
         time: Date.now(),
         timeInForce,
+        postOnly,
         isMaker: false
       })
       response.done.push(order)
@@ -992,6 +1001,7 @@ export class OrderBook {
               price: headOrder.price,
               time: headOrder.time,
               timeInForce: headOrder.timeInForce,
+              postOnly: headOrder.postOnly,
               isMaker: true
             })
             this.orders[headOrder.id] = response.partial

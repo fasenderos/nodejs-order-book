@@ -10,6 +10,7 @@ export enum ERROR {
   ErrInvalidSide = "orderbook: given neither 'bid' nor 'ask'",
   ErrInvalidTimeInForce = "orderbook: supported time in force are 'GTC', 'IOC' and 'FOK'",
   ErrLimitFOKNotFillable = 'orderbook: limit FOK order not fillable',
+  ErrLimitOrderPostOnly = 'orderbook: Post-only order rejected because would execute immediately',
   ErrOrderExists = 'orderbook: order already exists',
   ErrOrderNotFound = 'orderbook: order not found',
   ErrJournalLog = 'journal: invalid journal log format',
@@ -41,6 +42,8 @@ export const CustomError = (error?: ERROR | string): Error => {
       return new Error(ERROR.ErrInvalidTimeInForce)
     case ERROR.ErrLimitFOKNotFillable:
       return new Error(ERROR.ErrLimitFOKNotFillable)
+    case ERROR.ErrLimitOrderPostOnly:
+      return new Error(ERROR.ErrLimitOrderPostOnly)
     case ERROR.ErrJournalLog:
       return new Error(ERROR.ErrJournalLog)
     default:

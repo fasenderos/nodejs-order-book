@@ -100,6 +100,7 @@ export class OrderSide {
       price: orderUpdate.price,
       time: Date.now(),
       timeInForce: oldOrder.timeInForce,
+      postOnly: oldOrder.postOnly,
       isMaker: oldOrder.isMaker
     })
     this.append(newOrder)

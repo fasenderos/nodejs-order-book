@@ -44,6 +44,7 @@ export interface LimitOrderOptions extends MarketOrderOptions {
   id: string
   price: number
   timeInForce?: TimeInForce
+  postOnly?: boolean
 }
 interface ILimitOrderOptions extends InternalBaseOrderOptions {
   id: string
@@ -53,6 +54,7 @@ interface ILimitOrderOptions extends InternalBaseOrderOptions {
 }
 export interface InternalLimitOrderOptions extends ILimitOrderOptions {
   type: OrderType.LIMIT
+  postOnly: boolean
   ocoStopPrice?: number
 }
 
