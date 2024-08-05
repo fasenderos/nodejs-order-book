@@ -148,7 +148,7 @@ export class OrderBook {
   ): IProcessOrder {
     let options: CreateOrderOptions
     // We don't want to test the deprecated signature.
-    /* c8 ignore start */
+    /* node:coverage disable */
     if (
       typeof typeOrOptions === 'string' &&
       side !== undefined &&
@@ -169,14 +169,14 @@ export class OrderBook {
         stopLimitTimeInForce,
         postOnly
       }
-      /* c8 ignore stop */
+      /* node:coverage enable */
     } else if (typeof typeOrOptions === 'object') {
       options = typeOrOptions
-      /* c8 ignore start */
+      /* node:coverage disable */
     } else {
       throw new Error('Invalid arguments.')
     }
-    /* c8 ignore stop */
+    /* node:coverage enable */
 
     switch (options.type) {
       case OrderType.MARKET:
@@ -227,17 +227,17 @@ export class OrderBook {
     size?: number
   ): IProcessOrder {
     // We don't want to test the deprecated signature.
-    /* c8 ignore start */
+    /* node:coverage disable */
     if (typeof sideOrOptions === 'string' && size !== undefined) {
       return this._market({ side: sideOrOptions, size })
-      /* c8 ignore stop */
+      /* node:coverage enable */
     } else if (typeof sideOrOptions === 'object') {
       return this._market(sideOrOptions)
-      /* c8 ignore start */
+      /* node:coverage disable */
     } else {
       throw new Error('Invalid arguments.')
     }
-    /* c8 ignore stop */
+    /* node:coverage enable */
   }
 
   /**
@@ -250,7 +250,7 @@ export class OrderBook {
    * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */
   public stopMarket = (options: StopMarketOrderOptions): IProcessOrder => {
-    /* c8 ignore next we don't need test for this */
+    /* node:coverage ignore next we don't need test for this */
     if (!this.experimentalConditionalOrders) throw new Error('In order to use conditional orders you need to instantiate the order book with the `experimentalConditionalOrders` option set to true')
     return this._stopMarket(options)
   }
@@ -297,7 +297,7 @@ export class OrderBook {
     timeInForce: TimeInForce = TimeInForce.GTC
   ): IProcessOrder {
     // We don't want to test the deprecated signature.
-    /* c8 ignore start */
+    /* node:coverage disable */
     if (
       typeof sideOrOptions === 'string' &&
       orderID !== undefined &&
@@ -311,14 +311,14 @@ export class OrderBook {
         price,
         timeInForce
       })
-      /* c8 ignore stop */
+      /* node:coverage enable */
     } else if (typeof sideOrOptions === 'object') {
       return this._limit(sideOrOptions)
-      /* c8 ignore start */
+      /* node:coverage disable */
     } else {
       throw new Error('Invalid arguments.')
     }
-    /* c8 ignore stop */
+    /* node:coverage enable */
   }
 
   /**
@@ -334,7 +334,7 @@ export class OrderBook {
    * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */
   public stopLimit = (options: StopLimitOrderOptions): IProcessOrder => {
-    /* c8 ignore next we don't need test for this */
+    /* node:coverage ignore next we don't need test for this */
     if (!this.experimentalConditionalOrders) throw new Error('In order to use conditional orders you need to instantiate the order book with the `experimentalConditionalOrders` option set to true')
     return this._stopLimit(options)
   }
@@ -363,7 +363,7 @@ export class OrderBook {
    * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
    */
   public oco = (options: OCOOrderOptions): IProcessOrder => {
-    /* c8 ignore next we don't need test for this */
+    /* node:coverage ignore next we don't need test for this */
     if (!this.experimentalConditionalOrders) throw new Error('In order to use conditional orders you need to instantiate the order book with the `experimentalConditionalOrders` option set to true')
     return this._oco(options)
   }
@@ -628,7 +628,7 @@ export class OrderBook {
 
   private readonly _oco = (options: OCOOrderOptions): IProcessOrder => {
     const response = this.validateLimitOrder(options)
-    /* c8 ignore next already validated with limit test */
+    /* node:coverage ignore next already validated with limit test */
     if (response.err != null) return response
     if (this.validateOCOOrder(options)) {
       // We use the same ID for Stop Limit and Limit Order, since
@@ -644,7 +644,7 @@ export class OrderBook {
         },
         response
       )
-      /* c8 ignore next already validated with limit test */
+      /* node:coverage ignore next already validated with limit test */
       if (response.err != null) return response
 
       const stopLimit = OrderFactory.createOrder({
@@ -1019,7 +1019,7 @@ export class OrderBook {
           } else {
             response.quantityLeft = response.quantityLeft - headOrder.size
             const canceledOrder = this._cancelOrder(headOrder.id, true)
-            /* c8 ignore next unable to test when order is undefined */
+            /* node:coverage ignore next unable to test when order is undefined */
             if (canceledOrder?.order !== undefined) {
               response.done.push(canceledOrder.order)
             }

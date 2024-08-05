@@ -1,4 +1,5 @@
-import { test } from 'tap'
+import test from 'node:test'
+import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import {
   LimitOrder,
@@ -9,7 +10,7 @@ import {
 import { OrderType, Side, TimeInForce } from '../src/types'
 import { ErrorCodes, ErrorMessages } from '../src/errors'
 
-void test('it should create LimitOrder', ({ equal, same, end }) => {
+void test('it should create LimitOrder', () => {
   const id = 'fakeId'
   const side = Side.BUY
   const type = OrderType.LIMIT
@@ -32,19 +33,19 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
       takerQty: 0
     })
 
-    equal(order instanceof LimitOrder, true)
-    equal(order.id, id)
-    equal(order.type, type)
-    equal(order.side, side)
-    equal(order.size, size)
-    equal(order.origSize, size)
-    equal(order.price, price)
-    equal(order.time, time)
-    equal(order.timeInForce, timeInForce)
-    equal(order.makerQty, size)
-    equal(order.takerQty, 0)
-    equal(order.ocoStopPrice, undefined)
-    same(order.toObject(), {
+    assert.equal(order instanceof LimitOrder, true)
+    assert.equal(order.id, id)
+    assert.equal(order.type, type)
+    assert.equal(order.side, side)
+    assert.equal(order.size, size)
+    assert.equal(order.origSize, size)
+    assert.equal(order.price, price)
+    assert.equal(order.time, time)
+    assert.equal(order.timeInForce, timeInForce)
+    assert.equal(order.makerQty, size)
+    assert.equal(order.takerQty, 0)
+    assert.equal(order.ocoStopPrice, undefined)
+    assert.deepEqual(order.toObject(), {
       id,
       type,
       side,
@@ -56,7 +57,7 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
       makerQty: size,
       takerQty: 0
     })
-    equal(
+    assert.equal(
       order.toString(),
       `${id}:
     type: ${type}
@@ -69,7 +70,7 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
     makerQty: ${size}
     takerQty: 0`
     )
-    equal(
+    assert.equal(
       order.toJSON(),
       JSON.stringify({
         id,
@@ -102,19 +103,19 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
       takerQty: 0,
       ocoStopPrice
     })
-    equal(order instanceof LimitOrder, true)
-    equal(order.id, id)
-    equal(order.type, type)
-    equal(order.side, side)
-    equal(order.size, size)
-    equal(order.origSize, size)
-    equal(order.price, price)
-    equal(order.time, time)
-    equal(order.timeInForce, timeInForce)
-    equal(order.makerQty, size)
-    equal(order.takerQty, 0)
-    equal(order.ocoStopPrice, ocoStopPrice)
-    same(order.toObject(), {
+    assert.equal(order instanceof LimitOrder, true)
+    assert.equal(order.id, id)
+    assert.equal(order.type, type)
+    assert.equal(order.side, side)
+    assert.equal(order.size, size)
+    assert.equal(order.origSize, size)
+    assert.equal(order.price, price)
+    assert.equal(order.time, time)
+    assert.equal(order.timeInForce, timeInForce)
+    assert.equal(order.makerQty, size)
+    assert.equal(order.takerQty, 0)
+    assert.equal(order.ocoStopPrice, ocoStopPrice)
+    assert.deepEqual(order.toObject(), {
       id,
       type,
       side,
@@ -126,7 +127,7 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
       makerQty: size,
       takerQty: 0
     })
-    equal(
+    assert.equal(
       order.toString(),
       `${id}:
     type: ${type}
@@ -139,7 +140,7 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
     makerQty: ${size}
     takerQty: 0`
     )
-    equal(
+    assert.equal(
       order.toJSON(),
       JSON.stringify({
         id,
@@ -155,10 +156,9 @@ void test('it should create LimitOrder', ({ equal, same, end }) => {
       })
     )
   }
-  end()
 })
 
-void test('it should create StopMarketOrder', ({ equal, same, end }) => {
+void test('it should create StopMarketOrder', () => {
   const id = 'fakeId'
   const side = Side.BUY
   const type = OrderType.STOP_MARKET
@@ -174,14 +174,14 @@ void test('it should create StopMarketOrder', ({ equal, same, end }) => {
     stopPrice
   })
 
-  equal(order instanceof StopMarketOrder, true)
-  equal(order.id, id)
-  equal(order.type, type)
-  equal(order.side, side)
-  equal(order.size, size)
-  equal(order.stopPrice, stopPrice)
-  equal(order.time, time)
-  same(order.toObject(), {
+  assert.equal(order instanceof StopMarketOrder, true)
+  assert.equal(order.id, id)
+  assert.equal(order.type, type)
+  assert.equal(order.side, side)
+  assert.equal(order.size, size)
+  assert.equal(order.stopPrice, stopPrice)
+  assert.equal(order.time, time)
+  assert.deepEqual(order.toObject(), {
     id,
     type,
     side,
@@ -189,7 +189,7 @@ void test('it should create StopMarketOrder', ({ equal, same, end }) => {
     stopPrice,
     time
   })
-  equal(
+  assert.equal(
     order.toString(),
     `${id}:
     type: ${type}
@@ -198,7 +198,7 @@ void test('it should create StopMarketOrder', ({ equal, same, end }) => {
     stopPrice: ${stopPrice}
     time: ${time}`
   )
-  equal(
+  assert.equal(
     order.toJSON(),
     JSON.stringify({
       id,
@@ -209,10 +209,9 @@ void test('it should create StopMarketOrder', ({ equal, same, end }) => {
       time
     })
   )
-  end()
 })
 
-void test('it should create StopLimitOrder', ({ equal, same, end }) => {
+void test('it should create StopLimitOrder', () => {
   const id = 'fakeId'
   const side = Side.BUY
   const type = OrderType.STOP_LIMIT
@@ -233,17 +232,17 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
       timeInForce
     })
 
-    equal(order instanceof StopLimitOrder, true)
-    equal(order.id, id)
-    equal(order.type, type)
-    equal(order.side, side)
-    equal(order.size, size)
-    equal(order.price, price)
-    equal(order.stopPrice, stopPrice)
-    equal(order.timeInForce, timeInForce)
-    equal(order.time, time)
-    equal(order.isOCO, false)
-    same(order.toObject(), {
+    assert.equal(order instanceof StopLimitOrder, true)
+    assert.equal(order.id, id)
+    assert.equal(order.type, type)
+    assert.equal(order.side, side)
+    assert.equal(order.size, size)
+    assert.equal(order.price, price)
+    assert.equal(order.stopPrice, stopPrice)
+    assert.equal(order.timeInForce, timeInForce)
+    assert.equal(order.time, time)
+    assert.equal(order.isOCO, false)
+    assert.deepEqual(order.toObject(), {
       id,
       type,
       side,
@@ -253,7 +252,7 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
       timeInForce,
       time
     })
-    equal(
+    assert.equal(
       order.toString(),
       `${id}:
     type: ${type}
@@ -264,7 +263,7 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
     timeInForce: ${timeInForce}
     time: ${time}`
     )
-    equal(
+    assert.equal(
       order.toJSON(),
       JSON.stringify({
         id,
@@ -280,7 +279,7 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
     // Price setter
     const newPrice = 120
     order.price = newPrice
-    equal(order.price, newPrice)
+    assert.equal(order.price, newPrice)
   }
 
   {
@@ -297,17 +296,17 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
       isOCO: true
     })
 
-    equal(order instanceof StopLimitOrder, true)
-    equal(order.id, id)
-    equal(order.type, type)
-    equal(order.side, side)
-    equal(order.size, size)
-    equal(order.price, price)
-    equal(order.stopPrice, stopPrice)
-    equal(order.timeInForce, timeInForce)
-    equal(order.time, time)
-    equal(order.isOCO, true)
-    same(order.toObject(), {
+    assert.equal(order instanceof StopLimitOrder, true)
+    assert.equal(order.id, id)
+    assert.equal(order.type, type)
+    assert.equal(order.side, side)
+    assert.equal(order.size, size)
+    assert.equal(order.price, price)
+    assert.equal(order.stopPrice, stopPrice)
+    assert.equal(order.timeInForce, timeInForce)
+    assert.equal(order.time, time)
+    assert.equal(order.isOCO, true)
+    assert.deepEqual(order.toObject(), {
       id,
       type,
       side,
@@ -317,7 +316,7 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
       timeInForce,
       time
     })
-    equal(
+    assert.equal(
       order.toString(),
       `${id}:
     type: ${type}
@@ -328,7 +327,7 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
     timeInForce: ${timeInForce}
     time: ${time}`
     )
-    equal(
+    assert.equal(
       order.toJSON(),
       JSON.stringify({
         id,
@@ -344,26 +343,20 @@ void test('it should create StopLimitOrder', ({ equal, same, end }) => {
     // Price setter
     const newPrice = 120
     order.price = newPrice
-    equal(order.price, newPrice)
+    assert.equal(order.price, newPrice)
   }
-  end()
 })
 
-void test('it should create order without passing a date or id', ({
-  equal,
-  end,
-  teardown,
-  same
-}) => {
+void test('it should create order without passing a date or id', (t) => {
   const fakeTimestamp = 1487076708000
   const fakeId = 'some-uuid'
   const { now } = Date
   const originalRandomUUID = randomUUID
 
-  teardown(() => (Date.now = now))
+  t.after(() => (Date.now = now))
   // @ts-expect-error cannot assign because is readonly
   // eslint-disable-next-line
-  teardown(() => (randomUUID = originalRandomUUID));
+  t.after(() => (randomUUID = originalRandomUUID));
 
   Date.now = (...m) => fakeTimestamp
   // @ts-expect-error cannot assign because is readonly
@@ -380,9 +373,9 @@ void test('it should create order without passing a date or id', ({
     size,
     stopPrice
   })
-  equal(order.id, fakeId)
-  equal(order.time, fakeTimestamp)
-  same(order.toObject(), {
+  assert.equal(order.id, fakeId)
+  assert.equal(order.time, fakeTimestamp)
+  assert.deepEqual(order.toObject(), {
     id: fakeId,
     type,
     side,
@@ -390,7 +383,7 @@ void test('it should create order without passing a date or id', ({
     stopPrice,
     time: fakeTimestamp
   })
-  equal(
+  assert.equal(
     order.toString(),
     `${fakeId}:
     type: ${type}
@@ -400,7 +393,7 @@ void test('it should create order without passing a date or id', ({
     time: ${fakeTimestamp}`
   )
 
-  equal(
+  assert.equal(
     order.toJSON(),
     JSON.stringify({
       id: fakeId,
@@ -411,10 +404,9 @@ void test('it should create order without passing a date or id', ({
       time: fakeTimestamp
     })
   )
-  end()
 })
 
-void test('test orders setters', (t) => {
+void test('test orders setters', () => {
   const type = OrderType.LIMIT
   const id = 'fakeId'
   const side = Side.BUY
@@ -438,25 +430,23 @@ void test('test orders setters', (t) => {
   // Price setter
   const newPrice = 300
   order.price = newPrice
-  t.equal(order.price, newPrice)
+  assert.equal(order.price, newPrice)
 
   // Size setter
   const newSize = 40
   order.size = newSize
-  t.equal(order.size, newSize)
+  assert.equal(order.size, newSize)
 
   // Time setter
   const newTime = Date.now()
   order.time = newTime
-  t.equal(order.time, newTime)
+  assert.equal(order.time, newTime)
 
   // Original size should not be changed
-  t.equal(order.origSize, size)
-
-  t.end()
+  assert.equal(order.origSize, size)
 })
 
-void test('test invalid order type', (t) => {
+void test('test invalid order type', () => {
   try {
     const id = 'fakeId'
     const side = Side.BUY
@@ -476,8 +466,7 @@ void test('test invalid order type', (t) => {
       timeInForce
     })
   } catch (error) {
-    t.equal(error?.message, ErrorMessages.INVALID_ORDER_TYPE)
-    t.equal(error?.code, ErrorCodes.INVALID_ORDER_TYPE)
+    assert.equal(error?.message, ErrorMessages.INVALID_ORDER_TYPE)
+    assert.equal(error?.code, ErrorCodes.INVALID_ORDER_TYPE)
   }
-  t.end()
 })

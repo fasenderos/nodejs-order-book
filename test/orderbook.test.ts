@@ -1,4 +1,5 @@
-import { test } from 'tap'
+import test from 'node:test'
+import assert from 'node:assert/strict'
 import { OrderBook } from '../src/orderbook'
 import { ERROR, ErrorCodes, ErrorMessages } from '../src/errors'
 import {
@@ -38,16 +39,15 @@ const addDepth = (
 }
 
 // First test the addDepth function used by all the other test
-void test('test addDepth testing function', ({ equal, end }) => {
+void test('test addDepth testing function', () => {
   const ob = new OrderBook()
   addDepth(ob, '', 10)
-  equal(
+  assert.equal(
     ob.toString(),
     '\n140 -> 10\n130 -> 10\n120 -> 10\n110 -> 10\n100 -> 10\r\n------------------------------------\n90 -> 10\n80 -> 10\n70 -> 10\n60 -> 10\n50 -> 10'
   )
-  end()
 })
-void test('test limit place', ({ equal, end }) => {
+void test('test limit place', () => {
   const ob = new OrderBook()
   const size = 2
   for (let index = 50; index < 100; index += 10) {
@@ -57,10 +57,10 @@ void test('test limit place', ({ equal, end }) => {
       size,
       price: index
     })
-    equal(done.length, 0)
-    equal(partial === null, true)
-    equal(partialQuantityProcessed, 0)
-    equal(err === null, true)
+    assert.equal(done.length, 0)
+    assert.equal(partial === null, true)
+    assert.equal(partialQuantityProcessed, 0)
+    assert.equal(err === null, true)
   }
 
   for (let index = 100; index < 150; index += 10) {
@@ -70,68 +70,67 @@ void test('test limit place', ({ equal, end }) => {
       size,
       price: index
     })
-    equal(done.length, 0)
-    equal(partial === null, true)
-    equal(partialQuantityProcessed, 0)
-    equal(err === null, true)
+    assert.equal(done.length, 0)
+    assert.equal(partial === null, true)
+    assert.equal(partialQuantityProcessed, 0)
+    assert.equal(err === null, true)
   }
 
-  equal(ob.order('fake') === undefined, true)
-  equal(ob.order('sell-100') instanceof LimitOrder, true)
+  assert.equal(ob.order('fake') === undefined, true)
+  assert.equal(ob.order('sell-100') instanceof LimitOrder, true)
 
   const depth = ob.depth()
 
   depth.forEach((side, index) => {
     side.forEach((level, subIndex) => {
-      equal(level[1], 2)
+      assert.equal(level[1], 2)
       const price = index === 0 ? 100 + 10 * subIndex : 90 - 10 * subIndex
-      equal(level[0], price)
+      assert.equal(level[0], price)
     })
   })
-  end()
 })
 
-void test('test limit', ({ equal, end }) => {
+void test('test limit', () => {
   const ob = new OrderBook()
 
   addDepth(ob, '', 2)
-  equal(ob.marketPrice, 0)
+  assert.equal(ob.marketPrice, 0)
   const process1 =
     // { done, partial, partialQuantityProcessed, quantityLeft, err }
     ob.limit({ side: Side.BUY, id: 'order-b100', size: 1, price: 100 })
 
-  equal(ob.marketPrice, 100)
-  equal(process1.err === null, true)
-  equal(process1.done[0].id, 'order-b100')
-  equal((process1.done[0] as LimitOrder).makerQty, 0)
-  equal((process1.done[0] as LimitOrder).takerQty, 1)
-  equal((process1.done[0] as LimitOrder).makerQty + (process1.done[0] as LimitOrder).takerQty, (process1.done[0] as LimitOrder).origSize)
+  assert.equal(ob.marketPrice, 100)
+  assert.equal(process1.err === null, true)
+  assert.equal(process1.done[0].id, 'order-b100')
+  assert.equal((process1.done[0] as LimitOrder).makerQty, 0)
+  assert.equal((process1.done[0] as LimitOrder).takerQty, 1)
+  assert.equal((process1.done[0] as LimitOrder).makerQty + (process1.done[0] as LimitOrder).takerQty, (process1.done[0] as LimitOrder).origSize)
 
-  equal(process1.partial?.id, 'sell-100')
-  equal(process1.partial?.origSize, 2)
-  equal(process1.partial?.size, 1)
-  equal(process1.partial?.takerQty, 0)
-  equal(process1.partial?.makerQty, 2)
-  equal(process1.partialQuantityProcessed, 1)
-  equal(process1.quantityLeft, 0)
-  equal(process1.partialQuantityProcessed + process1.quantityLeft, (process1.done[0] as LimitOrder).origSize)
+  assert.equal(process1.partial?.id, 'sell-100')
+  assert.equal(process1.partial?.origSize, 2)
+  assert.equal(process1.partial?.size, 1)
+  assert.equal(process1.partial?.takerQty, 0)
+  assert.equal(process1.partial?.makerQty, 2)
+  assert.equal(process1.partialQuantityProcessed, 1)
+  assert.equal(process1.quantityLeft, 0)
+  assert.equal(process1.partialQuantityProcessed + process1.quantityLeft, (process1.done[0] as LimitOrder).origSize)
 
   const process2 =
     // { done, partial, partialQuantityProcessed, quantityLeft, err } =
     ob.limit({ side: Side.BUY, id: 'order-b150', size: 10, price: 150 })
-  equal(process2.err === null, true)
-  equal(process2.done.length, 5)
-  equal(process2.partial?.id, 'order-b150')
-  equal((process2.partial as LimitOrder)?.origSize, 10)
-  equal((process2.partial as LimitOrder)?.size, 1)
-  equal((process2.partial as LimitOrder)?.takerQty, 9)
-  equal((process2.partial as LimitOrder)?.makerQty, 1)
-  equal(
-    (process2.partial as LimitOrder)?.takerQty + (process2.partial as LimitOrder)?.makerQty, (process2.partial as LimitOrder)?.origSize
+  assert.equal(process2.err === null, true)
+  assert.equal(process2.done.length, 5)
+  assert.equal(process2.partial?.id, 'order-b150')
+  assert.equal((process2.partial)?.origSize, 10)
+  assert.equal((process2.partial)?.size, 1)
+  assert.equal((process2.partial)?.takerQty, 9)
+  assert.equal((process2.partial)?.makerQty, 1)
+  assert.equal(
+    (process2.partial)?.takerQty + (process2.partial)?.makerQty, (process2.partial)?.origSize
   )
-  equal(process2.partialQuantityProcessed, 9)
-  equal(process2.quantityLeft, 1)
-  equal(process2.partialQuantityProcessed + process2.quantityLeft, (process2.partial as LimitOrder)?.origSize)
+  assert.equal(process2.partialQuantityProcessed, 9)
+  assert.equal(process2.quantityLeft, 1)
+  assert.equal(process2.partialQuantityProcessed + process2.quantityLeft, (process2.partial)?.origSize)
 
   const process3 = ob.limit({
     side: Side.SELL,
@@ -139,8 +138,8 @@ void test('test limit', ({ equal, end }) => {
     size: 11,
     price: 40
   })
-  equal(process3.err?.message, ErrorMessages.ORDER_ALREDY_EXISTS)
-  equal(process3.err?.code, ErrorCodes.ORDER_ALREDY_EXISTS)
+  assert.equal(process3.err?.message, ErrorMessages.ORDER_ALREDY_EXISTS)
+  assert.equal(process3.err?.code, ErrorCodes.ORDER_ALREDY_EXISTS)
 
   const process4 = ob.limit({
     side: Side.SELL,
@@ -148,8 +147,8 @@ void test('test limit', ({ equal, end }) => {
     size: 0,
     price: 40
   })
-  equal(process4.err?.message, ErrorMessages.INVALID_QUANTITY)
-  equal(process4.err?.code, ErrorCodes.INVALID_QUANTITY)
+  assert.equal(process4.err?.message, ErrorMessages.INVALID_QUANTITY)
+  assert.equal(process4.err?.code, ErrorCodes.INVALID_QUANTITY)
 
   const process5 = ob.limit({
     // @ts-expect-error invalid side
@@ -158,11 +157,11 @@ void test('test limit', ({ equal, end }) => {
     size: 70,
     price: 100
   })
-  equal(process5.err?.message, ErrorMessages.INVALID_SIDE)
-  equal(process5.err?.code, ErrorCodes.INVALID_SIDE)
+  assert.equal(process5.err?.message, ErrorMessages.INVALID_SIDE)
+  assert.equal(process5.err?.code, ErrorCodes.INVALID_SIDE)
 
   const removed = ob.cancel('order-b100')
-  equal(removed === undefined, true)
+  assert.equal(removed === undefined, true)
   // Test also the createOrder method
   const process6 = ob.createOrder({
     type: OrderType.LIMIT,
@@ -172,11 +171,11 @@ void test('test limit', ({ equal, end }) => {
     id: 'order-s40',
     timeInForce: TimeInForce.GTC
   })
-  equal(ob.marketPrice, 50)
-  equal(process6.err === null, true)
-  equal(process6.done.length, 7)
-  equal(process6.partial === null, true)
-  equal(process6.partialQuantityProcessed, 0)
+  assert.equal(ob.marketPrice, 50)
+  assert.equal(process6.err === null, true)
+  assert.equal(process6.done.length, 7)
+  assert.equal(process6.partial === null, true)
+  assert.equal(process6.partialQuantityProcessed, 0)
 
   const process7 = ob.limit({
     side: Side.SELL,
@@ -185,8 +184,8 @@ void test('test limit', ({ equal, end }) => {
     size: '0',
     price: 40
   })
-  equal(process7.err?.message, ErrorMessages.INVALID_QUANTITY)
-  equal(process7.err?.code, ErrorCodes.INVALID_QUANTITY)
+  assert.equal(process7.err?.message, ErrorMessages.INVALID_QUANTITY)
+  assert.equal(process7.err?.code, ErrorCodes.INVALID_QUANTITY)
 
   const process8 = ob.limit({
     side: Side.SELL,
@@ -195,8 +194,8 @@ void test('test limit', ({ equal, end }) => {
     size: null,
     price: 40
   })
-  equal(process8.err?.message, ErrorMessages.INVALID_QUANTITY)
-  equal(process8.err?.code, ErrorCodes.INVALID_QUANTITY)
+  assert.equal(process8.err?.message, ErrorMessages.INVALID_QUANTITY)
+  assert.equal(process8.err?.code, ErrorCodes.INVALID_QUANTITY)
 
   const process9 = ob.limit({
     side: Side.SELL,
@@ -205,8 +204,8 @@ void test('test limit', ({ equal, end }) => {
     // @ts-expect-error price must be a number
     price: '40'
   })
-  equal(process9.err?.message, ErrorMessages.INVALID_PRICE)
-  equal(process9.err?.code, ErrorCodes.INVALID_PRICE)
+  assert.equal(process9.err?.message, ErrorMessages.INVALID_PRICE)
+  assert.equal(process9.err?.code, ErrorCodes.INVALID_PRICE)
 
   // @ts-expect-error missing price
   const process10 = ob.limit({
@@ -214,8 +213,8 @@ void test('test limit', ({ equal, end }) => {
     id: 'fake-without-price',
     size: 10
   })
-  equal(process10.err?.message, ErrorMessages.INVALID_PRICE)
-  equal(process10.err?.code, ErrorCodes.INVALID_PRICE)
+  assert.equal(process10.err?.message, ErrorMessages.INVALID_PRICE)
+  assert.equal(process10.err?.code, ErrorCodes.INVALID_PRICE)
 
   const process11 = ob.limit({
     side: Side.SELL,
@@ -225,31 +224,27 @@ void test('test limit', ({ equal, end }) => {
     // @ts-expect-error invalid time in force
     timeInForce: 'FAKE'
   })
-  equal(process11.err?.message, ErrorMessages.INVALID_TIF)
-  equal(process11.err?.code, ErrorCodes.INVALID_TIF)
-
-  end()
+  assert.equal(process11.err?.message, ErrorMessages.INVALID_TIF)
+  assert.equal(process11.err?.code, ErrorCodes.INVALID_TIF)
 })
 
-void test('test limit with postOnly', ({ equal, end }) => {
+void test('test limit with postOnly', () => {
   const ob = new OrderBook()
 
   addDepth(ob, '', 2)
-  equal(ob.marketPrice, 0)
+  assert.equal(ob.marketPrice, 0)
   const process1 = ob.limit({ side: Side.BUY, id: 'order-b90', size: 2, price: 90, postOnly: true })
-  equal(process1.err, null)
-  equal(process1.quantityLeft, 2)
+  assert.equal(process1.err, null)
+  assert.equal(process1.quantityLeft, 2)
 
   const process2 = ob.limit({ side: Side.BUY, id: 'order-b100', size: 3, price: 100, postOnly: true })
-  equal(process2.err?.message, ErrorMessages.LIMIT_ORDER_POST_ONLY)
-  equal(process2.err?.code, ErrorCodes.LIMIT_ORDER_POST_ONLY)
+  assert.equal(process2.err?.message, ErrorMessages.LIMIT_ORDER_POST_ONLY)
+  assert.equal(process2.err?.code, ErrorCodes.LIMIT_ORDER_POST_ONLY)
 
-  equal(process2.quantityLeft, 3)
-
-  end()
+  assert.equal(process2.quantityLeft, 3)
 })
 
-void test('test limit FOK and IOC', ({ equal, end }) => {
+void test('test limit FOK and IOC', () => {
   const ob = new OrderBook()
   addDepth(ob, '', 2)
   const process1 = ob.limit({
@@ -259,8 +254,8 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     price: 100,
     timeInForce: TimeInForce.FOK
   })
-  equal(process1.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
-  equal(process1.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  assert.equal(process1.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  assert.equal(process1.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
 
   const process2 = ob.limit({
     side: Side.SELL,
@@ -269,8 +264,8 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     price: 90,
     timeInForce: TimeInForce.FOK
   })
-  equal(process2.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
-  equal(process2.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  assert.equal(process2.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  assert.equal(process2.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
 
   const process3 = ob.limit({
     side: Side.BUY,
@@ -279,8 +274,8 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     price: 100,
     timeInForce: TimeInForce.FOK
   })
-  equal(process3.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
-  equal(process3.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  assert.equal(process3.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  assert.equal(process3.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
 
   const process4 = ob.limit({
     side: Side.SELL,
@@ -289,8 +284,8 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     price: 90,
     timeInForce: TimeInForce.FOK
   })
-  equal(process4.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
-  equal(process4.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  assert.equal(process4.err?.message, ErrorMessages.LIMIT_ORDER_FOK_NOT_FILLABLE)
+  assert.equal(process4.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE)
 
   ob.limit({
     side: Side.BUY,
@@ -299,7 +294,7 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     price: 100,
     timeInForce: TimeInForce.IOC
   })
-  equal(ob.order('order-ioc-b100') === undefined, true)
+  assert.equal(ob.order('order-ioc-b100') === undefined, true)
 
   const processIOC = ob.limit({
     side: Side.SELL,
@@ -308,8 +303,8 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     price: 90,
     timeInForce: TimeInForce.IOC
   })
-  equal(ob.order('order-ioc-s90') === undefined, true)
-  equal(processIOC.partial?.id, 'order-ioc-s90')
+  assert.equal(ob.order('order-ioc-s90') === undefined, true)
+  assert.equal(processIOC.partial?.id, 'order-ioc-s90')
 
   const processFOKBuy = ob.limit({
     side: Side.BUY,
@@ -319,8 +314,8 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     timeInForce: TimeInForce.FOK
   })
 
-  equal(processFOKBuy.err === null, true)
-  equal(processFOKBuy.quantityLeft, 0)
+  assert.equal(processFOKBuy.err === null, true)
+  assert.equal(processFOKBuy.quantityLeft, 0)
 
   const processFOKSell = ob.limit({
     side: Side.SELL,
@@ -329,12 +324,11 @@ void test('test limit FOK and IOC', ({ equal, end }) => {
     price: 70,
     timeInForce: TimeInForce.FOK
   })
-  equal(processFOKSell.err === null, true)
-  equal(processFOKSell.quantityLeft, 0)
-  end()
+  assert.equal(processFOKSell.err === null, true)
+  assert.equal(processFOKSell.quantityLeft, 0)
 })
 
-void test('test market', ({ equal, end }) => {
+void test('test market', () => {
   const ob = new OrderBook()
 
   addDepth(ob, '', 2)
@@ -343,40 +337,38 @@ void test('test market', ({ equal, end }) => {
     // { done, partial, partialQuantityProcessed, quantityLeft, err }
     ob.market({ side: Side.BUY, size: 3 })
 
-  equal(process1.err === null, true)
-  equal(process1.quantityLeft, 0)
-  equal(process1.partialQuantityProcessed, 1)
+  assert.equal(process1.err === null, true)
+  assert.equal(process1.quantityLeft, 0)
+  assert.equal(process1.partialQuantityProcessed, 1)
 
   // Test also the createOrder method
   const process3 =
     // { done, partial, partialQuantityProcessed, quantityLeft, err } =
     ob.createOrder({ type: OrderType.MARKET, side: Side.SELL, size: 12 })
 
-  equal(process3.done.length, 5)
-  equal(process3.err === null, true)
-  equal(process3.partial === null, true)
-  equal(process3.partialQuantityProcessed, 0)
-  equal(process3.quantityLeft, 2)
+  assert.equal(process3.done.length, 5)
+  assert.equal(process3.err === null, true)
+  assert.equal(process3.partial === null, true)
+  assert.equal(process3.partialQuantityProcessed, 0)
+  assert.equal(process3.quantityLeft, 2)
 
   // @ts-expect-error size must be a number
   const process4 = ob.market({ side: Side.SELL, size: '0' })
-  equal(process4.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
-  equal(process4.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
+  assert.equal(process4.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
+  assert.equal(process4.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
 
   // @ts-expect-error missing size
   const process5 = ob.market({ side: Side.SELL })
-  equal(process5.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
-  equal(process5.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
+  assert.equal(process5.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
+  assert.equal(process5.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
 
   // @ts-expect-error invalid side
   const process6 = ob.market({ side: 'unsupported-side', size: 100 })
-  equal(process6.err?.message, ErrorMessages.INVALID_SIDE)
-  equal(process6.err?.code, ErrorCodes.INVALID_SIDE)
-
-  end()
+  assert.equal(process6.err?.message, ErrorMessages.INVALID_SIDE)
+  assert.equal(process6.err?.code, ErrorCodes.INVALID_SIDE)
 })
 
-void test('createOrder error', ({ equal, end }) => {
+void test('createOrder error', () => {
   const ob = new OrderBook()
   addDepth(ob, '', 2)
   const result = ob.createOrder({
@@ -385,8 +377,8 @@ void test('createOrder error', ({ equal, end }) => {
     side: Side.SELL,
     size: 10
   })
-  equal(result.err?.message, ErrorMessages.INVALID_ORDER_TYPE)
-  equal(result.err?.code, ErrorCodes.INVALID_ORDER_TYPE)
+  assert.equal(result.err?.message, ErrorMessages.INVALID_ORDER_TYPE)
+  assert.equal(result.err?.code, ErrorCodes.INVALID_ORDER_TYPE)
 
   // Added for testing with default timeOnForce when not provided
   const process1 = ob.createOrder({
@@ -396,12 +388,11 @@ void test('createOrder error', ({ equal, end }) => {
     size: 1,
     price: 90
   })
-  equal(process1.done.length, 0)
-  equal(process1.partial, null)
-  equal(process1.partialQuantityProcessed, 0)
-  equal(process1.quantityLeft, 1)
-  equal(process1.err, null)
-  end()
+  assert.equal(process1.done.length, 0)
+  assert.equal(process1.partial, null)
+  assert.equal(process1.partialQuantityProcessed, 0)
+  assert.equal(process1.quantityLeft, 1)
+  assert.equal(process1.err, null)
 })
 
 /**
@@ -409,14 +400,14 @@ void test('createOrder error', ({ equal, end }) => {
  *    Buy: marketPrice < stopPrice
  *    Sell: marketPrice > stopPrice
  */
-void test('test stop_market order', ({ equal, end }) => {
+void test('test stop_market order', () => {
   const ob = new OrderBook({ experimentalConditionalOrders: true })
 
   addDepth(ob, '', 2)
   // We need to create at least on maket order in order to set
   // the market price
   ob.market({ side: Side.BUY, size: 3 })
-  equal(ob.marketPrice, 110)
+  assert.equal(ob.marketPrice, 110)
 
   {
     // Test stop market BUY wrong stopPrice
@@ -425,25 +416,25 @@ void test('test stop_market order', ({ equal, end }) => {
       size: 1,
       stopPrice: ob.marketPrice - 10
     }) // Below market price
-    equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
-    equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongStopPrice2 = ob.stopMarket({
       side: Side.BUY,
       size: 1,
       stopPrice: ob.marketPrice
     }) // Same as market price
-    equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
-    equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongOtherOrderOption1 = ob.stopMarket({
       // @ts-expect-error invalid side
       side: 'wrong-side',
       size: 1
     })
-    equal(wrongOtherOrderOption1.err != null, true)
+    assert.equal(wrongOtherOrderOption1.err != null, true)
 
     // @ts-expect-error size must be greather than 0
     const wrongOtherOrderOption2 = ob.stopMarket({ side: Side.BUY, size: 0 })
-    equal(wrongOtherOrderOption2.err != null, true)
+    assert.equal(wrongOtherOrderOption2.err != null, true)
 
     // Add a stop market BUY order
     const beforeMarketPrice = ob.marketPrice
@@ -452,20 +443,20 @@ void test('test stop_market order', ({ equal, end }) => {
     const stopMarketBuy = ob.stopMarket({ side: Side.BUY, size, stopPrice })
 
     // Market price should be the same as before
-    equal(ob.marketPrice, beforeMarketPrice)
-    equal(stopMarketBuy.done[0] instanceof StopMarketOrder, true)
-    equal(stopMarketBuy.quantityLeft, size)
-    equal(stopMarketBuy.err, null)
+    assert.equal(ob.marketPrice, beforeMarketPrice)
+    assert.equal(stopMarketBuy.done[0] instanceof StopMarketOrder, true)
+    assert.equal(stopMarketBuy.quantityLeft, size)
+    assert.equal(stopMarketBuy.err, null)
     const stopOrder = stopMarketBuy.done[0].toObject() as StopMarketOrder
-    equal(stopOrder.stopPrice, stopPrice)
+    assert.equal(stopOrder.stopPrice, stopPrice)
 
     // Create a market order that activate the stop order
     const resp = ob.market({ side: Side.BUY, size: 2 })
-    equal(resp.activated[0] instanceof StopMarketOrder, true)
-    equal(resp.activated[0].id, stopOrder.id)
-    equal(resp.done.length, 2)
-    equal(resp.partial, null)
-    equal(resp.err, null)
+    assert.equal(resp.activated[0] instanceof StopMarketOrder, true)
+    assert.equal(resp.activated[0].id, stopOrder.id)
+    assert.equal(resp.done.length, 2)
+    assert.equal(resp.partial, null)
+    assert.equal(resp.err, null)
   }
 
   {
@@ -476,15 +467,15 @@ void test('test stop_market order', ({ equal, end }) => {
       size: 1,
       stopPrice: ob.marketPrice + 10
     }) // Above market price
-    equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
-    equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongStopPrice2 = ob.stopMarket({
       side: Side.SELL,
       size: 1,
       stopPrice: ob.marketPrice
     }) // Same as market price
-    equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
-    equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
 
     // Add a stop market SELL order
     const beforeMarketPrice = ob.marketPrice
@@ -497,20 +488,20 @@ void test('test stop_market order', ({ equal, end }) => {
     })
 
     // Market price should be the same as before
-    equal(ob.marketPrice, beforeMarketPrice)
-    equal(stopMarketSell.done[0] instanceof StopMarketOrder, true)
-    equal(stopMarketSell.quantityLeft, size)
-    equal(stopMarketSell.err, null)
+    assert.equal(ob.marketPrice, beforeMarketPrice)
+    assert.equal(stopMarketSell.done[0] instanceof StopMarketOrder, true)
+    assert.equal(stopMarketSell.quantityLeft, size)
+    assert.equal(stopMarketSell.err, null)
     const stopOrder = stopMarketSell.done[0].toObject() as StopMarketOrder
-    equal(stopOrder.stopPrice, stopPrice)
+    assert.equal(stopOrder.stopPrice, stopPrice)
 
     // Create a market order that activate the stop order
     const resp = ob.market({ side: Side.SELL, size: 2 })
-    equal(resp.activated[0] instanceof StopMarketOrder, true)
-    equal(resp.activated[0].id, stopOrder.id)
-    equal(resp.done.length, 2)
-    equal(resp.partial, null)
-    equal(resp.err, null)
+    assert.equal(resp.activated[0] instanceof StopMarketOrder, true)
+    assert.equal(resp.activated[0].id, stopOrder.id)
+    assert.equal(resp.done.length, 2)
+    assert.equal(resp.partial, null)
+    assert.equal(resp.err, null)
   }
 
   {
@@ -521,12 +512,10 @@ void test('test stop_market order', ({ equal, end }) => {
       size: 2,
       stopPrice: ob.marketPrice - 10
     })
-    equal(stopOrder.done[0] instanceof StopMarketOrder, true)
-    equal(stopOrder.err, null)
-    equal(stopOrder.quantityLeft, 2)
+    assert.equal(stopOrder.done[0] instanceof StopMarketOrder, true)
+    assert.equal(stopOrder.err, null)
+    assert.equal(stopOrder.quantityLeft, 2)
   }
-
-  end()
 })
 
 /**
@@ -534,14 +523,14 @@ void test('test stop_market order', ({ equal, end }) => {
  *    Buy: marketPrice < stopPrice <= price
  *    Sell: marketPrice > stopPrice >= price
  */
-void test('test stop_limit order', ({ equal, end }) => {
+void test('test stop_limit order', () => {
   const ob = new OrderBook({ experimentalConditionalOrders: true })
 
   addDepth(ob, '', 2)
   // We need to create at least on maket order in order to set
   // the market price
   ob.market({ side: Side.BUY, size: 3 })
-  equal(ob.marketPrice, 110)
+  assert.equal(ob.marketPrice, 110)
 
   {
     // Test stop limit BUY wrong stopPrice
@@ -552,8 +541,8 @@ void test('test stop_limit order', ({ equal, end }) => {
       stopPrice: ob.marketPrice - 10, // Below market price
       price: ob.marketPrice
     })
-    equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
-    equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongStopPrice2 = ob.stopLimit({
       id: 'fake-id',
       side: Side.BUY,
@@ -561,15 +550,15 @@ void test('test stop_limit order', ({ equal, end }) => {
       stopPrice: ob.marketPrice,
       price: ob.marketPrice
     }) // Same as market price
-    equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
-    equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongOtherOrderOption1 = ob.stopLimit({
       // @ts-expect-error invalid side
       side: 'wrong-side',
       size: 1,
       price: 10
     })
-    equal(wrongOtherOrderOption1.err != null, true)
+    assert.equal(wrongOtherOrderOption1.err != null, true)
 
     // @ts-expect-error size must be greather than 0
     const wrongOtherOrderOption2 = ob.stopLimit({
@@ -577,7 +566,7 @@ void test('test stop_limit order', ({ equal, end }) => {
       size: 0,
       price: 10
     })
-    equal(wrongOtherOrderOption2.err != null, true)
+    assert.equal(wrongOtherOrderOption2.err != null, true)
 
     // @ts-expect-error price must be greather than 0
     const wrongOtherOrderOption3 = ob.stopLimit({
@@ -585,7 +574,7 @@ void test('test stop_limit order', ({ equal, end }) => {
       size: 1,
       price: 0
     })
-    equal(wrongOtherOrderOption3.err != null, true)
+    assert.equal(wrongOtherOrderOption3.err != null, true)
 
     // Add a stop limit BUY order
     const beforeMarketPrice = ob.marketPrice
@@ -602,24 +591,24 @@ void test('test stop_limit order', ({ equal, end }) => {
     })
 
     // Market price should be the same as before
-    equal(ob.marketPrice, beforeMarketPrice)
-    equal(stopLimitBuy.done[0] instanceof StopLimitOrder, true)
-    equal(stopLimitBuy.quantityLeft, size)
-    equal(stopLimitBuy.err, null)
+    assert.equal(ob.marketPrice, beforeMarketPrice)
+    assert.equal(stopLimitBuy.done[0] instanceof StopLimitOrder, true)
+    assert.equal(stopLimitBuy.quantityLeft, size)
+    assert.equal(stopLimitBuy.err, null)
     const stopOrder = stopLimitBuy.done[0].toObject() as StopLimitOrder
-    equal(stopOrder.stopPrice, stopPrice)
-    equal(stopOrder.price, price)
-    equal(stopOrder.timeInForce, TimeInForce.IOC)
+    assert.equal(stopOrder.stopPrice, stopPrice)
+    assert.equal(stopOrder.price, price)
+    assert.equal(stopOrder.timeInForce, TimeInForce.IOC)
 
     // Create a market order that activate the stop order
     const resp = ob.market({ side: Side.BUY, size: 6 })
-    equal(resp.activated[0] instanceof StopLimitOrder, true)
-    equal(resp.activated[0].id, stopOrder.id)
-    equal(resp.done.length, 3)
+    assert.equal(resp.activated[0] instanceof StopLimitOrder, true)
+    assert.equal(resp.activated[0].id, stopOrder.id)
+    assert.equal(resp.done.length, 3)
     // The stop order becomes a LimitOrder
-    equal(resp.partial instanceof LimitOrder, true)
-    equal(resp.partial?.id, stopOrder.id)
-    equal(resp.err, null)
+    assert.equal(resp.partial instanceof LimitOrder, true)
+    assert.equal(resp.partial?.id, stopOrder.id)
+    assert.equal(resp.err, null)
   }
 
   // addDepth(ob, 'second-run-', 2)
@@ -634,8 +623,8 @@ void test('test stop_limit order', ({ equal, end }) => {
       stopPrice: ob.marketPrice + 10, // Above market price
       price: ob.marketPrice
     })
-    equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
-    equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
     const wrongStopPrice2 = ob.stopLimit({
       id: 'fake-id',
       side: Side.SELL,
@@ -643,8 +632,8 @@ void test('test stop_limit order', ({ equal, end }) => {
       stopPrice: ob.marketPrice,
       price: ob.marketPrice
     }) // Same as market price
-    equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
-    equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice2.err?.message, ErrorMessages.INVALID_CONDITIONAL_ORDER)
+    assert.equal(wrongStopPrice2.err?.code, ErrorCodes.INVALID_CONDITIONAL_ORDER)
 
     // Add a stop limit BUY order
     const beforeMarketPrice = ob.marketPrice
@@ -660,24 +649,24 @@ void test('test stop_limit order', ({ equal, end }) => {
     })
 
     // Market price should be the same as before
-    equal(ob.marketPrice, beforeMarketPrice)
-    equal(stopLimitSell.done[0] instanceof StopLimitOrder, true)
-    equal(stopLimitSell.quantityLeft, size)
-    equal(stopLimitSell.err, null)
+    assert.equal(ob.marketPrice, beforeMarketPrice)
+    assert.equal(stopLimitSell.done[0] instanceof StopLimitOrder, true)
+    assert.equal(stopLimitSell.quantityLeft, size)
+    assert.equal(stopLimitSell.err, null)
     const stopOrder = stopLimitSell.done[0].toObject() as StopLimitOrder
-    equal(stopOrder.stopPrice, stopPrice)
-    equal(stopOrder.price, price)
-    equal(stopOrder.timeInForce, TimeInForce.GTC)
+    assert.equal(stopOrder.stopPrice, stopPrice)
+    assert.equal(stopOrder.price, price)
+    assert.equal(stopOrder.timeInForce, TimeInForce.GTC)
 
     // Create a market order that activate the stop order
     const resp = ob.market({ side: Side.SELL, size: 6 })
-    equal(resp.activated[0] instanceof StopLimitOrder, true)
-    equal(resp.activated[0].id, stopOrder.id)
-    equal(resp.done.length, 3)
+    assert.equal(resp.activated[0] instanceof StopLimitOrder, true)
+    assert.equal(resp.activated[0].id, stopOrder.id)
+    assert.equal(resp.done.length, 3)
     // The stop order becomes a LimitOrder
-    equal(resp.partial instanceof LimitOrder, true)
-    equal(resp.partial?.id, stopOrder.id)
-    equal(resp.err, null)
+    assert.equal(resp.partial instanceof LimitOrder, true)
+    assert.equal(resp.partial?.id, stopOrder.id)
+    assert.equal(resp.err, null)
   }
 
   {
@@ -690,12 +679,10 @@ void test('test stop_limit order', ({ equal, end }) => {
       stopPrice: ob.marketPrice - 10,
       price: ob.marketPrice - 10
     })
-    equal(stopOrder.done[0] instanceof StopLimitOrder, true)
-    equal(stopOrder.err, null)
-    equal(stopOrder.quantityLeft, 2)
+    assert.equal(stopOrder.done[0] instanceof StopLimitOrder, true)
+    assert.equal(stopOrder.err, null)
+    assert.equal(stopOrder.quantityLeft, 2)
   }
-
-  end()
 })
 
 /**
@@ -703,14 +690,14 @@ void test('test stop_limit order', ({ equal, end }) => {
  *    Buy: price < marketPrice < stopPrice
  *    Sell: price > marketPrice > stopPrice
  */
-void test('test oco order', ({ equal, same, end }) => {
+void test('test oco order', () => {
   const ob = new OrderBook({ experimentalConditionalOrders: true })
 
   addDepth(ob, '', 2)
   // We need to create at least on maket order in order to set
   // the market price
   ob.market({ side: Side.BUY, size: 3, id: 'some-fake-order' })
-  equal(ob.marketPrice, 110)
+  assert.equal(ob.marketPrice, 110)
 
   const validate = (
     orderId: string,
@@ -732,7 +719,8 @@ void test('test oco order', ({ equal, same, end }) => {
     if (typeof expect === 'function') {
       expect(order)
     } else {
-      same(order.err, { code: ErrorCodes[expect], message: ErrorMessages[expect] })
+      assert.equal(order.err?.message, ErrorMessages[expect])
+      assert.equal(order.err?.code, ErrorCodes[expect])
     }
   }
 
@@ -760,30 +748,30 @@ void test('test oco order', ({ equal, same, end }) => {
   // valid OCO with limit to 100 and stopLimit to 120
   validate('oco-buy-1', Side.BUY, 100, 120, 121, (response) => {
     const order = response.done[0] as StopLimitOrder
-    equal(order instanceof StopLimitOrder, true)
-    equal(order.stopPrice === 120, true)
-    equal(order.price === 121, true)
-    equal(order.isOCO, true)
+    assert.equal(order instanceof StopLimitOrder, true)
+    assert.equal(order.stopPrice === 120, true)
+    assert.equal(order.price === 121, true)
+    assert.equal(order.isOCO, true)
     // The limit oco must be the only one inserted in the price level 100
     // @ts-expect-error bids is private
-    equal(ob.bids.maxPriceQueue()?.price(), 100)
+    assert.equal(ob.bids.maxPriceQueue()?.price(), 100)
     // @ts-expect-error bids is private
-    equal(ob.bids.maxPriceQueue()?.tail()?.id, 'oco-buy-1')
+    assert.equal(ob.bids.maxPriceQueue()?.tail()?.id, 'oco-buy-1')
   })
 
   // Here marketPrice is 110, lowest sell is 110 and highest buy is 90
   // valid OCO with limit to 100 and stopLimit to 120
   validate('oco-buy-2', Side.BUY, 100, 120, 121, (response) => {
     const order = response.done[0] as StopLimitOrder
-    equal(order instanceof StopLimitOrder, true)
-    equal(order.stopPrice === 120, true)
-    equal(order.price === 121, true)
-    equal(order.isOCO, true)
+    assert.equal(order instanceof StopLimitOrder, true)
+    assert.equal(order.stopPrice === 120, true)
+    assert.equal(order.price === 121, true)
+    assert.equal(order.isOCO, true)
     // The limit oco must be the only one inserted in the price level 100
     // @ts-expect-error bids is private
-    equal(ob.bids.maxPriceQueue()?.price(), 100)
+    assert.equal(ob.bids.maxPriceQueue()?.price(), 100)
     // @ts-expect-error bids is private
-    equal(ob.bids.maxPriceQueue()?.tail()?.id, 'oco-buy-2')
+    assert.equal(ob.bids.maxPriceQueue()?.tail()?.id, 'oco-buy-2')
   })
 
   // Test OCO Sell
@@ -810,32 +798,32 @@ void test('test oco order', ({ equal, same, end }) => {
   // valid OCO with limit to 120 and stopLimit to 100
   validate('oco-sell-1', Side.SELL, 120, 100, 99, (response) => {
     const order = response.done[0] as StopLimitOrder
-    equal(order instanceof StopLimitOrder, true)
-    equal(order.stopPrice === 100, true)
-    equal(order.price === 99, true)
-    equal(order.isOCO, true)
+    assert.equal(order instanceof StopLimitOrder, true)
+    assert.equal(order.stopPrice === 100, true)
+    assert.equal(order.price === 99, true)
+    assert.equal(order.isOCO, true)
     // The limit oco must be in the tail of the price level 120
     // @ts-expect-error bids is private
-    equal(ob.asks._prices[120].tail()?.id === 'oco-sell-1', true)
+    assert.equal(ob.asks._prices[120].tail()?.id === 'oco-sell-1', true)
   })
 
   //  Here marketPrice is 110, lowest sell is 110 and highest buy is 90
   //  valid OCO with limit to 120 and stopLimit to 100
   validate('oco-sell-2', Side.SELL, 120, 100, 99, (response) => {
     const order = response.done[0] as StopLimitOrder
-    equal(order instanceof StopLimitOrder, true)
-    equal(order.stopPrice === 100, true)
-    equal(order.price === 99, true)
-    equal(order.isOCO, true)
+    assert.equal(order instanceof StopLimitOrder, true)
+    assert.equal(order.stopPrice === 100, true)
+    assert.equal(order.price === 99, true)
+    assert.equal(order.isOCO, true)
     // The limit oco must be in the tail of the price level 120
     // @ts-expect-error bids is private
-    equal(ob.asks._prices[120].tail()?.id === 'oco-sell-2', true)
+    assert.equal(ob.asks._prices[120].tail()?.id === 'oco-sell-2', true)
   })
 
   // Removing the limit order should remove also the stop limit
   const response = ob.cancel('oco-sell-2')
-  equal(response?.order.id, 'oco-sell-2')
-  equal(response?.stopOrder?.id, 'oco-sell-2')
+  assert.equal(response?.order.id, 'oco-sell-2')
+  assert.equal(response?.stopOrder?.id, 'oco-sell-2')
 
   // Recreate the same OCO with the createOrder method
   {
@@ -849,41 +837,40 @@ void test('test oco order', ({ equal, same, end }) => {
       stopLimitPrice: 99
     })
     const order = response.done[0] as StopLimitOrder
-    equal(order instanceof StopLimitOrder, true)
-    equal(order.stopPrice === 100, true)
-    equal(order.price === 99, true)
-    equal(order.isOCO, true)
+    assert.equal(order instanceof StopLimitOrder, true)
+    assert.equal(order.stopPrice === 100, true)
+    assert.equal(order.price === 99, true)
+    assert.equal(order.isOCO, true)
     // The limit oco must be in the tail of the price level 120
     // @ts-expect-error bids is private
-    equal(ob.asks._prices[120].tail()?.id === 'oco-sell-2', true)
+    assert.equal(ob.asks._prices[120].tail()?.id === 'oco-sell-2', true)
   }
 
   {
     const response = ob.market({ side: Side.SELL, size: 1 })
     // market order match against the limit order oco-buy-1 and activate the two stop limit
     // orders of the oco sell.
-    equal(response.done[0]?.id === 'oco-buy-1', true)
-    equal(response.activated[0]?.id === 'oco-sell-1', true)
-    equal(response.activated[1]?.id === 'oco-sell-2', true)
+    assert.equal(response.done[0]?.id === 'oco-buy-1', true)
+    assert.equal(response.activated[0]?.id === 'oco-sell-1', true)
+    assert.equal(response.activated[1]?.id === 'oco-sell-2', true)
 
     // The first stop limit oco-sell-1 match against the limit oco-buy-2
-    equal(response.done[1]?.id === 'oco-buy-2', true)
-    equal(response.done[2]?.id === 'oco-sell-1', true)
+    assert.equal(response.done[1]?.id === 'oco-buy-2', true)
+    assert.equal(response.done[2]?.id === 'oco-sell-1', true)
 
     // While the second stop limit oco-sell-2 go to the order book
-    equal(response.partial?._id === 'oco-sell-2', true)
-    equal(response.partialQuantityProcessed, 0)
+    assert.equal(response.partial?._id === 'oco-sell-2', true)
+    assert.equal(response.partialQuantityProcessed, 0)
 
     // Both the side of the stop book must be empty
     // @ts-expect-error stopBook is private
-    equal(ob.stopBook.asks._priceTree.length, 0)
+    assert.equal(ob.stopBook.asks._priceTree.length, 0)
     // @ts-expect-error stopBook is private
-    equal(ob.stopBook.bids._priceTree.length, 0)
+    assert.equal(ob.stopBook.bids._priceTree.length, 0)
   }
-  end()
 })
 
-void test('test modify', ({ equal, end }) => {
+void test('test modify', () => {
   const ob = new OrderBook()
 
   addDepth(ob, '', 2)
@@ -910,48 +897,48 @@ void test('test modify', ({ equal, end }) => {
     const newSize = 990
     // Test update size
     let response = ob.modify('first-order', { size: newSize })
-    equal(response?.done.length, 0)
-    equal(response?.err, null)
-    equal(response?.quantityLeft, newSize)
+    assert.equal(response?.done.length, 0)
+    assert.equal(response?.err, null)
+    assert.equal(response?.quantityLeft, newSize)
 
     // Test passing an invalid price
     response = ob.modify('first-order', { price: 0 })
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size
     response = ob.modify('first-order', { size: -1 })
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size and price
     response = ob.modify('first-order', { size: -1, price: 0 })
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid price
     response = ob.modify('first-order', { price: 0 })
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size
     response = ob.modify('first-order', { size: -1 })
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test modify without passing size and price
     // @ts-expect-error missing size and/or price
     response = ob.modify('first-order')
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test update price
     const newPrice = 82
     response = ob.modify('first-order', { price: newPrice, size: newSize })
-    equal(response?.done.length, 0)
-    equal(response?.err, null)
-    equal(response?.quantityLeft, newSize)
-    equal(ob.order('first-order')?.price, newPrice)
+    assert.equal(response?.done.length, 0)
+    assert.equal(response?.err, null)
+    assert.equal(response?.quantityLeft, newSize)
+    assert.equal(ob.order('first-order')?.price, newPrice)
 
     // @ts-expect-error properties bids and _priceTree are private
     const bookOrdersSize = ob.asks._priceTree.values
@@ -966,14 +953,14 @@ void test('test modify', ({ equal, end }) => {
     // Test modify price order that cross the market price and don't fill completely
     response = ob.modify('first-order', { price: 130 })
     const completedOrders = response?.done.map((order) => order.id)
-    equal(
+    assert.equal(
       completedOrders?.join(),
       ['sell-100', 'sell-110', 'sell-120', 'sell-130'].join()
     )
-    equal(response?.partial?.id, 'first-order')
-    equal(response?.partial?.size, newSize - bookOrdersSize)
-    equal(response?.partialQuantityProcessed, bookOrdersSize)
-    equal(response?.quantityLeft, newSize - bookOrdersSize)
+    assert.equal(response?.partial?.id, 'first-order')
+    assert.equal(response?.partial?.size, newSize - bookOrdersSize)
+    assert.equal(response?.partialQuantityProcessed, bookOrdersSize)
+    assert.equal(response?.quantityLeft, newSize - bookOrdersSize)
   }
 
   {
@@ -981,48 +968,48 @@ void test('test modify', ({ equal, end }) => {
     const newSize = 990
     // Test update size
     let response = ob.modify('second-order', { size: newSize })
-    equal(response?.done.length, 0)
-    equal(response?.err, null)
-    equal(response?.quantityLeft, newSize)
+    assert.equal(response?.done.length, 0)
+    assert.equal(response?.err, null)
+    assert.equal(response?.quantityLeft, newSize)
 
     // Test passing an invalid price
     response = ob.modify('second-order', { price: 0 })
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size
     response = ob.modify('second-order', { size: -1 })
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size and price
     response = ob.modify('second-order', { size: -1, price: 0 })
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid price
     response = ob.modify('second-order', { price: 0 })
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test passing an invalid size
     response = ob.modify('second-order', { size: -1 })
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test modify without passing size and price
     // @ts-expect-error missing size and/or price
     response = ob.modify('second-order')
-    equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
-    equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.message, ErrorMessages.INVALID_PRICE_OR_QUANTITY)
+    assert.equal(response?.err?.code, ErrorCodes.INVALID_PRICE_OR_QUANTITY)
 
     // Test update price
     const newPrice = 250
     response = ob.modify('second-order', { price: newPrice, size: newSize })
-    equal(response?.done.length, 0)
-    equal(response?.err, null)
-    equal(response?.quantityLeft, newSize)
-    equal(ob.order('second-order')?.price, newPrice)
+    assert.equal(response?.done.length, 0)
+    assert.equal(response?.err, null)
+    assert.equal(response?.quantityLeft, newSize)
+    assert.equal(ob.order('second-order')?.price, newPrice)
 
     // @ts-expect-error properties bids and _priceTree are private
     const bookOrdersSize = ob.bids._priceTree.values
@@ -1037,22 +1024,21 @@ void test('test modify', ({ equal, end }) => {
     // Test modify price order that cross the market price
     response = ob.modify('second-order', { price: 80 })
     const completedOrders = response?.done.map((order) => order.id)
-    equal(completedOrders?.join(), ['first-order', 'buy-90', 'buy-80'].join())
-    equal(response?.partial?.id, 'second-order')
-    equal(response?.partial?.size, newSize - bookOrdersSize)
-    equal(response?.partialQuantityProcessed, bookOrdersSize)
-    equal(response?.quantityLeft, newSize - bookOrdersSize)
+    assert.equal(completedOrders?.join(), ['first-order', 'buy-90', 'buy-80'].join())
+    assert.equal(response?.partial?.id, 'second-order')
+    assert.equal(response?.partial?.size, newSize - bookOrdersSize)
+    assert.equal(response?.partialQuantityProcessed, bookOrdersSize)
+    assert.equal(response?.quantityLeft, newSize - bookOrdersSize)
   }
 
   // Test modify a non-existent order without passing size
   const resp = ob.modify('non-existent-order', { price: 123 })
-  equal(resp.err?.message, ErrorMessages.ORDER_NOT_FOUND)
-  equal(resp.err?.code, ErrorCodes.ORDER_NOT_FOUND)
-  equal(resp.quantityLeft, 0)
-  end()
+  assert.equal(resp.err?.message, ErrorMessages.ORDER_NOT_FOUND)
+  assert.equal(resp.err?.code, ErrorCodes.ORDER_NOT_FOUND)
+  assert.equal(resp.quantityLeft, 0)
 })
 
-void test('test priceCalculation', ({ equal, end }) => {
+void test('test priceCalculation', () => {
   const ob = new OrderBook()
 
   addDepth(ob, '05-', 10)
@@ -1061,29 +1047,28 @@ void test('test priceCalculation', ({ equal, end }) => {
 
   const calc1 = ob.calculateMarketPrice(Side.BUY, 115)
 
-  equal(calc1.err === null, true)
-  equal(calc1.price, 13150)
+  assert.equal(calc1.err === null, true)
+  assert.equal(calc1.price, 13150)
 
   const calc2 = ob.calculateMarketPrice(Side.BUY, 200)
 
-  equal(calc2.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
-  equal(calc2.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
-  equal(calc2.price, 18000)
+  assert.equal(calc2.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
+  assert.equal(calc2.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
+  assert.equal(calc2.price, 18000)
 
   const calc3 = ob.calculateMarketPrice(Side.SELL, 115)
 
-  equal(calc3.err === null, true)
-  equal(calc3.price, 8700)
+  assert.equal(calc3.err === null, true)
+  assert.equal(calc3.price, 8700)
 
   const calc4 = ob.calculateMarketPrice(Side.SELL, 200)
 
-  equal(calc4.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
-  equal(calc4.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
-  equal(calc4.price, 10500)
-  end()
+  assert.equal(calc4.err?.message, ErrorMessages.INSUFFICIENT_QUANTITY)
+  assert.equal(calc4.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY)
+  assert.equal(calc4.price, 10500)
 })
 
-void test('orderbook enableJournaling option', ({ equal, end, same }) => {
+void test('orderbook enableJournaling option', () => {
   const ob = new OrderBook({ enableJournaling: true })
 
   {
@@ -1093,10 +1078,10 @@ void test('orderbook enableJournaling option', ({ equal, end, same }) => {
       size: 50,
       price: 100
     })
-    equal(response.log?.opId, 1)
-    equal(typeof response.log?.ts, 'number')
-    equal(response.log?.op, 'l')
-    same(response.log?.o, {
+    assert.equal(response.log?.opId, 1)
+    assert.equal(typeof response.log?.ts, 'number')
+    assert.equal(response.log?.op, 'l')
+    assert.deepEqual(response.log?.o, {
       side: Side.BUY,
       id: 'first-order',
       size: 50,
@@ -1107,10 +1092,10 @@ void test('orderbook enableJournaling option', ({ equal, end, same }) => {
 
   {
     const response = ob.market({ side: Side.BUY, size: 50 })
-    equal(response.log?.opId, 2)
-    equal(typeof response.log?.ts, 'number')
-    equal(response.log?.op, 'm')
-    same(response.log?.o, {
+    assert.equal(response.log?.opId, 2)
+    assert.equal(typeof response.log?.ts, 'number')
+    assert.equal(response.log?.op, 'm')
+    assert.deepEqual(response.log?.o, {
       side: Side.BUY,
       size: 50
     })
@@ -1118,10 +1103,10 @@ void test('orderbook enableJournaling option', ({ equal, end, same }) => {
 
   {
     const response = ob.modify('first-order', { size: 55 })
-    equal(response.log?.opId, 3)
-    equal(typeof response.log?.ts, 'number')
-    equal(response.log?.op, 'u')
-    same(response.log?.o, {
+    assert.equal(response.log?.opId, 3)
+    assert.equal(typeof response.log?.ts, 'number')
+    assert.equal(response.log?.op, 'u')
+    assert.deepEqual(response.log?.o, {
       orderID: 'first-order',
       orderUpdate: { size: 55 }
     })
@@ -1129,18 +1114,16 @@ void test('orderbook enableJournaling option', ({ equal, end, same }) => {
 
   {
     const response = ob.cancel('first-order')
-    equal(response?.log?.opId, 4)
-    equal(typeof response?.log?.ts, 'number')
-    equal(response?.log?.op, 'd')
-    same(response?.log?.o, {
+    assert.equal(response?.log?.opId, 4)
+    assert.equal(typeof response?.log?.ts, 'number')
+    assert.equal(response?.log?.op, 'd')
+    assert.deepEqual(response?.log?.o, {
       orderID: 'first-order'
     })
   }
-
-  end()
 })
 
-void test('orderbook replayJournal', ({ equal, end }) => {
+void test('orderbook replayJournal', () => {
   const ob = new OrderBook({ enableJournaling: true })
 
   const journal: JournalLog[] = []
@@ -1170,12 +1153,10 @@ void test('orderbook replayJournal', ({ equal, end }) => {
 
   const ob2 = new OrderBook({ journal })
 
-  equal(ob.toString(), ob2.toString())
-
-  end()
+  assert.equal(ob.toString(), ob2.toString())
 })
 
-void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
+void test('orderbook replayJournal test wrong journal', () => {
   // Test valid journal log that is not an array
   try {
     const journalLog: JournalLog = {
@@ -1188,8 +1169,8 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: journalLog })
   } catch (error) {
-    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
+    assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
 
   // Test wrong op in journal log
@@ -1205,8 +1186,8 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: wrongOp })
   } catch (error) {
-    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
+    assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
 
   // Test wrong market order journal log
@@ -1222,8 +1203,8 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: wrongOp })
   } catch (error) {
-    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
+    assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
 
   // Test wrong limit order journal log
@@ -1239,8 +1220,8 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: wrongOp })
   } catch (error) {
-    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
+    assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
 
   // Test wrong update order journal log
@@ -1256,8 +1237,8 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: wrongOp })
   } catch (error) {
-    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
+    assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
 
   // Test wrong delete order journal log
@@ -1273,40 +1254,37 @@ void test('orderbook replayJournal test wrong journal', ({ equal, end }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const ob = new OrderBook({ journal: wrongOp })
   } catch (error) {
-    equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
-    equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
+    assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG)
+    assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG)
   }
-  end()
 })
 
-void test('orderbook test snapshot', ({ equal, end }) => {
+void test('orderbook test snapshot', () => {
   const ob = new OrderBook()
   addDepth(ob, '', 10)
   const snapshot = ob.snapshot()
 
-  equal(Array.isArray(snapshot.asks), true)
-  equal(Array.isArray(snapshot.bids), true)
-  equal(typeof snapshot.ts, 'number')
+  assert.equal(Array.isArray(snapshot.asks), true)
+  assert.equal(Array.isArray(snapshot.bids), true)
+  assert.equal(typeof snapshot.ts, 'number')
   snapshot.asks.forEach((level) => {
-    equal(typeof level.price, 'number')
-    equal(Array.isArray(level.orders), true)
+    assert.equal(typeof level.price, 'number')
+    assert.equal(Array.isArray(level.orders), true)
     level.orders.forEach((order) => {
-      equal(order instanceof LimitOrder, true)
+      assert.equal(order instanceof LimitOrder, true)
     })
   })
 
   snapshot.bids.forEach((level) => {
-    equal(typeof level.price, 'number')
-    equal(Array.isArray(level.orders), true)
+    assert.equal(typeof level.price, 'number')
+    assert.equal(Array.isArray(level.orders), true)
     level.orders.forEach((order) => {
-      equal(order instanceof LimitOrder, true)
+      assert.equal(order instanceof LimitOrder, true)
     })
   })
-
-  end()
 })
 
-void test('orderbook restore from snapshot', ({ equal, same, end }) => {
+void test('orderbook restore from snapshot', () => {
   // Create a new orderbook with 3 orders for price levels and make a snapshot
   const journal: JournalLog[] = []
   const ob = new OrderBook({ enableJournaling: true })
@@ -1319,27 +1297,27 @@ void test('orderbook restore from snapshot', ({ equal, same, end }) => {
     // Create a new orderbook from the snapshot and check is the same as before
     const ob2 = new OrderBook({ snapshot, enableJournaling: true })
 
-    equal(ob.toString(), ob2.toString())
-    same(ob.depth(), ob2.depth())
+    assert.equal(ob.toString(), ob2.toString())
+    assert.deepEqual(ob.depth(), ob2.depth())
 
     // @ts-expect-error these are private properties
-    same(ob.orders, ob2.orders)
+    assert.deepEqual(ob.orders, ob2.orders)
     // @ts-expect-error these are private properties
-    equal(ob.asks.volume(), ob2.asks.volume())
+    assert.equal(ob.asks.volume(), ob2.asks.volume())
     // @ts-expect-error these are private properties
-    equal(ob.bids.volume(), ob2.bids.volume())
+    assert.equal(ob.bids.volume(), ob2.bids.volume())
 
     // @ts-expect-error these are private properties
-    equal(ob.asks.total(), ob2.asks.total())
+    assert.equal(ob.asks.total(), ob2.asks.total())
     // @ts-expect-error these are private properties
-    equal(ob.bids.total(), ob2.bids.total())
+    assert.equal(ob.bids.total(), ob2.bids.total())
 
     // @ts-expect-error these are private properties
-    equal(ob.asks.len(), ob2.asks.len())
+    assert.equal(ob.asks.len(), ob2.asks.len())
     // @ts-expect-error these are private properties
-    equal(ob.bids.len(), ob2.bids.len())
+    assert.equal(ob.bids.len(), ob2.bids.len())
 
-    equal(ob.lastOp, ob2.lastOp)
+    assert.equal(ob.lastOp, ob2.lastOp)
 
     const prev = {}
     const restored = {}
@@ -1364,12 +1342,12 @@ void test('orderbook restore from snapshot', ({ equal, same, end }) => {
       restored[price] = level.toArray()
     })
 
-    same(prev, restored)
+    assert.deepEqual(prev, restored)
 
     // Compare also the snapshot from the original order book and the restored one
     const snapshot2 = ob2.snapshot()
-    same(snapshot.asks, snapshot2.asks)
-    same(snapshot.bids, snapshot2.bids)
+    assert.deepEqual(snapshot.asks, snapshot2.asks)
+    assert.deepEqual(snapshot.bids, snapshot2.bids)
   }
 
   {
@@ -1380,19 +1358,15 @@ void test('orderbook restore from snapshot', ({ equal, same, end }) => {
     addDepth(ob, 'sixth-run-', 10, journal)
 
     const ob2 = new OrderBook({ snapshot, journal, enableJournaling: true })
-    equal(ob2.lastOp, lastOp + 30) // every run add 10 additional orders
+    assert.equal(ob2.lastOp, lastOp + 30) // every run add 10 additional orders
   }
-
-  end()
 })
 
-void test('orderbook test unreachable lines', ({ equal, end }) => {
+void test('orderbook test unreachable lines', () => {
   const ob = new OrderBook({ enableJournaling: true })
   addDepth(ob, '', 10)
 
   // test SELL side remove order with journal enabled
   const deleted = ob.cancel('sell-100')
-  equal(ob.lastOp, deleted?.log?.opId)
-
-  end()
+  assert.equal(ob.lastOp, deleted?.log?.opId)
 })

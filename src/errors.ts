@@ -71,7 +71,7 @@ export class OrderBookError implements IError {
       errorMessage = `${ErrorMessages.DEFAULT}${customMessage}`
     }
     this.message = errorMessage
-    this.code = ErrorCodes[error as ERROR ?? ERROR.DEFAULT]
+    this.code = ErrorCodes[error as ERROR] ?? ErrorCodes[ERROR.DEFAULT]
   }
 }
 
