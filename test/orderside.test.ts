@@ -1,14 +1,11 @@
-import { test } from 'tap'
+import test from 'node:test'
+import assert from 'node:assert/strict'
 import { OrderFactory } from '../src/order'
 import { OrderSide } from '../src/orderside'
 import { ErrorCodes, ErrorMessages } from '../src/errors'
 import { OrderType, Side, TimeInForce } from '../src/types'
 
-void test('it should append/update/remove orders from queue on BUY side', ({
-  equal,
-  same,
-  end
-}) => {
+void test('it should append/update/remove orders from queue on BUY side', () => {
   const os = new OrderSide(Side.BUY)
   const order1 = OrderFactory.createOrder({
     type: OrderType.LIMIT,
@@ -33,33 +30,33 @@ void test('it should append/update/remove orders from queue on BUY side', ({
     takerQty: 0
   })
 
-  equal(os.minPriceQueue() === undefined, true)
-  equal(os.maxPriceQueue() === undefined, true)
+  assert.equal(os.minPriceQueue() === undefined, true)
+  assert.equal(os.maxPriceQueue() === undefined, true)
 
   os.append(order1)
-  equal(os.maxPriceQueue(), os.minPriceQueue())
-  equal(os.volume(), 5)
-  equal(os.total(), order1.price * order1.size)
-  equal(os.priceTree().length, 1)
+  assert.equal(os.maxPriceQueue(), os.minPriceQueue())
+  assert.equal(os.volume(), 5)
+  assert.equal(os.total(), order1.price * order1.size)
+  assert.equal(os.priceTree().length, 1)
 
   os.append(order2)
-  equal(os.depth(), 2)
-  equal(os.volume(), 10)
-  equal(os.total(), order1.price * order1.size + order2.price * order2.size)
-  equal(os.len(), 2)
-  equal(os.priceTree().length, 2)
-  same(os.orders()[0], order1)
-  same(os.orders()[1], order2)
+  assert.equal(os.depth(), 2)
+  assert.equal(os.volume(), 10)
+  assert.equal(os.total(), order1.price * order1.size + order2.price * order2.size)
+  assert.equal(os.len(), 2)
+  assert.equal(os.priceTree().length, 2)
+  assert.deepEqual(os.orders()[0], order1)
+  assert.deepEqual(os.orders()[1], order2)
 
-  equal(os.lowerThan(21)?.price(), 20)
-  equal(os.lowerThan(19)?.price(), 10)
-  equal(os.lowerThan(9) === undefined, true)
+  assert.equal(os.lowerThan(21)?.price(), 20)
+  assert.equal(os.lowerThan(19)?.price(), 10)
+  assert.equal(os.lowerThan(9) === undefined, true)
 
-  equal(os.greaterThan(9)?.price(), 10)
-  equal(os.greaterThan(19)?.price(), 20)
-  equal(os.greaterThan(21) === undefined, true)
+  assert.equal(os.greaterThan(9)?.price(), 10)
+  assert.equal(os.greaterThan(19)?.price(), 20)
+  assert.equal(os.greaterThan(21) === undefined, true)
 
-  equal(os.toString(), '\n20 -> 5\n10 -> 5')
+  assert.equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
   // Update order size and passing a price
   os.updateOrderSize(order1, {
@@ -67,22 +64,24 @@ void test('it should append/update/remove orders from queue on BUY side', ({
     price: order1.price
   })
 
-  equal(os.volume(), 15)
-  equal(os.depth(), 2)
-  equal(os.len(), 2)
-  same(os.orders()[0], { ...order1, size: 10 })
-  same(os.orders()[1], order2)
-  equal(os.toString(), '\n20 -> 5\n10 -> 10')
+  assert.equal(os.volume(), 15)
+  assert.equal(os.depth(), 2)
+  assert.equal(os.len(), 2)
+  assert.equal(os.orders()[0].id, order1.id)
+  assert.equal(os.orders()[0].size, 10)
+  assert.deepEqual(os.orders()[1], order2)
+  assert.equal(os.toString(), '\n20 -> 5\n10 -> 10')
 
   // Update order size without passing price, so the old order price will be used
   os.updateOrderSize(order1, { size: 5 })
 
-  equal(os.volume(), 10)
-  equal(os.depth(), 2)
-  equal(os.len(), 2)
-  same(os.orders()[0], { ...order1, size: 5 })
-  same(os.orders()[1], order2)
-  equal(os.toString(), '\n20 -> 5\n10 -> 5')
+  assert.equal(os.volume(), 10)
+  assert.equal(os.depth(), 2)
+  assert.equal(os.len(), 2)
+  assert.equal(os.orders()[0].id, order1.id)
+  assert.equal(os.orders()[0].size, 5)
+  assert.deepEqual(os.orders()[1], order2)
+  assert.equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
   // When price is updated a new order will be created, so we can't match entire object, only properties
   // Update price of order1 < price order2
@@ -90,14 +89,14 @@ void test('it should append/update/remove orders from queue on BUY side', ({
     size: 10,
     price: 15
   })
-  equal(os.volume(), 15)
-  equal(os.depth(), 2)
-  equal(os.len(), 2)
+  assert.equal(os.volume(), 15)
+  assert.equal(os.depth(), 2)
+  assert.equal(os.len(), 2)
   let updateOrder1 = os.orders()[0]
-  equal(updateOrder1.size, 10)
-  equal(updateOrder1.price, 15)
-  same(os.orders()[1], order2)
-  equal(os.toString(), '\n20 -> 5\n15 -> 10')
+  assert.equal(updateOrder1.size, 10)
+  assert.equal(updateOrder1.price, 15)
+  assert.deepEqual(os.orders()[1], order2)
+  assert.equal(os.toString(), '\n20 -> 5\n15 -> 10')
 
   // Test for error when price level not exists
   try {
@@ -107,8 +106,8 @@ void test('it should append/update/remove orders from queue on BUY side', ({
       price: 20
     })
   } catch (error) {
-    equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
-    equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL)
+    assert.equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
+    assert.equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL)
   }
 
   // Update price of order1 == price order2, without providind size (the original order size is used)
@@ -117,65 +116,59 @@ void test('it should append/update/remove orders from queue on BUY side', ({
   updatedOrder = os.updateOrderPrice(updatedOrder, {
     price: 20
   })
-  equal(os.volume(), 15)
-  equal(os.depth(), 1)
-  equal(os.len(), 2)
-  same(os.orders()[0], order2)
+  assert.equal(os.volume(), 15)
+  assert.equal(os.depth(), 1)
+  assert.equal(os.len(), 2)
+  assert.deepEqual(os.orders()[0], order2)
   updateOrder1 = os.orders()[1]
-  equal(updateOrder1.size, 10)
-  equal(updateOrder1.price, 20)
-  equal(os.toString(), '\n20 -> 15')
+  assert.equal(updateOrder1.size, 10)
+  assert.equal(updateOrder1.price, 20)
+  assert.equal(os.toString(), '\n20 -> 15')
 
   // Update price of order1 > price order2
   updatedOrder = os.updateOrderPrice(updatedOrder, {
     size: 10,
     price: 25
   })
-  equal(os.volume(), 15)
-  equal(os.depth(), 2)
-  equal(os.len(), 2)
-  same(os.orders()[0], order2)
+  assert.equal(os.volume(), 15)
+  assert.equal(os.depth(), 2)
+  assert.equal(os.len(), 2)
+  assert.deepEqual(os.orders()[0], order2)
   updateOrder1 = os.orders()[1]
-  equal(updateOrder1.size, 10)
-  equal(updateOrder1.price, 25)
-  equal(os.toString(), '\n25 -> 10\n20 -> 5')
+  assert.equal(updateOrder1.size, 10)
+  assert.equal(updateOrder1.price, 25)
+  assert.equal(os.toString(), '\n25 -> 10\n20 -> 5')
 
   // @ts-expect-error _priceTree is private property
   os._priceTree.values.reduce((previousPrice, curr) => {
     // BUY side are in descending order bigger to lower
     // @ts-expect-error _price is private property
     const currPrice = curr._price
-    equal(currPrice < previousPrice, true)
+    assert.equal(currPrice < previousPrice, true)
     return currPrice
   }, Infinity)
 
   // Remove the updated order
   os.remove(updatedOrder)
 
-  equal(os.maxPriceQueue(), os.minPriceQueue())
-  equal(os.depth(), 1)
-  equal(os.volume(), 5)
-  equal(os.len(), 1)
-  same(os.orders()[0], order2)
+  assert.equal(os.maxPriceQueue(), os.minPriceQueue())
+  assert.equal(os.depth(), 1)
+  assert.equal(os.volume(), 5)
+  assert.equal(os.len(), 1)
+  assert.deepEqual(os.orders()[0], order2)
 
-  equal(os.toString(), '\n20 -> 5')
+  assert.equal(os.toString(), '\n20 -> 5')
 
   // Remove the remaining order
   os.remove(order2)
 
-  equal(os.maxPriceQueue(), os.minPriceQueue())
-  equal(os.depth(), 0)
-  equal(os.volume(), 0)
-  equal(os.len(), 0)
-  equal(os.toString(), '')
-
-  end()
+  assert.equal(os.maxPriceQueue(), os.minPriceQueue())
+  assert.equal(os.depth(), 0)
+  assert.equal(os.volume(), 0)
+  assert.equal(os.len(), 0)
+  assert.equal(os.toString(), '')
 })
-void test('it should append/update/remove orders from queue on SELL side', ({
-  equal,
-  same,
-  end
-}) => {
+void test('it should append/update/remove orders from queue on SELL side', () => {
   const os = new OrderSide(Side.SELL)
   const order1 = OrderFactory.createOrder({
     type: OrderType.LIMIT,
@@ -200,34 +193,34 @@ void test('it should append/update/remove orders from queue on SELL side', ({
     takerQty: 0
   })
 
-  equal(os.minPriceQueue() === undefined, true)
-  equal(os.maxPriceQueue() === undefined, true)
+  assert.equal(os.minPriceQueue() === undefined, true)
+  assert.equal(os.maxPriceQueue() === undefined, true)
 
   os.append(order1)
 
-  equal(os.maxPriceQueue(), os.minPriceQueue())
-  equal(os.volume(), 5)
-  equal(os.total(), order1.price * order1.size)
-  equal(os.priceTree().length, 1)
+  assert.equal(os.maxPriceQueue(), os.minPriceQueue())
+  assert.equal(os.volume(), 5)
+  assert.equal(os.total(), order1.price * order1.size)
+  assert.equal(os.priceTree().length, 1)
 
   os.append(order2)
-  equal(os.depth(), 2)
-  equal(os.volume(), 10)
-  equal(os.total(), order1.price * order1.size + order2.price * order2.size)
-  equal(os.len(), 2)
-  equal(os.priceTree().length, 2)
-  same(os.orders()[0], order1)
-  same(os.orders()[1], order2)
+  assert.equal(os.depth(), 2)
+  assert.equal(os.volume(), 10)
+  assert.equal(os.total(), order1.price * order1.size + order2.price * order2.size)
+  assert.equal(os.len(), 2)
+  assert.equal(os.priceTree().length, 2)
+  assert.deepEqual(os.orders()[0], order1)
+  assert.deepEqual(os.orders()[1], order2)
 
-  equal(os.lowerThan(21)?.price(), 20)
-  equal(os.lowerThan(19)?.price(), 10)
-  equal(os.lowerThan(9) === undefined, true)
+  assert.equal(os.lowerThan(21)?.price(), 20)
+  assert.equal(os.lowerThan(19)?.price(), 10)
+  assert.equal(os.lowerThan(9) === undefined, true)
 
-  equal(os.greaterThan(9)?.price(), 10)
-  equal(os.greaterThan(19)?.price(), 20)
-  equal(os.greaterThan(21) === undefined, true)
+  assert.equal(os.greaterThan(9)?.price(), 10)
+  assert.equal(os.greaterThan(19)?.price(), 20)
+  assert.equal(os.greaterThan(21) === undefined, true)
 
-  equal(os.toString(), '\n20 -> 5\n10 -> 5')
+  assert.equal(os.toString(), '\n20 -> 5\n10 -> 5')
 
   // Update order size and passing a price
   os.updateOrderSize(order1, {
@@ -235,12 +228,13 @@ void test('it should append/update/remove orders from queue on SELL side', ({
     price: order1.price
   })
 
-  equal(os.volume(), 15)
-  equal(os.depth(), 2)
-  equal(os.len(), 2)
-  same(os.orders()[0], { ...order1, size: 10 })
-  same(os.orders()[1], order2)
-  equal(os.toString(), '\n20 -> 5\n10 -> 10')
+  assert.equal(os.volume(), 15)
+  assert.equal(os.depth(), 2)
+  assert.equal(os.len(), 2)
+  assert.equal(os.orders()[0].id, order1.id)
+  assert.equal(os.orders()[0].size, 10)
+  assert.deepEqual(os.orders()[1], order2)
+  assert.equal(os.toString(), '\n20 -> 5\n10 -> 10')
 
   // When price is updated a new order will be created, so we can't match entire object, only properties
   // Update price of order1 < price order2
@@ -248,14 +242,14 @@ void test('it should append/update/remove orders from queue on SELL side', ({
     size: 10,
     price: 15
   })
-  equal(os.volume(), 15)
-  equal(os.depth(), 2)
-  equal(os.len(), 2)
+  assert.equal(os.volume(), 15)
+  assert.equal(os.depth(), 2)
+  assert.equal(os.len(), 2)
   let updateOrder1 = os.orders()[0]
-  equal(updateOrder1.size, 10)
-  equal(updateOrder1.price, 15)
-  same(os.orders()[1], order2)
-  equal(os.toString(), '\n20 -> 5\n15 -> 10')
+  assert.equal(updateOrder1.size, 10)
+  assert.equal(updateOrder1.price, 15)
+  assert.deepEqual(os.orders()[1], order2)
+  assert.equal(os.toString(), '\n20 -> 5\n15 -> 10')
 
   // Test for error when price level not exists
   try {
@@ -265,8 +259,8 @@ void test('it should append/update/remove orders from queue on SELL side', ({
       price: 20
     })
   } catch (error) {
-    equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
-    equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL)
+    assert.equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
+    assert.equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL)
   }
 
   // Update price of order1 == price order2
@@ -276,56 +270,55 @@ void test('it should append/update/remove orders from queue on SELL side', ({
     size: updatedOrder.size,
     price: 20
   })
-  equal(os.volume(), 15)
-  equal(os.depth(), 1)
-  equal(os.len(), 2)
-  same(os.orders()[0], order2)
+  assert.equal(os.volume(), 15)
+  assert.equal(os.depth(), 1)
+  assert.equal(os.len(), 2)
+  assert.deepEqual(os.orders()[0], order2)
   updateOrder1 = os.orders()[1]
-  equal(updateOrder1.size, 10)
-  equal(updateOrder1.price, 20)
-  equal(os.toString(), '\n20 -> 15')
+  assert.equal(updateOrder1.size, 10)
+  assert.equal(updateOrder1.price, 20)
+  assert.equal(os.toString(), '\n20 -> 15')
 
   // Update price of order1 > price order2
   updatedOrder = os.updateOrderPrice(updatedOrder, {
     size: 10,
     price: 25
   })
-  equal(os.volume(), 15)
-  equal(os.depth(), 2)
-  equal(os.len(), 2)
-  same(os.orders()[0], order2)
+  assert.equal(os.volume(), 15)
+  assert.equal(os.depth(), 2)
+  assert.equal(os.len(), 2)
+  assert.deepEqual(os.orders()[0], order2)
   updateOrder1 = os.orders()[1]
-  equal(updateOrder1.size, 10)
-  equal(updateOrder1.price, 25)
-  equal(os.toString(), '\n25 -> 10\n20 -> 5')
+  assert.equal(updateOrder1.size, 10)
+  assert.equal(updateOrder1.price, 25)
+  assert.equal(os.toString(), '\n25 -> 10\n20 -> 5')
 
   // @ts-expect-error _priceTree is private property
   os._priceTree.values.reduce((previousPrice, curr) => {
     // SELL side are in ascending order lower to bigger
     // @ts-expect-error _price is private property
     const currPrice = curr._price
-    equal(currPrice > previousPrice, true)
+    assert.equal(currPrice > previousPrice, true)
     return currPrice
   }, 0)
 
   // Remove the updated order
   os.remove(updatedOrder)
 
-  equal(os.maxPriceQueue(), os.minPriceQueue())
-  equal(os.depth(), 1)
-  equal(os.volume(), 5)
-  equal(os.len(), 1)
-  same(os.orders()[0], order2)
+  assert.equal(os.maxPriceQueue(), os.minPriceQueue())
+  assert.equal(os.depth(), 1)
+  assert.equal(os.volume(), 5)
+  assert.equal(os.len(), 1)
+  assert.deepEqual(os.orders()[0], order2)
 
-  equal(os.toString(), '\n20 -> 5')
+  assert.equal(os.toString(), '\n20 -> 5')
 
   // Remove the remaining order
   os.remove(order2)
 
-  equal(os.maxPriceQueue(), os.minPriceQueue())
-  equal(os.depth(), 0)
-  equal(os.volume(), 0)
-  equal(os.len(), 0)
-  equal(os.toString(), '')
-  end()
+  assert.equal(os.maxPriceQueue(), os.minPriceQueue())
+  assert.equal(os.depth(), 0)
+  assert.equal(os.volume(), 0)
+  assert.equal(os.len(), 0)
+  assert.equal(os.toString(), '')
 })

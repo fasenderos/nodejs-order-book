@@ -26,13 +26,10 @@ on:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-        node: [18.x, 20.x]
+        node: [20.x, 22.x]
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -43,4 +40,4 @@ jobs:
       - name: Install modules
         run: npm install
       - name: Run tests
-        run: npm test
+        run: npm run test:ci

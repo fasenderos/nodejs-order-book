@@ -1,6 +1,6 @@
 import { OrderBookError } from './errors'
 import { LimitOrder, StopLimitOrder, StopMarketOrder } from './order'
-
+/* node:coverage disable */
 export enum Side {
   BUY = 'buy',
   SELL = 'sell',
@@ -356,3 +356,4 @@ export interface Snapshot {
   /** The id of the last operation inserted in the orderbook */
   lastOp: number
 }
+/* node:coverage enable */

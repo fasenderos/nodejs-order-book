@@ -1,18 +1,15 @@
-import { test } from 'tap'
+import test from 'node:test'
+import assert from 'node:assert/strict'
 import { OrderFactory, StopLimitOrder } from '../src/order'
 import { StopQueue } from '../src/stopqueue'
 import { OrderType, Side, TimeInForce } from '../src/types'
 
-void test('it should append/remove orders from queue', ({
-  equal,
-  same,
-  end
-}) => {
+void test('it should append/remove orders from queue', () => {
   const price = 100
   const stopPrice = 90
   const oq = new StopQueue(price)
   // Test edge case where head is undefined (queue is empty)
-  equal(oq.removeFromHead(), undefined)
+  assert.equal(oq.removeFromHead(), undefined)
 
   const order1 = OrderFactory.createOrder({
     type: OrderType.STOP_LIMIT,
@@ -36,11 +33,11 @@ void test('it should append/remove orders from queue', ({
   const head = oq.append(order1)
   const tail = oq.append(order2)
 
-  equal(head instanceof StopLimitOrder, true)
-  equal(tail instanceof StopLimitOrder, true)
-  same(head, order1)
-  same(tail, order2)
-  equal(oq.len(), 2)
+  assert.equal(head instanceof StopLimitOrder, true)
+  assert.equal(tail instanceof StopLimitOrder, true)
+  assert.deepEqual(head, order1)
+  assert.deepEqual(tail, order2)
+  assert.equal(oq.len(), 2)
 
   const order3 = OrderFactory.createOrder({
     type: OrderType.STOP_LIMIT,
@@ -52,7 +49,7 @@ void test('it should append/remove orders from queue', ({
     timeInForce: TimeInForce.GTC
   })
   oq.append(order3)
-  equal(oq.len(), 3)
+  assert.equal(oq.len(), 3)
 
   const order4 = OrderFactory.createOrder({
     type: OrderType.STOP_LIMIT,
@@ -64,20 +61,18 @@ void test('it should append/remove orders from queue', ({
     timeInForce: TimeInForce.GTC
   })
   oq.append(order4)
-  equal(oq.len(), 4)
+  assert.equal(oq.len(), 4)
 
-  same(oq.removeFromHead(), order1)
-  same(oq.remove(order4.id), order4)
-  equal(oq.len(), 2)
+  assert.deepEqual(oq.removeFromHead(), order1)
+  assert.deepEqual(oq.remove(order4.id), order4)
+  assert.equal(oq.len(), 2)
 
-  same(oq.removeFromHead(), order2)
-  equal(oq.len(), 1)
+  assert.deepEqual(oq.removeFromHead(), order2)
+  assert.equal(oq.len(), 1)
 
-  equal(oq.remove('fake-id'), undefined)
-  equal(oq.len(), 1)
+  assert.equal(oq.remove('fake-id'), undefined)
+  assert.equal(oq.len(), 1)
 
-  same(oq.remove(order3.id), order3)
-  equal(oq.len(), 0)
-
-  end()
+  assert.deepEqual(oq.remove(order3.id), order3)
+  assert.equal(oq.len(), 0)
 })

@@ -1,18 +1,16 @@
-import { test } from 'tap'
+import test from 'node:test'
+import assert from 'node:assert/strict'
 import { OrderFactory } from '../src/order'
 import { StopSide } from '../src/stopside'
 import { OrderType, Side, TimeInForce } from '../src/types'
 import { ErrorCodes, ErrorMessages } from '../src/errors'
 
-void test('it should append/remove orders from queue on BUY side', ({
-  equal,
-  end
-}) => {
+void test('it should append/remove orders from queue on BUY side', () => {
   const os = new StopSide(Side.BUY)
   // @ts-expect-error _prices is private
-  equal(Object.keys(os._prices).length, 0)
+  assert.equal(Object.keys(os._prices).length, 0)
   // @ts-expect-error _priceTree is private
-  equal(os._priceTree.length, 0)
+  assert.equal(os._priceTree.length, 0)
   {
     const order = OrderFactory.createOrder({
       type: OrderType.STOP_LIMIT,
@@ -25,9 +23,9 @@ void test('it should append/remove orders from queue on BUY side', ({
     })
     os.append(order)
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 1)
+    assert.equal(Object.keys(os._prices).length, 1)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 1)
+    assert.equal(os._priceTree.length, 1)
   }
 
   {
@@ -42,9 +40,9 @@ void test('it should append/remove orders from queue on BUY side', ({
     })
     os.append(order)
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 1)
+    assert.equal(Object.keys(os._prices).length, 1)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 1)
+    assert.equal(os._priceTree.length, 1)
   }
 
   {
@@ -58,9 +56,9 @@ void test('it should append/remove orders from queue on BUY side', ({
 
     os.append(order)
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 2)
+    assert.equal(Object.keys(os._prices).length, 2)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 2)
+    assert.equal(os._priceTree.length, 2)
   }
 
   // @ts-expect-error _priceTree is private property
@@ -68,7 +66,7 @@ void test('it should append/remove orders from queue on BUY side', ({
     // BUY side are in descending order bigger to lower
     // @ts-expect-error _price is private property
     const currPrice = curr._price
-    equal(currPrice < previousPrice, true)
+    assert.equal(currPrice < previousPrice, true)
     return currPrice
   }, Infinity)
 
@@ -77,20 +75,20 @@ void test('it should append/remove orders from queue on BUY side', ({
     const response = os.remove('order1', 10)
 
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 2)
+    assert.equal(Object.keys(os._prices).length, 2)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 2)
-    equal(response?.id, 'order1')
+    assert.equal(os._priceTree.length, 2)
+    assert.equal(response?.id, 'order1')
   }
 
   {
     // Try to remove the same order already deleted
     const response = os.remove('order1', 10)
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 2)
+    assert.equal(Object.keys(os._prices).length, 2)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 2)
-    equal(response, undefined)
+    assert.equal(os._priceTree.length, 2)
+    assert.equal(response, undefined)
   }
 
   {
@@ -98,10 +96,10 @@ void test('it should append/remove orders from queue on BUY side', ({
     const response = os.remove('order2', 10)
 
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 1)
+    assert.equal(Object.keys(os._prices).length, 1)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 1)
-    equal(response?.id, 'order2')
+    assert.equal(os._priceTree.length, 1)
+    assert.equal(response?.id, 'order2')
   }
 
   // Test for error when price level not exists
@@ -109,22 +107,17 @@ void test('it should append/remove orders from queue on BUY side', ({
     // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type INVALID_PRICE_LEVEL
     os.remove('some-id', 100)
   } catch (error) {
-    equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
-    equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL)
+    assert.equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
+    assert.equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL)
   }
-
-  end()
 })
 
-void test('it should append/remove orders from queue on SELL side', ({
-  equal,
-  end
-}) => {
+void test('it should append/remove orders from queue on SELL side', () => {
   const os = new StopSide(Side.SELL)
   // @ts-expect-error _prices is private
-  equal(Object.keys(os._prices).length, 0)
+  assert.equal(Object.keys(os._prices).length, 0)
   // @ts-expect-error _priceTree is private
-  equal(os._priceTree.length, 0)
+  assert.equal(os._priceTree.length, 0)
   {
     const order = OrderFactory.createOrder({
       type: OrderType.STOP_LIMIT,
@@ -137,9 +130,9 @@ void test('it should append/remove orders from queue on SELL side', ({
     })
     os.append(order)
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 1)
+    assert.equal(Object.keys(os._prices).length, 1)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 1)
+    assert.equal(os._priceTree.length, 1)
   }
 
   {
@@ -154,9 +147,9 @@ void test('it should append/remove orders from queue on SELL side', ({
     })
     os.append(order)
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 1)
+    assert.equal(Object.keys(os._prices).length, 1)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 1)
+    assert.equal(os._priceTree.length, 1)
   }
 
   {
@@ -170,9 +163,9 @@ void test('it should append/remove orders from queue on SELL side', ({
 
     os.append(order)
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 2)
+    assert.equal(Object.keys(os._prices).length, 2)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 2)
+    assert.equal(os._priceTree.length, 2)
   }
 
   // @ts-expect-error _priceTree is private property
@@ -180,7 +173,7 @@ void test('it should append/remove orders from queue on SELL side', ({
     // SELL side are in ascending order lower to bigger
     // @ts-expect-error _price is private property
     const currPrice = curr._price
-    equal(currPrice > previousPrice, true)
+    assert.equal(currPrice > previousPrice, true)
     return currPrice
   }, 0)
 
@@ -189,20 +182,20 @@ void test('it should append/remove orders from queue on SELL side', ({
     const response = os.remove('order1', 10)
 
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 2)
+    assert.equal(Object.keys(os._prices).length, 2)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 2)
-    equal(response?.id, 'order1')
+    assert.equal(os._priceTree.length, 2)
+    assert.equal(response?.id, 'order1')
   }
 
   {
     // Try to remove the same order already deleted
     const response = os.remove('order1', 10)
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 2)
+    assert.equal(Object.keys(os._prices).length, 2)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 2)
-    equal(response, undefined)
+    assert.equal(os._priceTree.length, 2)
+    assert.equal(response, undefined)
   }
 
   {
@@ -210,10 +203,10 @@ void test('it should append/remove orders from queue on SELL side', ({
     const response = os.remove('order2', 10)
 
     // @ts-expect-error _prices is private
-    equal(Object.keys(os._prices).length, 1)
+    assert.equal(Object.keys(os._prices).length, 1)
     // @ts-expect-error _priceTree is private
-    equal(os._priceTree.length, 1)
-    equal(response?.id, 'order2')
+    assert.equal(os._priceTree.length, 1)
+    assert.equal(response?.id, 'order2')
   }
 
   // Test for error when price level not exists
@@ -221,17 +214,12 @@ void test('it should append/remove orders from queue on SELL side', ({
     // order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type INVALID_PRICE_LEVEL
     os.remove('some-id', 100)
   } catch (error) {
-    equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
-    equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL)
+    assert.equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL)
+    assert.equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL)
   }
-
-  end()
 })
 
-void test('it should find all queue between upper and lower bound', ({
-  equal,
-  end
-}) => {
+void test('it should find all queue between upper and lower bound', () => {
   const appenOrder = (orderId: string, stopPrice: number, side, os: StopSide): void => {
     const order = OrderFactory.createOrder({
       type: OrderType.STOP_LIMIT,
@@ -264,9 +252,9 @@ void test('it should find all queue between upper and lower bound', ({
 
       response.forEach((queue) => {
         // @ts-expect-error _price is private
-        equal(queue._price <= 40, true)
+        assert.equal(queue._price <= 40, true)
         // @ts-expect-error _price is private
-        equal(queue._price >= 20, true)
+        assert.equal(queue._price >= 20, true)
       })
     }
 
@@ -274,9 +262,9 @@ void test('it should find all queue between upper and lower bound', ({
       const response = os.between(20, 40)
       response.forEach((queue) => {
         // @ts-expect-error _price is private
-        equal(queue._price <= 40, true)
+        assert.equal(queue._price <= 40, true)
         // @ts-expect-error _price is private
-        equal(queue._price >= 20, true)
+        assert.equal(queue._price >= 20, true)
       })
     }
   }
@@ -300,9 +288,9 @@ void test('it should find all queue between upper and lower bound', ({
 
       response.forEach((queue) => {
         // @ts-expect-error _price is private
-        equal(queue._price <= 40, true)
+        assert.equal(queue._price <= 40, true)
         // @ts-expect-error _price is private
-        equal(queue._price >= 20, true)
+        assert.equal(queue._price >= 20, true)
       })
     }
 
@@ -310,12 +298,10 @@ void test('it should find all queue between upper and lower bound', ({
       const response = os.between(20, 40)
       response.forEach((queue) => {
         // @ts-expect-error _price is private
-        equal(queue._price <= 40, true)
+        assert.equal(queue._price <= 40, true)
         // @ts-expect-error _price is private
-        equal(queue._price >= 20, true)
+        assert.equal(queue._price >= 20, true)
       })
     }
   }
-
-  end()
 })

@@ -1,14 +1,15 @@
-import { test } from 'tap'
+import test from 'node:test'
+import assert from 'node:assert/strict'
 import { OrderFactory } from '../src/order'
 import { OrderType, Side, StopOrder, TimeInForce } from '../src/types'
 import { StopBook } from '../src/stopbook'
 
-void test('it should add/remove/get order to stop book', ({ equal, same, end }) => {
+void test('it should add/remove/get order to stop book', () => {
   const ob = new StopBook()
   // @ts-expect-error asks is private
-  equal(ob.asks._priceTree.length, 0)
+  assert.equal(ob.asks._priceTree.length, 0)
   // @ts-expect-error bids is private
-  equal(ob.bids._priceTree.length, 0)
+  assert.equal(ob.bids._priceTree.length, 0)
 
   const addOrder = (side: Side, orderId: string, stopPrice: number): void => {
     const order = OrderFactory.createOrder({
@@ -26,9 +27,9 @@ void test('it should add/remove/get order to stop book', ({ equal, same, end }) 
   //  Start with SELL side
   addOrder(Side.SELL, 'sell-1', 110)
   // @ts-expect-error asks is private
-  equal(ob.asks._priceTree.length, 1)
+  assert.equal(ob.asks._priceTree.length, 1)
   // @ts-expect-error bids is private
-  equal(ob.bids._priceTree.length, 0)
+  assert.equal(ob.bids._priceTree.length, 0)
 
   addOrder(Side.SELL, 'sell-2', 110) // Same price as before
   addOrder(Side.SELL, 'sell-3', 120)
@@ -36,16 +37,16 @@ void test('it should add/remove/get order to stop book', ({ equal, same, end }) 
   addOrder(Side.SELL, 'sell-5', 140)
 
   // @ts-expect-error asks is private
-  equal(ob.asks._priceTree.length, 4)
+  assert.equal(ob.asks._priceTree.length, 4)
   // @ts-expect-error bids is private
-  equal(ob.bids._priceTree.length, 0)
+  assert.equal(ob.bids._priceTree.length, 0)
 
   // Test BUY side
   addOrder(Side.BUY, 'buy-1', 100)
   // @ts-expect-error asks is private
-  equal(ob.asks._priceTree.length, 4)
+  assert.equal(ob.asks._priceTree.length, 4)
   // @ts-expect-error bids is private
-  equal(ob.bids._priceTree.length, 1)
+  assert.equal(ob.bids._priceTree.length, 1)
 
   addOrder(Side.BUY, 'buy-2', 100) // Same price as before
   addOrder(Side.BUY, 'buy-3', 90)
@@ -53,9 +54,9 @@ void test('it should add/remove/get order to stop book', ({ equal, same, end }) 
   addOrder(Side.BUY, 'buy-5', 70)
 
   // @ts-expect-error asks is private
-  equal(ob.asks._priceTree.length, 4)
+  assert.equal(ob.asks._priceTree.length, 4)
   // @ts-expect-error bids is private
-  equal(ob.bids._priceTree.length, 4)
+  assert.equal(ob.bids._priceTree.length, 4)
 
   { // Before removing orders, test getConditionalOrders
     const response = ob.getConditionalOrders(Side.SELL, 110, 130)
@@ -63,9 +64,9 @@ void test('it should add/remove/get order to stop book', ({ equal, same, end }) 
     response.forEach((stopQueue) => {
       totalOrder += stopQueue.len()
       // @ts-expect-error _price is private
-      equal(stopQueue._price >= 110 && stopQueue._price <= 130, true)
+      assert.equal(stopQueue._price >= 110 && stopQueue._price <= 130, true)
     })
-    equal(totalOrder, 4)
+    assert.equal(totalOrder, 4)
   }
 
   { // Before removing orders, test getConditionalOrders
@@ -74,27 +75,25 @@ void test('it should add/remove/get order to stop book', ({ equal, same, end }) 
     response.forEach((stopQueue) => {
       totalOrder += stopQueue.len()
       // @ts-expect-error _price is private
-      equal(stopQueue._price >= 70 && stopQueue._price <= 100, true)
+      assert.equal(stopQueue._price >= 70 && stopQueue._price <= 100, true)
     })
-    equal(totalOrder, 5)
+    assert.equal(totalOrder, 5)
   }
 
-  same(ob.remove(Side.SELL, 'sell-3', 120)?.id, 'sell-3')
+  assert.deepEqual(ob.remove(Side.SELL, 'sell-3', 120)?.id, 'sell-3')
   // @ts-expect-error asks is private
-  equal(ob.asks._priceTree.length, 3)
+  assert.equal(ob.asks._priceTree.length, 3)
 
   // Lenght non changed because there were two orders at price level 100
-  same(ob.remove(Side.BUY, 'buy-2', 100)?.id, 'buy-2')
+  assert.deepEqual(ob.remove(Side.BUY, 'buy-2', 100)?.id, 'buy-2')
   // @ts-expect-error asks is private
-  equal(ob.bids._priceTree.length, 4)
+  assert.equal(ob.bids._priceTree.length, 4)
 
   // Try to remove non existing order
-  equal(ob.remove(Side.SELL, 'fake-id', 130), undefined)
-
-  end()
+  assert.equal(ob.remove(Side.SELL, 'fake-id', 130), undefined)
 })
 
-void test('it should validate conditional order', ({ equal, end }) => {
+void test('it should validate conditional order', () => {
   const ob = new StopBook()
 
   const validate = (
@@ -115,7 +114,7 @@ void test('it should validate conditional order', ({ equal, end }) => {
       stopPrice,
       timeInForce: TimeInForce.GTC
     }) as StopOrder
-    equal(ob.validConditionalOrder(marketPrice, order), expect)
+    assert.equal(ob.validConditionalOrder(marketPrice, order), expect)
   }
 
   // Stop LIMIT BUY
@@ -141,6 +140,4 @@ void test('it should validate conditional order', ({ equal, end }) => {
   validate(OrderType.STOP_MARKET, Side.SELL, null, 90, true, 100)
   validate(OrderType.STOP_MARKET, Side.SELL, null, 90, false, 90)
   validate(OrderType.STOP_MARKET, Side.SELL, null, 90, false, 80)
-
-  end()
 })

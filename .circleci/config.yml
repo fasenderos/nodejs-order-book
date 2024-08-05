@@ -19,7 +19,7 @@ jobs:
   build:
     working_directory: ~/hft-limit-order-book
     docker:
-      - image: cimg/node:lts
+      - image: cimg/node:22.5
     steps:
       - checkout
       - *restore-cache
@@ -33,7 +33,7 @@ jobs:
   test:
     working_directory: ~/hft-limit-order-book
     docker:
-      - image: cimg/node:lts
+      - image: cimg/node:22.5
     steps:
       - checkout
       - *restore-cache
@@ -42,7 +42,7 @@ jobs:
           name: Unit tests
           command: npm run test:cov
       - codecov/upload:
-          file: './.tap/report/lcov.info'
+          file: 'lcov.info'
 
 workflows:
   version: 2
