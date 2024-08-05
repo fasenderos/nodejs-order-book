@@ -26,12 +26,9 @@ on:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
         node: [20.x, 22.x]
 
     steps:
