@@ -1,6 +1,6 @@
+/* node:coverage disable */
 import { OrderBookError } from './errors'
 import { LimitOrder, StopLimitOrder, StopMarketOrder } from './order'
-/* node:coverage disable */
 export enum Side {
   BUY = 'buy',
   SELL = 'sell',

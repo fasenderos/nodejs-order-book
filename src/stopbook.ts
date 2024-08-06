@@ -1,3 +1,4 @@
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import { StopQueue } from './stopqueue'
 import { StopSide } from './stopside'
 import { OrderType, Side, StopOrder } from './types'
@@ -75,4 +76,5 @@ export class StopBook {
     }
     return response
   }
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 }

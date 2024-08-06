@@ -1,3 +1,4 @@
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import Denque from 'denque'
 import { StopOrder } from './types'
 
@@ -52,4 +53,5 @@ export class StopQueue {
     }
     return deletedOrder
   }
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 }

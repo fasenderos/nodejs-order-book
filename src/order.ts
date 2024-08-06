@@ -1,3 +1,4 @@
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import { CustomError, ERROR } from './errors'
 import {
   ILimitOrder,
@@ -287,4 +288,5 @@ export const OrderFactory = {
         throw CustomError(ERROR.INVALID_ORDER_TYPE)
     }
   }
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 }

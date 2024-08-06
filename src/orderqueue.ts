@@ -1,3 +1,4 @@
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import Denque from 'denque'
 import { LimitOrder } from './order'
 
@@ -83,4 +84,5 @@ export class OrderQueue {
     order.size = size
     order.time = Date.now()
   }
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 }
