@@ -1,5 +1,5 @@
-const fs = require('fs')
-const Path = require('path')
+const fs = require('node:fs')
+const Path = require('node:path')
 const fileName = '../package.json'
 const file = require(fileName)
 const args = process.argv.slice(2)
@@ -17,6 +17,6 @@ fs.writeFile(
     if (err) {
       return console.log(err)
     }
-    console.log('Writing to ' + fileName)
+    console.log(`Writing to ${fileName}`)
   }
 )

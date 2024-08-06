@@ -35,10 +35,10 @@
     "release:major": "release-it major --ci",
     "release:minor": "release-it minor --ci",
     "release:patch": "release-it patch --ci",
-    "test": "c8 node --import tsx --test ./test/*.test.ts",
-    "test:dev": "c8 node --import tsx --test --watch ./test/*.test.ts",
-    "test:ci": "node --import tsx --test ./test/*.test.ts",
-    "test:cov": "c8 --reporter lcov node --import tsx --test ./test/*.test.ts",
+    "test": "c8 node --import=tsx --test ./test/*.test.ts",
+    "test:dev": "c8 node --import=tsx --test --watch ./test/*.test.ts",
+    "test:ci": "node --import=tsx --test ./test/*.test.ts",
+    "test:cov": "c8 --reporter=lcov node --import=tsx --test ./test/*.test.ts",
     "prepare": "husky"
   },
   "dependencies": {

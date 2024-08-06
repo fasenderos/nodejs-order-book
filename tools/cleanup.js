@@ -1,16 +1,16 @@
-const fs = require('fs')
-const Path = require('path')
+const fs = require('node:fs')
+const Path = require('node:path')
 
 const deleteFolderRecursive = (path) => {
   if (fs.existsSync(path)) {
-    fs.readdirSync(path).forEach((file) => {
+    for (const file of fs.readdirSync(path)) {
       const curPath = Path.join(path, file)
       if (fs.lstatSync(curPath).isDirectory()) {
         deleteFolderRecursive(curPath)
       } else {
         fs.unlinkSync(curPath)
-      }
-    })
+      } 
+    }
     fs.rmdirSync(path)
   }
 }

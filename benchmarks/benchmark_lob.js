@@ -9,42 +9,42 @@ function spamLimitOrders (book, count) {
   }
 }
 
-bench('Spam 1 new Limits', function (b) {
+bench('Spam 1 new Limits', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitOrders(book, 1)
   b.end()
 })
 
-bench('Spam 10 new Limits', function (b) {
+bench('Spam 10 new Limits', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitOrders(book, 10)
   b.end()
 })
 
-bench('Spam 100 new Limits', function (b) {
+bench('Spam 100 new Limits', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitOrders(book, 100)
   b.end()
 })
 
-bench('Spam 1000 new Limits', function (b) {
+bench('Spam 1000 new Limits', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitOrders(book, 1000)
   b.end()
 })
 
-bench('Spam 100000 new Limits', function (b) {
+bench('Spam 100000 new Limits', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitOrders(book, 100000)
   b.end()
 })
 
-bench('Spam 300000 new Limits', function (b) {
+bench('Spam 300000 new Limits', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitOrders(book, 300000)
@@ -58,28 +58,28 @@ function spamOrders (book, count, variance = 5) {
   }
 }
 
-bench('Spam 1 new Orders', function (b) {
+bench('Spam 1 new Orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamOrders(book, 1)
   b.end()
 })
 
-bench('Spam 10 new Orders', function (b) {
+bench('Spam 10 new Orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamOrders(book, 10)
   b.end()
 })
 
-bench('Spam 100 new Orders', function (b) {
+bench('Spam 100 new Orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamOrders(book, 100)
   b.end()
 })
 
-bench('Spam 1000 new Orders', function (b) {
+bench('Spam 1000 new Orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamOrders(book, 1000)
@@ -102,28 +102,28 @@ function spamOrdersRandomCancels (
   }
 }
 
-bench('Spam 10 orders and randomly cancel orders', function (b) {
+bench('Spam 10 orders and randomly cancel orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamOrdersRandomCancels(book, 10)
   b.end()
 })
 
-bench('Spam 100 orders and randomly cancel orders', function (b) {
+bench('Spam 100 orders and randomly cancel orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamOrdersRandomCancels(book, 100)
   b.end()
 })
 
-bench('Spam 1000 orders and randomly cancel orders', function (b) {
+bench('Spam 1000 orders and randomly cancel orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamOrdersRandomCancels(book, 1000)
   b.end()
 })
 
-bench('Spam 10000 orders and randomly cancel orders', function (b) {
+bench('Spam 10000 orders and randomly cancel orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamOrdersRandomCancels(book, 10000)
@@ -151,21 +151,21 @@ function spamLimitRandomOrders (
   }
 }
 
-bench('Spam 1000 limit orders and occasional market orders', function (b) {
+bench('Spam 1000 limit orders and occasional market orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitRandomOrders(book, 1000)
   b.end()
 })
 
-bench('Spam 10000 limit orders and occasional market orders', function (b) {
+bench('Spam 10000 limit orders and occasional market orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitRandomOrders(book, 10000)
   b.end()
 })
 
-bench('Spam 100000 limit orders and occasional market orders', function (b) {
+bench('Spam 100000 limit orders and occasional market orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitRandomOrders(book, 100000)
@@ -191,28 +191,28 @@ function spamLimitManyMarketOrders (
   }
 }
 
-bench('Spam 10 limit orders and constant market orders', function (b) {
+bench('Spam 10 limit orders and constant market orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitManyMarketOrders(book, 10)
   b.end()
 })
 
-bench('Spam 100 limit orders and constant market orders', function (b) {
+bench('Spam 100 limit orders and constant market orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitManyMarketOrders(book, 100)
   b.end()
 })
 
-bench('Spam 1000 limit orders and constant market orders', function (b) {
+bench('Spam 1000 limit orders and constant market orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitManyMarketOrders(book, 1000)
   b.end()
 })
 
-bench('Spam 10000 limit orders and constant market orders', function (b) {
+bench('Spam 10000 limit orders and constant market orders', (b) => {
   const book = new hft.OrderBook()
   b.start()
   spamLimitManyMarketOrders(book, 10000)
