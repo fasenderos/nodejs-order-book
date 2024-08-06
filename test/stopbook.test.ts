@@ -1,143 +1,146 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
-import { OrderFactory } from '../src/order'
-import { OrderType, Side, StopOrder, TimeInForce } from '../src/types'
-import { StopBook } from '../src/stopbook'
+import assert from "node:assert/strict";
+import test from "node:test";
+import { OrderFactory } from "../src/order";
+import { StopBook } from "../src/stopbook";
+import { OrderType, Side, type StopOrder, TimeInForce } from "../src/types";
 
-void test('it should add/remove/get order to stop book', () => {
-  const ob = new StopBook()
-  // @ts-expect-error asks is private
-  assert.equal(ob.asks._priceTree.length, 0)
-  // @ts-expect-error bids is private
-  assert.equal(ob.bids._priceTree.length, 0)
+void test("it should add/remove/get order to stop book", () => {
+	const ob = new StopBook();
+	// @ts-expect-error asks is private
+	assert.equal(ob.asks._priceTree.length, 0);
+	// @ts-expect-error bids is private
+	assert.equal(ob.bids._priceTree.length, 0);
 
-  const addOrder = (side: Side, orderId: string, stopPrice: number): void => {
-    const order = OrderFactory.createOrder({
-      id: orderId,
-      type: OrderType.STOP_LIMIT,
-      side,
-      size: 5,
-      price: stopPrice,
-      stopPrice,
-      timeInForce: TimeInForce.GTC
-    })
-    ob.add(order)
-  }
+	const addOrder = (side: Side, orderId: string, stopPrice: number): void => {
+		const order = OrderFactory.createOrder({
+			id: orderId,
+			type: OrderType.STOP_LIMIT,
+			side,
+			size: 5,
+			price: stopPrice,
+			stopPrice,
+			timeInForce: TimeInForce.GTC,
+		});
+		ob.add(order);
+	};
 
-  //  Start with SELL side
-  addOrder(Side.SELL, 'sell-1', 110)
-  // @ts-expect-error asks is private
-  assert.equal(ob.asks._priceTree.length, 1)
-  // @ts-expect-error bids is private
-  assert.equal(ob.bids._priceTree.length, 0)
+	//  Start with SELL side
+	addOrder(Side.SELL, "sell-1", 110);
+	// @ts-expect-error asks is private
+	assert.equal(ob.asks._priceTree.length, 1);
+	// @ts-expect-error bids is private
+	assert.equal(ob.bids._priceTree.length, 0);
 
-  addOrder(Side.SELL, 'sell-2', 110) // Same price as before
-  addOrder(Side.SELL, 'sell-3', 120)
-  addOrder(Side.SELL, 'sell-4', 130)
-  addOrder(Side.SELL, 'sell-5', 140)
+	addOrder(Side.SELL, "sell-2", 110); // Same price as before
+	addOrder(Side.SELL, "sell-3", 120);
+	addOrder(Side.SELL, "sell-4", 130);
+	addOrder(Side.SELL, "sell-5", 140);
 
-  // @ts-expect-error asks is private
-  assert.equal(ob.asks._priceTree.length, 4)
-  // @ts-expect-error bids is private
-  assert.equal(ob.bids._priceTree.length, 0)
+	// @ts-expect-error asks is private
+	assert.equal(ob.asks._priceTree.length, 4);
+	// @ts-expect-error bids is private
+	assert.equal(ob.bids._priceTree.length, 0);
 
-  // Test BUY side
-  addOrder(Side.BUY, 'buy-1', 100)
-  // @ts-expect-error asks is private
-  assert.equal(ob.asks._priceTree.length, 4)
-  // @ts-expect-error bids is private
-  assert.equal(ob.bids._priceTree.length, 1)
+	// Test BUY side
+	addOrder(Side.BUY, "buy-1", 100);
+	// @ts-expect-error asks is private
+	assert.equal(ob.asks._priceTree.length, 4);
+	// @ts-expect-error bids is private
+	assert.equal(ob.bids._priceTree.length, 1);
 
-  addOrder(Side.BUY, 'buy-2', 100) // Same price as before
-  addOrder(Side.BUY, 'buy-3', 90)
-  addOrder(Side.BUY, 'buy-4', 80)
-  addOrder(Side.BUY, 'buy-5', 70)
+	addOrder(Side.BUY, "buy-2", 100); // Same price as before
+	addOrder(Side.BUY, "buy-3", 90);
+	addOrder(Side.BUY, "buy-4", 80);
+	addOrder(Side.BUY, "buy-5", 70);
 
-  // @ts-expect-error asks is private
-  assert.equal(ob.asks._priceTree.length, 4)
-  // @ts-expect-error bids is private
-  assert.equal(ob.bids._priceTree.length, 4)
+	// @ts-expect-error asks is private
+	assert.equal(ob.asks._priceTree.length, 4);
+	// @ts-expect-error bids is private
+	assert.equal(ob.bids._priceTree.length, 4);
 
-  { // Before removing orders, test getConditionalOrders
-    const response = ob.getConditionalOrders(Side.SELL, 110, 130)
-    let totalOrder = 0
-    response.forEach((stopQueue) => {
-      totalOrder += stopQueue.len()
-      // @ts-expect-error _price is private
-      assert.equal(stopQueue._price >= 110 && stopQueue._price <= 130, true)
-    })
-    assert.equal(totalOrder, 4)
-  }
+	{
+		// Before removing orders, test getConditionalOrders
+		const response = ob.getConditionalOrders(Side.SELL, 110, 130);
+		let totalOrder = 0;
+		response.forEach((stopQueue) => {
+			totalOrder += stopQueue.len();
+			// @ts-expect-error _price is private
+			assert.equal(stopQueue._price >= 110 && stopQueue._price <= 130, true);
+		});
+		assert.equal(totalOrder, 4);
+	}
 
-  { // Before removing orders, test getConditionalOrders
-    const response = ob.getConditionalOrders(Side.BUY, 70, 130)
-    let totalOrder = 0
-    response.forEach((stopQueue) => {
-      totalOrder += stopQueue.len()
-      // @ts-expect-error _price is private
-      assert.equal(stopQueue._price >= 70 && stopQueue._price <= 100, true)
-    })
-    assert.equal(totalOrder, 5)
-  }
+	{
+		// Before removing orders, test getConditionalOrders
+		const response = ob.getConditionalOrders(Side.BUY, 70, 130);
+		let totalOrder = 0;
+		response.forEach((stopQueue) => {
+			totalOrder += stopQueue.len();
+			// @ts-expect-error _price is private
+			assert.equal(stopQueue._price >= 70 && stopQueue._price <= 100, true);
+		});
+		assert.equal(totalOrder, 5);
+	}
 
-  assert.deepEqual(ob.remove(Side.SELL, 'sell-3', 120)?.id, 'sell-3')
-  // @ts-expect-error asks is private
-  assert.equal(ob.asks._priceTree.length, 3)
+	assert.deepEqual(ob.remove(Side.SELL, "sell-3", 120)?.id, "sell-3");
+	// @ts-expect-error asks is private
+	assert.equal(ob.asks._priceTree.length, 3);
 
-  // Lenght non changed because there were two orders at price level 100
-  assert.deepEqual(ob.remove(Side.BUY, 'buy-2', 100)?.id, 'buy-2')
-  // @ts-expect-error asks is private
-  assert.equal(ob.bids._priceTree.length, 4)
+	// Lenght non changed because there were two orders at price level 100
+	assert.deepEqual(ob.remove(Side.BUY, "buy-2", 100)?.id, "buy-2");
+	// @ts-expect-error asks is private
+	assert.equal(ob.bids._priceTree.length, 4);
 
-  // Try to remove non existing order
-  assert.equal(ob.remove(Side.SELL, 'fake-id', 130), undefined)
-})
+	// Try to remove non existing order
+	assert.equal(ob.remove(Side.SELL, "fake-id", 130), undefined);
+});
 
-void test('it should validate conditional order', () => {
-  const ob = new StopBook()
+void test("it should validate conditional order", () => {
+	const ob = new StopBook();
 
-  const validate = (
-    orderType: OrderType.STOP_LIMIT | OrderType.STOP_MARKET,
-    side: Side,
-    price: number | null = null,
-    stopPrice: number,
-    expect: boolean,
-    marketPrice: number
-  ): void => {
-    // @ts-expect-error price is available only for STOP_LIMIT
-    const order = OrderFactory.createOrder({
-      id: 'foo',
-      type: orderType,
-      side,
-      size: 5,
-      ...(price !== null ? { price } : {}),
-      stopPrice,
-      timeInForce: TimeInForce.GTC
-    }) as StopOrder
-    assert.equal(ob.validConditionalOrder(marketPrice, order), expect)
-  }
+	const validate = (
+		orderType: OrderType.STOP_LIMIT | OrderType.STOP_MARKET,
+		side: Side,
+		// biome-ignore lint: I prefer to leave price here for a better readability when invocking this function
+		price: number | null = null,
+		stopPrice: number,
+		expect: boolean,
+		marketPrice: number,
+	): void => {
+		// @ts-expect-error price is available only for STOP_LIMIT
+		const order = OrderFactory.createOrder({
+			id: "foo",
+			type: orderType,
+			side,
+			size: 5,
+			...(price !== null ? { price } : {}),
+			stopPrice,
+			timeInForce: TimeInForce.GTC,
+		}) as StopOrder;
+		assert.equal(ob.validConditionalOrder(marketPrice, order), expect);
+	};
 
-  // Stop LIMIT BUY
-  validate(OrderType.STOP_LIMIT, Side.BUY, 100, 90, true, 80)
-  validate(OrderType.STOP_LIMIT, Side.BUY, 100, 90, false, 90)
-  validate(OrderType.STOP_LIMIT, Side.BUY, 100, 90, false, 110)
-  validate(OrderType.STOP_LIMIT, Side.BUY, 90, 90, true, 80)
-  validate(OrderType.STOP_LIMIT, Side.BUY, 90, 90, true, 80)
-  validate(OrderType.STOP_LIMIT, Side.BUY, 90, 100, false, 80)
+	// Stop LIMIT BUY
+	validate(OrderType.STOP_LIMIT, Side.BUY, 100, 90, true, 80);
+	validate(OrderType.STOP_LIMIT, Side.BUY, 100, 90, false, 90);
+	validate(OrderType.STOP_LIMIT, Side.BUY, 100, 90, false, 110);
+	validate(OrderType.STOP_LIMIT, Side.BUY, 90, 90, true, 80);
+	validate(OrderType.STOP_LIMIT, Side.BUY, 90, 90, true, 80);
+	validate(OrderType.STOP_LIMIT, Side.BUY, 90, 100, false, 80);
 
-  // Stop LIMIT SELL
-  validate(OrderType.STOP_LIMIT, Side.SELL, 90, 100, true, 110)
-  validate(OrderType.STOP_LIMIT, Side.SELL, 90, 100, false, 100)
-  validate(OrderType.STOP_LIMIT, Side.SELL, 90, 90, true, 110)
-  validate(OrderType.STOP_LIMIT, Side.SELL, 90, 80, false, 110)
+	// Stop LIMIT SELL
+	validate(OrderType.STOP_LIMIT, Side.SELL, 90, 100, true, 110);
+	validate(OrderType.STOP_LIMIT, Side.SELL, 90, 100, false, 100);
+	validate(OrderType.STOP_LIMIT, Side.SELL, 90, 90, true, 110);
+	validate(OrderType.STOP_LIMIT, Side.SELL, 90, 80, false, 110);
 
-  // Stop MARKET BUY
-  validate(OrderType.STOP_MARKET, Side.BUY, null, 90, true, 80)
-  validate(OrderType.STOP_MARKET, Side.BUY, null, 90, false, 90)
-  validate(OrderType.STOP_MARKET, Side.BUY, null, 90, false, 110)
+	// Stop MARKET BUY
+	validate(OrderType.STOP_MARKET, Side.BUY, null, 90, true, 80);
+	validate(OrderType.STOP_MARKET, Side.BUY, null, 90, false, 90);
+	validate(OrderType.STOP_MARKET, Side.BUY, null, 90, false, 110);
 
-  // Stop MARKET SELL
-  validate(OrderType.STOP_MARKET, Side.SELL, null, 90, true, 100)
-  validate(OrderType.STOP_MARKET, Side.SELL, null, 90, false, 90)
-  validate(OrderType.STOP_MARKET, Side.SELL, null, 90, false, 80)
-})
+	// Stop MARKET SELL
+	validate(OrderType.STOP_MARKET, Side.SELL, null, 90, true, 100);
+	validate(OrderType.STOP_MARKET, Side.SELL, null, 90, false, 90);
+	validate(OrderType.STOP_MARKET, Side.SELL, null, 90, false, 80);
+});
