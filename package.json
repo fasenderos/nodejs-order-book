@@ -25,8 +25,8 @@
     "build:umd": "node tools/cleanup umd && webpack --config config/webpack.config.js",
     "build:types": "node tools/cleanup types && tsc -p config/tsconfig.types.json",
     "clean": "node tools/cleanup",
-    "lint": "ts-standard | snazzy",
-    "lint:fix": "ts-standard --fix | snazzy",
+    "lint": "biome check ./src ./test",
+    "lint:fix": "biome check --write ./src ./test",
     "package": "npm run build && npm pack",
     "postpublish": "pinst --enable",
     "prepublishOnly": "pinst --disable",
@@ -46,6 +46,7 @@
     "functional-red-black-tree": "1.0.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
     "@release-it/conventional-changelog": "^8.0.1",
@@ -57,11 +58,9 @@
     "nanobench": "^3.0.0",
     "pinst": "^3.0.0",
     "release-it": "^17.0.3",
-    "snazzy": "^9.0.0",
     "stream-browserify": "^3.0.0",
     "ts-loader": "^9.0.0",
     "ts-node": "^10.0.0",
-    "ts-standard": "^12.0.0",
     "tsx": "^4.16.5",
     "typescript": "^5.0.0",
     "vm-browserify": "^1.1.2",
@@ -86,10 +85,5 @@
     "order-book",
     "typescript",
     "trading"
-  ],
-  "ts-standard": {
-    "ignore": [
-      "dist"
-    ]
-  }
+  ]
 }
