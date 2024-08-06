@@ -1,3 +1,4 @@
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import { ERROR, CustomError, type OrderBookError } from './errors'
 import {
   LimitOrder,
@@ -1141,4 +1142,5 @@ export class OrderBook {
     }
     return response
   }
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 }

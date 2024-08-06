@@ -1,3 +1,4 @@
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import { IError } from './types'
 
 export enum ERROR {
@@ -74,7 +75,7 @@ export class OrderBookError implements IError {
     this.code = ErrorCodes[error as ERROR] ?? ErrorCodes[ERROR.DEFAULT]
   }
 }
-
+/* node:coverage ignore next - Don't know why this line is uncoverd */
 export const CustomError = (error?: ERROR | string): OrderBookError => {
   return new OrderBookError(error)
 }

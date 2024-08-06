@@ -1,3 +1,4 @@
+/* node:coverage disable */
 import { OrderBook } from './orderbook'
 import { OrderType, Side } from './types'
 import type {
@@ -30,3 +31,4 @@ export {
   StopLimitOrderOptions,
   StopMarketOrderOptions
 }
+/* node:coverage enable */

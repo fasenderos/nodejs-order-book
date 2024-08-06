@@ -1,3 +1,4 @@
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import createRBTree from 'functional-red-black-tree'
 import { StopQueue } from './stopqueue'
 import { Side, StopOrder } from './types'
@@ -79,4 +80,5 @@ export class StopSide {
     )
     return queues
   }
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 }

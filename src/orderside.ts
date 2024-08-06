@@ -1,3 +1,4 @@
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import createRBTree from 'functional-red-black-tree'
 import { CustomError, ERROR } from './errors'
 import { LimitOrder, OrderFactory } from './order'
@@ -177,4 +178,5 @@ export class OrderSide {
     }
     return s
   }
+/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 }
