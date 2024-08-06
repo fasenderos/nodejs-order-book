@@ -1,5 +1,13 @@
 # Changelog
 
+## [7.0.2](https://github.com/fasenderos/hft-limit-order-book/compare/v7.0.1...v7.0.2) (2024-08-06)
+
+
+### Test
+
+* remove matrix on windows ([f81ddd8](https://github.com/fasenderos/hft-limit-order-book/commit/f81ddd836ed2aa2eaaf3e912098805e29625667f))
+* replace tap with the built-in node test runner ([a61baad](https://github.com/fasenderos/hft-limit-order-book/commit/a61baad242151a9cbc3f4eb9785274ffa63e9028))
+
 ## [7.0.1](https://github.com/fasenderos/hft-limit-order-book/compare/v7.0.0...v7.0.1) (2024-08-02)
 
 
