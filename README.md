@@ -11,7 +11,7 @@
 
 :star: Star me on GitHub — it motivates me a lot!
 
-Ultra-fast matching engine written in TypeScript
+Ultra-fast Node.js Order Book for high-frequency trading (HFT) written in TypeScript :rocket::rocket:
 
 ## Features
 
