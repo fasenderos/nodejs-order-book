@@ -7,11 +7,11 @@
     <a href="https://github.com/fasenderos/hft-limit-order-book"><img src="https://badgen.net/badge/icon/typescript?icon=typescript&label" alt="Built with TypeScript"></a>
 </p>
 
-# hft-limit-order-book
+# Node.js Order Book
+
+Ultra-fast Node.js Order Book written in TypeScript for high-frequency trading (HFT) :rocket::rocket:
 
 :star: Star me on GitHub — it motivates me a lot!
-
-Ultra-fast Node.js Order Book for high-frequency trading (HFT) written in TypeScript :rocket::rocket:
 
 ## Features
 
