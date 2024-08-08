@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.0.1](https://github.com/fasenderos/nodejs-order-book/compare/v8.0.0...v8.0.1) (2024-08-08)
+
+
+### Documentation
+
+* package name ([7d7e5d1](https://github.com/fasenderos/nodejs-order-book/commit/7d7e5d184219aa6f5f99b557c74a319de35a7f3e))
+
 ## [8.0.0](https://github.com/fasenderos/nodejs-order-book/compare/v7.0.2...v8.0.0) (2024-08-08)
 
 
