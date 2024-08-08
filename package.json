@@ -1,23 +1,23 @@
 {
-  "name": "order-book",
+  "name": "nodejs-order-book",
   "version": "8.0.0",
   "description": "Node.js Lmit Order Book for high-frequency trading (HFT).",
   "author": "Andrea Fassina <andrea.fassina82@gmail.com>",
   "license": "MIT",
-  "homepage": "https://github.com/fasenderos/order-book",
+  "homepage": "https://github.com/fasenderos/nodejs-order-book",
   "repository": {
     "type": "git",
-    "url": "git@github.com:fasenderos/order-book.git"
+    "url": "git@github.com:fasenderos/nodejs-order-book.git"
   },
   "bugs": {
-    "url": "https://github.com/fasenderos/order-book/issues"
+    "url": "https://github.com/fasenderos/nodejs-order-book/issues"
   },
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "umd:main": "dist/umd/index.js",
   "types": "dist/types/index.d.js",
   "scripts": {
-    "addscope": "node tools/packagejson name @fasenderos/order-book",
+    "addscope": "node tools/packagejson name @fasenderos/nodejs-order-book",
     "bench": "node benchmarks/benchmark_lob.js",
     "build": "npm run build:cjs && npm run build:esm && npm run build:umd && npm run build:types",
     "build:cjs": "node tools/cleanup cjs && tsc -p config/tsconfig.cjs.json",
@@ -77,12 +77,12 @@
     "exchange",
     "hft",
     "hft-trading",
-    "limit-order-book",
+    "limit-nodejs-order-book",
     "matching-algorithm",
     "matching-engine",
     "nodejs",
     "orderbook",
-    "order-book",
+    "nodejs-order-book",
     "typescript",
     "trading"
   ]

@@ -17,7 +17,7 @@ aliases:
 
 jobs:
   build:
-    working_directory: ~/order-book
+    working_directory: ~/nodejs-order-book
     docker:
       - image: cimg/node:22.5
     steps:
@@ -31,7 +31,7 @@ jobs:
       - *build-packages
 
   test:
-    working_directory: ~/order-book
+    working_directory: ~/nodejs-order-book
     docker:
       - image: cimg/node:22.5
     steps:
