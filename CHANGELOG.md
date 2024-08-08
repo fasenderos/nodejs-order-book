@@ -1,5 +1,31 @@
 # Changelog
 
+## [8.0.0](https://github.com/fasenderos/order-book/compare/v7.0.2...v8.0.0) (2024-08-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* new package name `order-book`
+
+### Chore
+
+* **deps-dev:** bump @commitlint/cli from 19.3.0 to 19.4.0 ([32803c0](https://github.com/fasenderos/order-book/commit/32803c07537d491686386b538bdf49482cc655e1))
+* **deps-dev:** bump tsx from 4.16.5 to 4.17.0 ([bd04e06](https://github.com/fasenderos/order-book/commit/bd04e063b318d3c8f716eab1c0511926bfbe0bcb))
+* rename package ([0d6a5da](https://github.com/fasenderos/order-book/commit/0d6a5da63467ffcb696aeab660b8180772bbecfc))
+
+
+### Documentation
+
+* add pnpm installation ([54f5a57](https://github.com/fasenderos/order-book/commit/54f5a5762f120819eb647074500fdc161194e5fd))
+* udpate project description ([59a984f](https://github.com/fasenderos/order-book/commit/59a984f2265d1be677a053140ebe05365eeb7006))
+* udpate project description ([ec02069](https://github.com/fasenderos/order-book/commit/ec02069aea873e832f1015372c13bb11ae9e1956))
+
+
+### Test
+
+* c8 coverage reportern ([0abb8b4](https://github.com/fasenderos/order-book/commit/0abb8b4a7d30afdee49bec5a26561f02bda8ac28))
+* fix codecov lcov.info path ([7dc1d13](https://github.com/fasenderos/order-book/commit/7dc1d137d7df0085ca325c77dc71d843959d745d))
+
 ## [7.0.2](https://github.com/fasenderos/hft-limit-order-book/compare/v7.0.1...v7.0.2) (2024-08-06)
 
 

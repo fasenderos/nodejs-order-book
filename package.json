@@ -1,6 +1,6 @@
 {
   "name": "order-book",
-  "version": "7.0.2",
+  "version": "8.0.0",
   "description": "Node.js Lmit Order Book for high-frequency trading (HFT).",
   "author": "Andrea Fassina <andrea.fassina82@gmail.com>",
   "license": "MIT",
