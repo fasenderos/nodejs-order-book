@@ -34,13 +34,19 @@ Ultra-fast Node.js Order Book written in TypeScript for high-frequency trading (
 Install with npm:
 
 ```sh
-npm install order-book --save
+npm install order-book
 ```
 
 Install with yarn:
 
 ```sh
 yarn add order-book
+```
+
+Install with pnpm:
+
+```sh
+pnpm add order-book
 ```
 
 ## Usage
