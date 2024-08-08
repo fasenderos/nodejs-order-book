@@ -1,7 +1,7 @@
 ## PR Checklist
 Please check if your PR fulfills the following requirements:
 
-- [ ] The commit message follows our guidelines: https://github.com/fasenderos/hft-limit-order-book/blob/main/CONTRIBUTING.md
+- [ ] The commit message follows our guidelines: https://github.com/fasenderos/order-book/blob/main/CONTRIBUTING.md
 - [ ] Tests for the changes have been added (for bug fixes / features)
 - [ ] Docs (README.md) have been added / updated (for bug fixes / features)
 

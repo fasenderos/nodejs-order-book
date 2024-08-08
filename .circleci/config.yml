@@ -17,7 +17,7 @@ aliases:
 
 jobs:
   build:
-    working_directory: ~/hft-limit-order-book
+    working_directory: ~/order-book
     docker:
       - image: cimg/node:22.5
     steps:
@@ -31,7 +31,7 @@ jobs:
       - *build-packages
 
   test:
-    working_directory: ~/hft-limit-order-book
+    working_directory: ~/order-book
     docker:
       - image: cimg/node:22.5
     steps:

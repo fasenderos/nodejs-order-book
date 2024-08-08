@@ -1,6 +1,6 @@
 {
   "git": {
-    "commitMessage": "chore(release): hft-limit-order-book@${version}",
+    "commitMessage": "chore(release): order-book@${version}",
     "tagName": "v${version}",
     "tagAnnotation": "Release v${version}",
     "requireCommits": true,

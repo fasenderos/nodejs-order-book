@@ -1,23 +1,23 @@
 {
-  "name": "hft-limit-order-book",
+  "name": "order-book",
   "version": "7.0.2",
   "description": "Node.js Lmit Order Book for high-frequency trading (HFT).",
   "author": "Andrea Fassina <andrea.fassina82@gmail.com>",
   "license": "MIT",
-  "homepage": "https://github.com/fasenderos/hft-limit-order-book",
+  "homepage": "https://github.com/fasenderos/order-book",
   "repository": {
     "type": "git",
-    "url": "git@github.com:fasenderos/hft-limit-order-book.git"
+    "url": "git@github.com:fasenderos/order-book.git"
   },
   "bugs": {
-    "url": "https://github.com/fasenderos/hft-limit-order-book/issues"
+    "url": "https://github.com/fasenderos/order-book/issues"
   },
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "umd:main": "dist/umd/index.js",
   "types": "dist/types/index.d.js",
   "scripts": {
-    "addscope": "node tools/packagejson name @fasenderos/hft-limit-order-book",
+    "addscope": "node tools/packagejson name @fasenderos/order-book",
     "bench": "node benchmarks/benchmark_lob.js",
     "build": "npm run build:cjs && npm run build:esm && npm run build:umd && npm run build:types",
     "build:cjs": "node tools/cleanup cjs && tsc -p config/tsconfig.cjs.json",

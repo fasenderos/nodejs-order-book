@@ -1,10 +1,10 @@
 <p align="center">
-    <a href="https://www.npmjs.com/package/hft-limit-order-book" target="_blank"><img src="https://img.shields.io/npm/v/hft-limit-order-book?color=blue" alt="NPM Version"></a>
-    <a href="https://github.com/fasenderos/hft-limit-order-book/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/npm/l/hft-limit-order-book" alt="Package License"></a>
-    <a href="https://www.npmjs.com/package/hft-limit-order-book" target="_blank"><img src="https://img.shields.io/npm/dm/hft-limit-order-book" alt="NPM Downloads"></a>
-    <a href="https://circleci.com/gh/fasenderos/hft-limit-order-book" target="_blank"><img src="https://img.shields.io/circleci/build/github/fasenderos/hft-limit-order-book/main" alt="CircleCI" ></a>
-    <a href="https://codecov.io/github/fasenderos/hft-limit-order-book" target="_blank"><img src="https://img.shields.io/codecov/c/github/fasenderos/hft-limit-order-book" alt="Codecov"></a>
-    <a href="https://github.com/fasenderos/hft-limit-order-book"><img src="https://badgen.net/badge/icon/typescript?icon=typescript&label" alt="Built with TypeScript"></a>
+    <a href="https://www.npmjs.com/package/order-book" target="_blank"><img src="https://img.shields.io/npm/v/order-book?color=blue" alt="NPM Version"></a>
+    <a href="https://github.com/fasenderos/order-book/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/npm/l/order-book" alt="Package License"></a>
+    <a href="https://www.npmjs.com/package/order-book" target="_blank"><img src="https://img.shields.io/npm/dm/order-book" alt="NPM Downloads"></a>
+    <a href="https://circleci.com/gh/fasenderos/order-book" target="_blank"><img src="https://img.shields.io/circleci/build/github/fasenderos/order-book/main" alt="CircleCI" ></a>
+    <a href="https://codecov.io/github/fasenderos/order-book" target="_blank"><img src="https://img.shields.io/codecov/c/github/fasenderos/order-book" alt="Codecov"></a>
+    <a href="https://github.com/fasenderos/order-book"><img src="https://badgen.net/badge/icon/typescript?icon=typescript&label" alt="Built with TypeScript"></a>
 </p>
 
 # Node.js Order Book
@@ -27,20 +27,20 @@ Ultra-fast Node.js Order Book written in TypeScript for high-frequency trading (
 
 **Machine:** ASUS ExpertBook, 11th Gen Intel(R) Core(TM) i7-1165G7, 2.80Ghz, 16GB RAM, Node.js v18.4.0.
 
-<img src="https://user-images.githubusercontent.com/1219087/181792292-8619ee25-bf75-4871-a06c-bd6c82157f33.png" alt="hft-limit-order-book-benchmark" title="hft-limit-order-book benchmark" />
+<img src="https://user-images.githubusercontent.com/1219087/181792292-8619ee25-bf75-4871-a06c-bd6c82157f33.png" alt="order-book-benchmark" title="order-book benchmark" />
 
 ## Installation
 
 Install with npm:
 
 ```sh
-npm install hft-limit-order-book --save
+npm install order-book --save
 ```
 
 Install with yarn:
 
 ```sh
-yarn add hft-limit-order-book
+yarn add order-book
 ```
 
 ## Usage
@@ -48,7 +48,7 @@ yarn add hft-limit-order-book
 To start using order book you need to import `OrderBook` and create new instance:
 
 ```js
-import { OrderBook } from 'hft-limit-order-book'
+import { OrderBook } from 'order-book'
 
 const ob = new OrderBook()
 ```
@@ -69,7 +69,7 @@ ob.cancel(orderID: string)
 ### Conditional Orders ![Experimental](https://img.shields.io/badge/Experimental-blue)
 The version `v6.1.0` introduced support for Conditional Orders `Stop Market`, `Stop Limit` and `OCO`. Even though the test coverage for these new features is at 100%, they are not yet considered stable because they have not been tested with real-world scenarios. For this reason, if you want to use conditional orders, you need to instantiate the order book with the `experimentalConditionalOrders` option set to `true`.
 ```js
-import { OrderBook } from 'hft-limit-order-book'
+import { OrderBook } from 'order-book'
 
 const ob = new OrderBook({ experimentalConditionalOrders: true })
 
