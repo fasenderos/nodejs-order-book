@@ -3,7 +3,7 @@
     <a href="https://github.com/fasenderos/nodejs-order-book/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/npm/l/nodejs-order-book" alt="Package License"></a>
     <a href="https://www.npmjs.com/package/nodejs-order-book" target="_blank"><img src="https://img.shields.io/npm/dm/nodejs-order-book" alt="NPM Downloads"></a>
     <a href="https://circleci.com/gh/fasenderos/nodejs-order-book" target="_blank"><img src="https://img.shields.io/circleci/build/github/fasenderos/nodejs-order-book/main" alt="CircleCI" ></a>
-    <a href="https://codecov.io/github/fasenderos/nodejs-order-book" target="_blank"><img src="https://img.shields.io/codecov/c/github/fasenderos/nodejs-order-book" alt="Codecov"></a>
+    <a href="https://codecov.io/github/fasenderos/hft-limit-order-book" target="_blank"><img src="https://img.shields.io/codecov/c/github/fasenderos/hft-limit-order-book" alt="Codecov"></a>
     <a href="https://github.com/fasenderos/nodejs-order-book"><img src="https://badgen.net/badge/icon/typescript?icon=typescript&label" alt="Built with TypeScript"></a>
 </p>
 
