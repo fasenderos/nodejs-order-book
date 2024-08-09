@@ -13,6 +13,34 @@ Ultra-fast Node.js Order Book written in TypeScript for high-frequency trading (
 
 :star: Star me on GitHub — it motivates me a lot!
 
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Experimental Conditional Orders](#conditional-orders-)
+- [About Primary Functions](#about-primary-functions)
+  - [Create order `createOrder()`](#create-order)
+  - [Create Limit order `limit()`](#create-limit-order)
+  - [Create Market order `market()`](#create-market-order)
+  - [Create Stop Limit order `stopLimit()`](#create-stop-limit-order)
+  - [Create Stop Market order `stopMarket()`](#create-stop-market-order)
+  - [Create OCO (One-Cancels-the-Other) order `oco()`](#create-oco-one-cancels-the-other-order)
+  - [Modify an existing order `modifiy()`](#modify-an-existing-order)
+  - [Cancel order `cancel()`](#cancel-order)
+- [Order Book Options](#order-book-options)
+  - [Snapshot](#snapshot)
+  - [Journal Logs](#journal-logs)
+  - [Enable Journaling](#enable-journaling)
+- [Development](#development)
+  - [Build](#build)
+  - [Testing](#testing)
+  - [Coverage](#coverage)
+  - [Benchmarking](#benchmarking)
+- [Contributing](#contributing)
+- [Donation](#donation)
+- [License](#license)
+
 ## Features
 
 - Standard price-time priority
@@ -348,7 +376,7 @@ bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
 ```
 
-## Options
+## Order Book Options
 
 The orderbook can be initialized with the following options by passing them to the constructor:
 
