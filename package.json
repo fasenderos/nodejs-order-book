@@ -74,15 +74,19 @@
     "dist"
   ],
   "keywords": [
+    "order-book",
+    "nodejs-order-book",
+    "orderbook",
+    "limit-order-book",
     "exchange",
     "hft",
     "hft-trading",
-    "limit-nodejs-order-book",
     "matching-algorithm",
     "matching-engine",
     "nodejs",
-    "orderbook",
-    "nodejs-order-book",
+    "performance",
+    "low-latency",
+    "trading-algorithm",
     "typescript",
     "trading"
   ]
