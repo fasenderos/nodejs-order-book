@@ -96,7 +96,6 @@ export interface InternalStopLimitOrderOptions extends ILimitOrderOptions {
  * Specific options for oco order.
  */
 export interface OCOOrderOptions extends StopLimitOrderOptions {
-	stopPrice: number;
 	stopLimitPrice: number;
 	stopLimitTimeInForce?: TimeInForce;
 }
@@ -240,6 +239,48 @@ interface LimitOrderJournalLog {
 }
 
 /**
+ * Represents a log entry for a stop_market order operation.
+ */
+interface StopMarketOrderJournalLog {
+	/** Incremental ID of the operation */
+	opId: number;
+	/** Timestamp of the operation. */
+	ts: number;
+	/** Operation type: 'sm' for stop_market order. */
+	op: "sm";
+	/** Specific options for the stop_market order. */
+	o: StopMarketOrderOptions;
+}
+
+/**
+ * Represents a log entry for a stop_limit order operation.
+ */
+interface StopLimitOrderJournalLog {
+	/** Incremental ID of the operation */
+	opId: number;
+	/** Timestamp of the operation. */
+	ts: number;
+	/** Operation type: 'l' for stop_limit order. */
+	op: "sl";
+	/** Specific options for the stop_limit order. */
+	o: StopLimitOrderOptions;
+}
+
+/**
+ * Represents a log entry for a oco order operation.
+ */
+interface OCOOrderJournalLog {
+	/** Incremental ID of the operation */
+	opId: number;
+	/** Timestamp of the operation. */
+	ts: number;
+	/** Operation type: 'l' for oco order. */
+	op: "oco";
+	/** Specific options for the oco order. */
+	o: OCOOrderOptions;
+}
+
+/**
  * Represents a log entry for an order modification operation.
  */
 interface ModifyOrderJournalLog {
@@ -273,6 +314,9 @@ interface CancelOrderJournalLog {
 export type JournalLog =
 	| MarketOrderJournalLog
 	| LimitOrderJournalLog
+	| StopMarketOrderJournalLog
+	| StopLimitOrderJournalLog
+	| OCOOrderJournalLog
 	| ModifyOrderJournalLog
 	| CancelOrderJournalLog;
 

@@ -1208,8 +1208,6 @@ void test("orderbook enableJournaling option", () => {
 			id: "first-order",
 			size: 50,
 			price: 100,
-			postOnly: false,
-			timeInForce: TimeInForce.GTC,
 		});
 	}
 
@@ -1247,7 +1245,10 @@ void test("orderbook enableJournaling option", () => {
 });
 
 void test("orderbook replayJournal", () => {
-	const ob = new OrderBook({ enableJournaling: true });
+	const ob = new OrderBook({
+		enableJournaling: true,
+		experimentalConditionalOrders: true,
+	});
 
 	const journal: JournalLog[] = [];
 
@@ -1260,7 +1261,7 @@ void test("orderbook replayJournal", () => {
 	}
 
 	{
-		// Add Limit Order, modify and delete the order
+		// Add Limit Order
 		const response = ob.limit({
 			side: Side.BUY,
 			id: "limit-order-b100",
@@ -1268,15 +1269,113 @@ void test("orderbook replayJournal", () => {
 			price: 100,
 		});
 		if (response.log != null) journal.push(response.log);
+	}
+
+	{
+		// Add Stop Market BUY Order
+		const response = ob.stopMarket({
+			side: Side.BUY,
+			size: 1,
+			stopPrice: 120,
+		});
+		if (response.log != null) journal.push(response.log);
+	}
+
+	{
+		// Add Stop Market SELL Order
+		const response = ob.stopMarket({
+			side: Side.SELL,
+			size: 1,
+			stopPrice: 80,
+		});
+		if (response.log != null) journal.push(response.log);
+	}
+
+	{
+		// Add Stop Limit BUY Order
+		const response = ob.stopLimit({
+			side: Side.BUY,
+			id: "stop-limit-order-b130",
+			size: 1,
+			price: 130,
+			stopPrice: 125,
+		});
+		if (response.log != null) journal.push(response.log);
+	}
+
+	{
+		// Add Stop Limit SELL Order
+		const response = ob.stopLimit({
+			side: Side.SELL,
+			id: "stop-limit-order-b70",
+			size: 1,
+			price: 70,
+			stopPrice: 75,
+		});
+		if (response.log != null) journal.push(response.log);
+	}
+
+	{
+		// Add OCO BUY Order
+		const response = ob.oco({
+			side: Side.BUY,
+			id: "oco-order-b-90-130/140",
+			size: 1,
+			price: 90,
+			stopPrice: 130,
+			stopLimitPrice: 140,
+		});
+		if (response.log != null) journal.push(response.log);
+	}
+
+	{
+		// Add OCO SELL Order
+		const response = ob.oco({
+			side: Side.SELL,
+			id: "oco-order-s-130-90/80",
+			size: 1,
+			price: 130,
+			stopPrice: 90,
+			stopLimitPrice: 80,
+		});
+		if (response.log != null) journal.push(response.log);
+	}
+
+	{
+		// Modify and delete the order
 		const modifyOrder = ob.modify("limit-order-b100", { size: 2 });
 		if (modifyOrder.log != null) journal.push(modifyOrder.log);
 		const deleteOrder = ob.cancel("limit-order-b100");
 		if (deleteOrder?.log != null) journal.push(deleteOrder.log);
 	}
 
-	const ob2 = new OrderBook({ journal });
+	const ob2 = new OrderBook({ journal, experimentalConditionalOrders: true });
 
 	assert.equal(ob.toString(), ob2.toString());
+	assert.equal(
+		// @ts-expect-error stopBook is private
+		ob.stopBook.bids._priceTree.length,
+		// @ts-expect-error stopBook is private
+		ob2.stopBook.bids._priceTree.length,
+	);
+	assert.equal(
+		// @ts-expect-error stopBook is private
+		ob.stopBook.bids._priceTree.keys.join(),
+		// @ts-expect-error stopBook is private
+		ob2.stopBook.bids._priceTree.keys.join(),
+	);
+	assert.equal(
+		// @ts-expect-error stopBook is private
+		ob.stopBook.asks._priceTree.length,
+		// @ts-expect-error stopBook is private
+		ob2.stopBook.asks._priceTree.length,
+	);
+	assert.equal(
+		// @ts-expect-error stopBook is private
+		ob.stopBook.asks._priceTree.keys.join(),
+		// @ts-expect-error stopBook is private
+		ob2.stopBook.asks._priceTree.keys.join(),
+	);
 });
 
 void test("orderbook replayJournal test wrong journal", () => {
@@ -1337,6 +1436,54 @@ void test("orderbook replayJournal test wrong journal", () => {
 			},
 		];
 		// @ts-expect-error invalid limit order "o" prop in journal log
+		const ob = new OrderBook({ journal: wrongOp });
+	} catch (error) {
+		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
+		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
+	}
+
+	// Test wrong market order journal log
+	try {
+		const wrongOp = [
+			{
+				ts: Date.now(),
+				op: "sm",
+				o: { foo: "bar" },
+			},
+		];
+		// @ts-expect-error invalid market order "o" prop in journal log
+		const ob = new OrderBook({ journal: wrongOp });
+	} catch (error) {
+		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
+		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
+	}
+
+	// Test wrong market order journal log
+	try {
+		const wrongOp = [
+			{
+				ts: Date.now(),
+				op: "sl",
+				o: { foo: "bar" },
+			},
+		];
+		// @ts-expect-error invalid market order "o" prop in journal log
+		const ob = new OrderBook({ journal: wrongOp });
+	} catch (error) {
+		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
+		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
+	}
+
+	// Test wrong oco order journal log
+	try {
+		const wrongOp = [
+			{
+				ts: Date.now(),
+				op: "oco",
+				o: { foo: "bar" },
+			},
+		];
+		// @ts-expect-error invalid market order "o" prop in journal log
 		const ob = new OrderBook({ journal: wrongOp });
 	} catch (error) {
 		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);

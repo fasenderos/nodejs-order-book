@@ -139,7 +139,7 @@ export class OrderBook {
 				opId: ++this._lastOp,
 				ts: Date.now(),
 				op: "m",
-				o: { side: options.side, size: options.size },
+				o: options,
 			};
 		}
 		return response;
@@ -160,7 +160,16 @@ export class OrderBook {
 			throw new Error(
 				"In order to use conditional orders you need to instantiate the order book with the `experimentalConditionalOrders` option set to true",
 			);
-		return this._stopMarket(options);
+		const response = this._stopMarket(options);
+		if (this.enableJournaling && response.err === null) {
+			response.log = {
+				opId: ++this._lastOp,
+				ts: Date.now(),
+				op: "sm",
+				o: options,
+			};
+		}
+		return response;
 	};
 
 	/**
@@ -182,14 +191,7 @@ export class OrderBook {
 				opId: ++this._lastOp,
 				ts: Date.now(),
 				op: "l",
-				o: {
-					side: options.side,
-					id: options.id,
-					size: options.size,
-					price: options.price,
-					postOnly: options.postOnly ?? false,
-					timeInForce: options.timeInForce ?? TimeInForce.GTC,
-				},
+				o: options,
 			};
 		}
 		return response;
@@ -213,7 +215,16 @@ export class OrderBook {
 			throw new Error(
 				"In order to use conditional orders you need to instantiate the order book with the `experimentalConditionalOrders` option set to true",
 			);
-		return this._stopLimit(options);
+		const response = this._stopLimit(options);
+		if (this.enableJournaling && response.err === null) {
+			response.log = {
+				opId: ++this._lastOp,
+				ts: Date.now(),
+				op: "sl",
+				o: options,
+			};
+		}
+		return response;
 	};
 
 	/**
@@ -245,7 +256,16 @@ export class OrderBook {
 			throw new Error(
 				"In order to use conditional orders you need to instantiate the order book with the `experimentalConditionalOrders` option set to true",
 			);
-		return this._oco(options);
+		const response = this._oco(options);
+		if (this.enableJournaling && response.err === null) {
+			response.log = {
+				opId: ++this._lastOp,
+				ts: Date.now(),
+				op: "oco",
+				o: options,
+			};
+		}
+		return response;
 	};
 
 	/**
@@ -780,21 +800,52 @@ export class OrderBook {
 					if (side == null || size == null) {
 						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
 					}
-					this.market({ side, size });
+					this.market(log.o);
 					break;
 				}
 				case "l": {
-					const { side, id, size, price, timeInForce } = log.o;
+					const { side, id, size, price } = log.o;
 					if (side == null || id == null || size == null || price == null) {
 						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
 					}
-					this.limit({
-						side,
-						id,
-						size,
-						price,
-						timeInForce,
-					});
+					this.limit(log.o);
+					break;
+				}
+				case "sm": {
+					const { side, size, stopPrice } = log.o;
+					if (side == null || size == null || stopPrice == null) {
+						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
+					}
+					this.stopMarket(log.o);
+					break;
+				}
+				case "sl": {
+					const { side, id, size, price, stopPrice } = log.o;
+					if (
+						side == null ||
+						id == null ||
+						size == null ||
+						price == null ||
+						stopPrice == null
+					) {
+						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
+					}
+					this.stopLimit(log.o);
+					break;
+				}
+				case "oco": {
+					const { side, id, size, price, stopPrice, stopLimitPrice } = log.o;
+					if (
+						side == null ||
+						id == null ||
+						size == null ||
+						price == null ||
+						stopPrice == null ||
+						stopLimitPrice == null
+					) {
+						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
+					}
+					this.oco(log.o);
 					break;
 				}
 				case "d":
