@@ -133,7 +133,16 @@ export class OrderBook {
 	 * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
 	 */
 	public market(options: MarketOrderOptions): IProcessOrder {
-		return this._market(options);
+		const response = this._market(options);
+		if (this.enableJournaling && response.err === null) {
+			response.log = {
+				opId: ++this._lastOp,
+				ts: Date.now(),
+				op: "m",
+				o: { side: options.side, size: options.size },
+			};
+		}
+		return response;
 	}
 
 	/**
@@ -167,7 +176,23 @@ export class OrderBook {
 	 * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
 	 */
 	public limit(options: LimitOrderOptions): IProcessOrder {
-		return this._limit(options);
+		const response = this._limit(options);
+		if (this.enableJournaling && response.err === null) {
+			response.log = {
+				opId: ++this._lastOp,
+				ts: Date.now(),
+				op: "l",
+				o: {
+					side: options.side,
+					id: options.id,
+					size: options.size,
+					price: options.price,
+					postOnly: options.postOnly ?? false,
+					timeInForce: options.timeInForce ?? TimeInForce.GTC,
+				},
+			};
+		}
+		return response;
 	}
 
 	/**
@@ -383,7 +408,7 @@ export class OrderBook {
 		incomingResponse?: IProcessOrder,
 	): IProcessOrder => {
 		const response = incomingResponse ?? this.validateMarketOrder(options);
-		if (response.err != null) return response;
+		if (response.err !== null) return response;
 
 		let quantityToTrade = options.size;
 		let iter: () => OrderQueue | undefined;
@@ -410,14 +435,6 @@ export class OrderBook {
 
 		this.executeConditionalOrder(options.side, priceBefore, response);
 
-		if (this.enableJournaling) {
-			response.log = {
-				opId: ++this._lastOp,
-				ts: Date.now(),
-				op: "m",
-				o: { side: options.side, size: options.size },
-			};
-		}
 		return response;
 	};
 
@@ -426,8 +443,8 @@ export class OrderBook {
 		incomingResponse?: IProcessOrder,
 	): IProcessOrder => {
 		const response = incomingResponse ?? this.validateLimitOrder(options);
-		if (response.err != null) return response;
-		const order = this.createLimitOrder(
+		if (response.err !== null) return response;
+		this.createLimitOrder(
 			response,
 			options.side,
 			options.id,
@@ -437,20 +454,6 @@ export class OrderBook {
 			options.timeInForce ?? TimeInForce.GTC,
 			options.ocoStopPrice,
 		);
-		if (this.enableJournaling && order != null) {
-			response.log = {
-				opId: ++this._lastOp,
-				ts: Date.now(),
-				op: "l",
-				o: {
-					side: order.side,
-					id: order.id,
-					size: order.size,
-					price: order.price,
-					timeInForce: order.timeInForce,
-				},
-			};
-		}
 		return response;
 	};
 
@@ -458,7 +461,7 @@ export class OrderBook {
 		options: StopMarketOrderOptions,
 	): IProcessOrder => {
 		const response = this.validateMarketOrder(options);
-		if (response.err != null) return response;
+		if (response.err !== null) return response;
 		const stopMarket = OrderFactory.createOrder({
 			...options,
 			type: OrderType.STOP_MARKET,
@@ -470,7 +473,7 @@ export class OrderBook {
 		options: StopLimitOrderOptions,
 	): IProcessOrder => {
 		const response = this.validateLimitOrder(options);
-		if (response.err != null) return response;
+		if (response.err !== null) return response;
 		const stopLimit = OrderFactory.createOrder({
 			...options,
 			type: OrderType.STOP_LIMIT,
@@ -482,7 +485,7 @@ export class OrderBook {
 	private readonly _oco = (options: OCOOrderOptions): IProcessOrder => {
 		const response = this.validateLimitOrder(options);
 		/* node:coverage ignore next - Already validated with limit test */
-		if (response.err != null) return response;
+		if (response.err !== null) return response;
 		if (this.validateOCOOrder(options)) {
 			// We use the same ID for Stop Limit and Limit Order, since
 			// we check only on limit order for duplicated ids
@@ -498,7 +501,7 @@ export class OrderBook {
 				response,
 			);
 			/* node:coverage ignore next - Already validated with limit test */
-			if (response.err != null) return response;
+			if (response.err !== null) return response;
 
 			const stopLimit = OrderFactory.createOrder({
 				type: OrderType.STOP_LIMIT,

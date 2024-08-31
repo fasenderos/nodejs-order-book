@@ -1208,6 +1208,7 @@ void test("orderbook enableJournaling option", () => {
 			id: "first-order",
 			size: 50,
 			price: 100,
+			postOnly: false,
 			timeInForce: TimeInForce.GTC,
 		});
 	}

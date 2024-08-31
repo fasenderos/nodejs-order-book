@@ -212,19 +212,9 @@ export interface CancelOrderOptions {
 }
 
 /**
- * Represents a cancel order operation.
- */
-export interface ICancelOrder {
-	order: LimitOrder;
-	stopOrder?: StopOrder;
-	/** Optional log related to the order cancellation. */
-	log?: CancelOrderJournalLog;
-}
-
-/**
  * Represents a log entry for a market order operation.
  */
-export interface MarketOrderJournalLog {
+interface MarketOrderJournalLog {
 	/** Incremental ID of the operation */
 	opId: number;
 	/** Timestamp of the operation. */
@@ -238,7 +228,7 @@ export interface MarketOrderJournalLog {
 /**
  * Represents a log entry for a limit order operation.
  */
-export interface LimitOrderJournalLog {
+interface LimitOrderJournalLog {
 	/** Incremental ID of the operation */
 	opId: number;
 	/** Timestamp of the operation. */
@@ -252,7 +242,7 @@ export interface LimitOrderJournalLog {
 /**
  * Represents a log entry for an order modification operation.
  */
-export interface ModifyOrderJournalLog {
+interface ModifyOrderJournalLog {
 	/** Incremental ID of the operation */
 	opId: number;
 	/** Timestamp of the operation. */
@@ -266,7 +256,7 @@ export interface ModifyOrderJournalLog {
 /**
  * Represents a log entry for an order cancellation operation.
  */
-export interface CancelOrderJournalLog {
+interface CancelOrderJournalLog {
 	/** Incremental ID of the operation */
 	opId: number;
 	/** Timestamp of the operation. */
@@ -292,6 +282,16 @@ export type CreateOrderOptions =
 	| ({ type: OrderType.STOP_MARKET } & StopMarketOrderOptions)
 	| ({ type: OrderType.STOP_LIMIT } & StopLimitOrderOptions)
 	| ({ type: OrderType.OCO } & OCOOrderOptions);
+
+/**
+ * Represents a cancel order operation.
+ */
+export interface ICancelOrder {
+	order: LimitOrder;
+	stopOrder?: StopOrder;
+	/** Optional log related to the order cancellation. */
+	log?: CancelOrderJournalLog;
+}
 
 /**
  * Options for configuring the order book.
