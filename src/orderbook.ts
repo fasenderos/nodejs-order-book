@@ -100,84 +100,7 @@ export class OrderBook {
 	 * @param options.stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
 	 * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
 	 */
-	public createOrder(options: CreateOrderOptions): IProcessOrder;
-	/**
-	 * @deprecated This implementation has been deprecated and will be removed on v7.0.0.
-	 * Use createOrder({ type, side, size, price, id, timeInForce }) instead.
-	 *
-	 * Create a trade order
-	 *
-	 * @param type - `limit` | `market` | 'stop_limit' | 'stop_market' | 'oco'
-	 * @param side - `sell` or `buy`
-	 * @param size - How much of currency you want to trade in units of base currency
-	 * @param price - The price at which the order is to be fullfilled, in units of the quote currency. Param only for limit order
-	 * @param orderID - Unique order ID. Param only for limit order
-	 * @param timeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
-	 * @param stopPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
-	 * @param stopLimitPrice - The price at which the order will be triggered. Used with `stop_limit` and `stop_market` order.
-	 * @param stopLimitTimeInForce - Time-in-force supported are: `GTC` (default), `FOK`, `IOC`. Param only for limit order
-	 * @param postOnly - Can be used with 'limit' order and when it's `true` the order will be rejected if immediately matches and trades as a taker. Default is `false`
-	 * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
-	 */
-	public createOrder(
-		// Common for all order types
-		type: OrderType,
-		side: Side,
-		size: number,
-		// Specific for limit order type
-		price?: number,
-		orderID?: string,
-		timeInForce?: TimeInForce,
-		stopPrice?: number,
-		stopLimitPrice?: number,
-		stopLimitTimeInForce?: TimeInForce,
-		postOnly?: boolean,
-	): IProcessOrder;
-
-	public createOrder(
-		typeOrOptions: CreateOrderOptions | OrderType,
-		side?: Side,
-		size?: number,
-		price?: number,
-		orderID?: string,
-		timeInForce = TimeInForce.GTC,
-		stopPrice?: number,
-		stopLimitPrice?: number,
-		stopLimitTimeInForce = TimeInForce.GTC,
-		postOnly?: boolean,
-	): IProcessOrder {
-		let options: CreateOrderOptions;
-		// We don't want to test the deprecated signature.
-		/* node:coverage disable */
-		if (
-			typeof typeOrOptions === "string" &&
-			side !== undefined &&
-			size !== undefined
-		) {
-			options = {
-				type: typeOrOptions,
-				side,
-				size,
-				// @ts-expect-error
-				price,
-				id: orderID,
-				timeInForce,
-				// @ts-expect-error
-				stopPrice,
-				// @ts-expect-error
-				stopLimitPrice,
-				stopLimitTimeInForce,
-				postOnly,
-			};
-			/* node:coverage enable */
-		} else if (typeof typeOrOptions === "object") {
-			options = typeOrOptions;
-			/* node:coverage disable */
-		} else {
-			throw new Error("Invalid arguments.");
-		}
-		/* node:coverage enable */
-
+	public createOrder(options: CreateOrderOptions): IProcessOrder {
 		switch (options.type) {
 			case OrderType.MARKET:
 				return this.market(options);
@@ -209,37 +132,8 @@ export class OrderBook {
 	 * @param options.size - How much of currency you want to trade in units of base currency
 	 * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
 	 */
-	public market(options: MarketOrderOptions): IProcessOrder;
-	/**
-	 * @deprecated This implementation has been deprecated and will be removed on v7.0.0.
-	 * Use market({ side, size }) instead.
-	 *
-	 * Create a market order
-	 *
-	 * @param side - `sell` or `buy`
-	 * @param size - How much of currency you want to trade in units of base currency
-	 * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
-	 */
-	public market(side: Side, size: number): IProcessOrder;
-
-	public market(
-		sideOrOptions: MarketOrderOptions | Side,
-		size?: number,
-	): IProcessOrder {
-		// We don't want to test the deprecated signature.
-		/* node:coverage disable */
-		if (typeof sideOrOptions === "string" && size !== undefined) {
-			return this._market({ side: sideOrOptions, size });
-			/* node:coverage enable */
-		}
-		if (typeof sideOrOptions === "object") {
-			return this._market(sideOrOptions);
-			/* node:coverage disable */
-		}
-
-		throw new Error("Invalid arguments.");
-
-		/* node:coverage enable */
+	public market(options: MarketOrderOptions): IProcessOrder {
+		return this._market(options);
 	}
 
 	/**
@@ -272,59 +166,8 @@ export class OrderBook {
 	 * @param options.timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
 	 * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
 	 */
-	public limit(options: LimitOrderOptions): IProcessOrder;
-	/**
-	 * @deprecated This implementation has been deprecated and will be removed on v7.0.0.
-	 * Use limit({ id, side, size, price, timeInForce }) instead.
-	 *
-	 * Create a limit order
-	 *
-	 * @param side - `sell` or `buy`
-	 * @param orderID - Unique order ID
-	 * @param size - How much of currency you want to trade in units of base currency
-	 * @param price - The price at which the order is to be fullfilled, in units of the quote currency
-	 * @param timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
-	 * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
-	 */
-	public limit(
-		side: Side,
-		orderID: string,
-		size: number,
-		price: number,
-		timeInForce?: TimeInForce,
-	): IProcessOrder;
-
-	public limit(
-		sideOrOptions: LimitOrderOptions | Side,
-		orderID?: string,
-		size?: number,
-		price?: number,
-		timeInForce: TimeInForce = TimeInForce.GTC,
-	): IProcessOrder {
-		// We don't want to test the deprecated signature.
-		/* node:coverage disable */
-		if (
-			typeof sideOrOptions === "string" &&
-			orderID !== undefined &&
-			size !== undefined &&
-			price !== undefined
-		) {
-			return this._limit({
-				id: orderID,
-				side: sideOrOptions,
-				size,
-				price,
-				timeInForce,
-			});
-			/* node:coverage enable */
-		}
-		if (typeof sideOrOptions === "object") {
-			return this._limit(sideOrOptions);
-			/* node:coverage disable */
-		}
-
-		throw new Error("Invalid arguments.");
-		/* node:coverage enable */
+	public limit(options: LimitOrderOptions): IProcessOrder {
+		return this._limit(options);
 	}
 
 	/**
