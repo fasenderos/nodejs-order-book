@@ -1,5 +1,38 @@
 # Changelog
 
+## [8.1.0](https://github.com/fasenderos/nodejs-order-book/compare/v8.0.1...v8.1.0) (2024-08-31)
+
+
+### Features
+
+* add journal log for conditional orders ([ca140c1](https://github.com/fasenderos/nodejs-order-book/commit/ca140c1e70e3c5d59035248f727455fe168867d9))
+* remove deprecated signatures ([2833a0f](https://github.com/fasenderos/nodejs-order-book/commit/2833a0f45777bdf434eb3f16b089f9c37fd9888b))
+
+
+### Chore
+
+* **deps-dev:** bump @commitlint/cli from 19.4.0 to 19.4.1 ([404d083](https://github.com/fasenderos/nodejs-order-book/commit/404d0835197eba5d985c9f11c3b19f998c1aac9d))
+* **deps-dev:** bump @commitlint/config-conventional ([e862e60](https://github.com/fasenderos/nodejs-order-book/commit/e862e60fda490f963465fe4f39bb0b156db7d5f3))
+* **deps-dev:** bump elliptic from 6.5.6 to 6.5.7 ([2bb9cbf](https://github.com/fasenderos/nodejs-order-book/commit/2bb9cbf3198c2e7e39adbbfeb8fdf1e53dda9bc9))
+* **deps-dev:** bump husky from 9.1.4 to 9.1.5 ([7af8e01](https://github.com/fasenderos/nodejs-order-book/commit/7af8e01af725fa186dca007551f9d12c58b2f48f))
+* **deps-dev:** bump tsx from 4.17.0 to 4.18.0 ([768ec99](https://github.com/fasenderos/nodejs-order-book/commit/768ec99584cb347d635c77f2c32a98afaacc7ddf))
+* **deps-dev:** bump tsx from 4.18.0 to 4.19.0 ([cb1d529](https://github.com/fasenderos/nodejs-order-book/commit/cb1d529ad4e26962bd36d8b406a53bae086a28d1))
+* **deps-dev:** bump webpack from 5.93.0 to 5.94.0 ([f1bbf28](https://github.com/fasenderos/nodejs-order-book/commit/f1bbf288855771dfa78951bd815a0228981703fc))
+
+
+### Documentation
+
+* add section "Table of Contents" ([e6ddd2a](https://github.com/fasenderos/nodejs-order-book/commit/e6ddd2a55f7b36b7d634d5a1048d26608eb96e59))
+* fix coverage badge [skip ci] ([c224515](https://github.com/fasenderos/nodejs-order-book/commit/c224515c9b70374412727fbb7af95ecfb5d59af8))
+* fix coverage badge [skip ci] ([41eb9c2](https://github.com/fasenderos/nodejs-order-book/commit/41eb9c24675bf0a11b4a6035560727ba668cbe55))
+* update author [skip ci] ([1ec4ff2](https://github.com/fasenderos/nodejs-order-book/commit/1ec4ff2aeb58278dce19ff6943c3b1ab02df9722))
+* update package keywords [skip ci] ([f5b50e6](https://github.com/fasenderos/nodejs-order-book/commit/f5b50e63a9ebb698d4b37f261bde5769e3c71d0c))
+
+
+### Performance Improvement
+
+* refactor market and limit journaling ([9fc263a](https://github.com/fasenderos/nodejs-order-book/commit/9fc263a0828caf0221432167e9347f4d46a25887))
+
 ## [8.0.1](https://github.com/fasenderos/nodejs-order-book/compare/v8.0.0...v8.0.1) (2024-08-08)
 
 
