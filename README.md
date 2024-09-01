@@ -14,6 +14,7 @@ Ultra-fast Node.js Order Book written in TypeScript for high-frequency trading (
 <p align="center">
 :star: Star me on GitHub — it motivates me a lot!
 </p>
+
 ## Table of Contents
 
 - [Features](#features)
