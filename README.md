@@ -10,7 +10,7 @@
 # Node.js Order Book
 
 <p align="center">
-Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency trading (HFT) :rocket::rocket: </br>
+Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency trading (HFT) :rocket::rocket: </br></br>
 :star: Star me on GitHub — it motivates me a lot!
 </p>
 
