@@ -11,8 +11,9 @@
 
 Ultra-fast Node.js Order Book written in TypeScript for high-frequency trading (HFT) :rocket::rocket:
 
+<p align="center">
 :star: Star me on GitHub — it motivates me a lot!
-
+</p>
 ## Table of Contents
 
 - [Features](#features)
@@ -42,15 +43,16 @@ Ultra-fast Node.js Order Book written in TypeScript for high-frequency trading (
 - [License](#license)
 
 ## Features
+> Initially ported from [Go orderbook](https://github.com/i25959341/orderbook), this order book has been enhanced with new features
 
 - Standard price-time priority
 - Supports both market and limit orders
-- Supports `post-only` limit order
-- Supports conditional orders [**Stop Limit, Stop Market and OCO**](#conditional-orders-) <img src="https://img.shields.io/badge/Experimental-blue" alt="Experimental">
-- Supports time in force GTC, FOK and IOC
+- Supports `post-only` limit order <img src="https://img.shields.io/badge/New-green" alt="New">
+- Supports conditional orders [**Stop Limit, Stop Market and OCO**](#conditional-orders-) <img src="https://img.shields.io/badge/New-green" alt="New"> <img src="https://img.shields.io/badge/Experimental-blue" alt="Experimental">
+- Supports time in force GTC, FOK and IOC <img src="https://img.shields.io/badge/New-green" alt="New">
 - Supports order cancelling
-- Supports order price and/or size updating
-- Snapshot and journaling functionalities for restoring the order book during server startup
+- Supports order price and/or size updating <img src="https://img.shields.io/badge/New-green" alt="New">
+- Snapshot and journaling functionalities for restoring the order book during server startup <img src="https://img.shields.io/badge/New-green" alt="New">
 - **High performance (above 300k trades per second)**
 
 **Machine:** ASUS ExpertBook, 11th Gen Intel(R) Core(TM) i7-1165G7, 2.80Ghz, 16GB RAM, Node.js v18.4.0.
