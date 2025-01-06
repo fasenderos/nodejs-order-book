@@ -82,12 +82,12 @@ void test("it should add/remove/get order to stop book", () => {
 		assert.equal(totalOrder, 5);
 	}
 
-	assert.deepEqual(ob.remove(Side.SELL, "sell-3", 120)?.id, "sell-3");
+	assert.deepStrictEqual(ob.remove(Side.SELL, "sell-3", 120)?.id, "sell-3");
 	// @ts-expect-error asks is private
 	assert.equal(ob.asks._priceTree.length, 3);
 
 	// Lenght non changed because there were two orders at price level 100
-	assert.deepEqual(ob.remove(Side.BUY, "buy-2", 100)?.id, "buy-2");
+	assert.deepStrictEqual(ob.remove(Side.BUY, "buy-2", 100)?.id, "buy-2");
 	// @ts-expect-error asks is private
 	assert.equal(ob.bids._priceTree.length, 4);
 

@@ -12,12 +12,13 @@ import { StopBook } from "./stopbook";
 import {
 	type CreateOrderOptions,
 	type ICancelOrder,
+	type ILimitOrder,
+	type IOrder,
 	type IProcessOrder,
 	type JournalLog,
 	type LimitOrderOptions,
 	type MarketOrderOptions,
 	type OCOOrderOptions,
-	type Order,
 	type OrderBookOptions,
 	OrderType,
 	type OrderUpdatePrice,
@@ -346,8 +347,8 @@ export class OrderBook {
 	 * @param orderID - The ID of the order to be returned
 	 * @returns The order if exists or `undefined`
 	 */
-	public order = (orderID: string): LimitOrder | undefined => {
-		return this.orders[orderID];
+	public order = (orderID: string): ILimitOrder | undefined => {
+		return this.orders[orderID]?.toObject();
 	};
 
 	// Returns price levels and volume at price level
@@ -412,13 +413,13 @@ export class OrderBook {
 	};
 
 	public snapshot = (): Snapshot => {
-		const bids: Array<{ price: number; orders: LimitOrder[] }> = [];
-		const asks: Array<{ price: number; orders: LimitOrder[] }> = [];
+		const bids: Array<{ price: number; orders: ILimitOrder[] }> = [];
+		const asks: Array<{ price: number; orders: ILimitOrder[] }> = [];
 		this.bids.priceTree().forEach((price: number, orders: OrderQueue) => {
-			bids.push({ price, orders: orders.toArray() });
+			bids.push({ price, orders: orders.toArray().map((o) => o.toObject()) });
 		});
 		this.asks.priceTree().forEach((price: number, orders: OrderQueue) => {
-			asks.push({ price, orders: orders.toArray() });
+			asks.push({ price, orders: orders.toArray().map((o) => o.toObject()) });
 		});
 		return { bids, asks, ts: Date.now(), lastOp: this._lastOp };
 	};
@@ -534,7 +535,7 @@ export class OrderBook {
 				isOCO: true,
 			});
 			this.stopBook.add(stopLimit);
-			response.done.push(stopLimit);
+			response.done.push(stopLimit.toObject());
 		} else {
 			response.err = CustomError(ERROR.INVALID_CONDITIONAL_ORDER);
 		}
@@ -547,7 +548,7 @@ export class OrderBook {
 	): IProcessOrder => {
 		if (this.stopBook.validConditionalOrder(this._marketPrice, stopOrder)) {
 			this.stopBook.add(stopOrder);
-			response.done.push(stopOrder);
+			response.done.push(stopOrder.toObject());
 		} else {
 			response.err = CustomError(ERROR.INVALID_CONDITIONAL_ORDER);
 		}
@@ -558,15 +559,17 @@ export class OrderBook {
 		this._lastOp = snapshot.lastOp;
 		for (const level of snapshot.bids) {
 			for (const order of level.orders) {
-				this.orders[order.id] = order;
-				this.bids.append(order);
+				const newOrder = OrderFactory.createOrder(order);
+				this.orders[newOrder.id] = newOrder;
+				this.bids.append(newOrder);
 			}
 		}
 
 		for (const level of snapshot.asks) {
 			for (const order of level.orders) {
-				this.orders[order.id] = order;
-				this.asks.append(order);
+				const newOrder = OrderFactory.createOrder(order);
+				this.orders[newOrder.id] = newOrder;
+				this.asks.append(newOrder);
 			}
 		}
 	};
@@ -586,16 +589,14 @@ export class OrderBook {
 		delete this.orders[orderID];
 		const side = order.side === Side.BUY ? this.bids : this.asks;
 		const response: ICancelOrder = {
-			order: side.remove(order),
+			order: side.remove(order)?.toObject(),
 		};
 
 		// Delete OCO Order only when the delete request comes from user
 		if (!internalDeletion && order.ocoStopPrice !== undefined) {
-			response.stopOrder = this.stopBook.remove(
-				order.side,
-				orderID,
-				order.ocoStopPrice,
-			);
+			response.stopOrder = this.stopBook
+				.remove(order.side, orderID, order.ocoStopPrice)
+				?.toObject();
 		}
 
 		if (this.enableJournaling) {
@@ -698,16 +699,16 @@ export class OrderBook {
 			});
 			if (response.done.length > 0) {
 				response.partialQuantityProcessed = size - quantityToTrade;
-				response.partial = order;
+				response.partial = order.toObject();
 			}
 			this.orders[orderID] = sideToAdd.append(order);
 		} else {
 			let totalQuantity = 0;
 			let totalPrice = 0;
 
-			response.done.forEach((order: Order) => {
+			response.done.forEach((order: IOrder) => {
 				totalQuantity += order.size;
-				totalPrice += (order as LimitOrder).price * order.size;
+				totalPrice += (order as ILimitOrder).price * order.size;
 			});
 
 			if (response.partialQuantityProcessed > 0 && response.partial !== null) {
@@ -728,7 +729,7 @@ export class OrderBook {
 				takerQty,
 				makerQty,
 			});
-			response.done.push(order);
+			response.done.push(order.toObject());
 		}
 
 		// If IOC order was not matched completely remove from the order book
@@ -787,7 +788,7 @@ export class OrderBook {
 						response,
 					);
 				}
-				response.activated.push(stopOrder);
+				response.activated.push(stopOrder.toObject());
 			});
 		}
 	};
@@ -914,13 +915,14 @@ export class OrderBook {
 				const headOrder = orderQueue.head();
 				if (headOrder !== undefined) {
 					if (response.quantityLeft < headOrder.size) {
-						response.partial = OrderFactory.createOrder({
+						const partial = OrderFactory.createOrder({
 							...headOrder.toObject(),
 							size: headOrder.size - response.quantityLeft,
 						});
-						this.orders[headOrder.id] = response.partial;
+						response.partial = partial.toObject();
+						this.orders[headOrder.id] = partial;
 						response.partialQuantityProcessed = response.quantityLeft;
-						orderQueue.update(headOrder, response.partial);
+						orderQueue.update(headOrder, partial);
 						response.quantityLeft = 0;
 					} else {
 						response.quantityLeft = response.quantityLeft - headOrder.size;

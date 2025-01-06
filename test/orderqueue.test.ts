@@ -35,14 +35,14 @@ void test("it should append/update/remove orders from queue", () => {
 
 	assert.equal(head instanceof LimitOrder, true);
 	assert.equal(tail instanceof LimitOrder, true);
-	assert.deepEqual(head, order1);
-	assert.deepEqual(tail, order2);
+	assert.deepStrictEqual(head, order1);
+	assert.deepStrictEqual(tail, order2);
 	assert.equal(oq.volume(), 10);
 	assert.equal(oq.len(), 2);
 	assert.equal(oq.price(), price);
 	const orders = oq.toArray();
-	assert.deepEqual(orders[0].toObject(), order1.toObject());
-	assert.deepEqual(orders[1].toObject(), order2.toObject());
+	assert.deepStrictEqual(orders[0].toObject(), order1.toObject());
+	assert.deepStrictEqual(orders[1].toObject(), order2.toObject());
 
 	const order3 = OrderFactory.createOrder({
 		type: OrderType.LIMIT,
@@ -64,8 +64,8 @@ void test("it should append/update/remove orders from queue", () => {
 
 	const head2 = oq.head();
 	const tail2 = oq.tail();
-	assert.deepEqual(head2, order3);
-	assert.deepEqual(tail2, order2);
+	assert.deepStrictEqual(head2, order3);
+	assert.deepStrictEqual(tail2, order2);
 
 	oq.remove(order3);
 
@@ -74,8 +74,8 @@ void test("it should append/update/remove orders from queue", () => {
 	const tail3 = oq.tail();
 	assert.equal(oq.len(), 1);
 	assert.equal(oq.volume(), 5);
-	assert.deepEqual(head3, order2);
-	assert.deepEqual(tail3, order2);
+	assert.deepStrictEqual(head3, order2);
+	assert.deepStrictEqual(tail3, order2);
 });
 
 void test("it should update order size and the volume", () => {

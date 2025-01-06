@@ -13,6 +13,7 @@ import {
 	type Side,
 	type TimeInForce,
 } from "./types";
+import { safeStringify } from "./utils";
 
 abstract class BaseOrder {
 	readonly _id: string;
@@ -141,7 +142,7 @@ export class LimitOrder extends BaseOrder {
     makerQty: ${this._makerQty}
     takerQty: ${this._takerQty}`;
 
-	toJSON = (): string => JSON.stringify(this.toObject());
+	toJSON = (): string | null => safeStringify(this.toObject());
 
 	toObject = (): ILimitOrder => ({
 		id: this._id,
@@ -184,7 +185,7 @@ export class StopMarketOrder extends BaseOrder {
     stopPrice: ${this._stopPrice}
     time: ${this._time}`;
 
-	toJSON = (): string => JSON.stringify(this.toObject());
+	toJSON = (): string | null => safeStringify(this.toObject());
 
 	toObject = (): IStopMarketOrder => ({
 		id: this._id,
@@ -249,10 +250,11 @@ export class StopLimitOrder extends BaseOrder {
     size: ${this._size}
     price: ${this._price}
     stopPrice: ${this._stopPrice}
+	isOCO: ${this.isOCO}
     timeInForce: ${this._timeInForce}
     time: ${this._time}`;
 
-	toJSON = (): string => JSON.stringify(this.toObject());
+	toJSON = (): string | null => safeStringify(this.toObject());
 
 	toObject = (): IStopLimitOrder => ({
 		id: this._id,
@@ -261,6 +263,7 @@ export class StopLimitOrder extends BaseOrder {
 		size: this._size,
 		price: this._price,
 		stopPrice: this._stopPrice,
+		isOCO: this.isOCO,
 		timeInForce: this._timeInForce,
 		time: this._time,
 	});

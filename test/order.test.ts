@@ -45,7 +45,7 @@ void test("it should create LimitOrder", () => {
 		assert.equal(order.makerQty, size);
 		assert.equal(order.takerQty, 0);
 		assert.equal(order.ocoStopPrice, undefined);
-		assert.deepEqual(order.toObject(), {
+		assert.deepStrictEqual(order.toObject(), {
 			id,
 			type,
 			side,
@@ -115,7 +115,7 @@ void test("it should create LimitOrder", () => {
 		assert.equal(order.makerQty, size);
 		assert.equal(order.takerQty, 0);
 		assert.equal(order.ocoStopPrice, ocoStopPrice);
-		assert.deepEqual(order.toObject(), {
+		assert.deepStrictEqual(order.toObject(), {
 			id,
 			type,
 			side,
@@ -181,7 +181,7 @@ void test("it should create StopMarketOrder", () => {
 	assert.equal(order.size, size);
 	assert.equal(order.stopPrice, stopPrice);
 	assert.equal(order.time, time);
-	assert.deepEqual(order.toObject(), {
+	assert.deepStrictEqual(order.toObject(), {
 		id,
 		type,
 		side,
@@ -242,13 +242,14 @@ void test("it should create StopLimitOrder", () => {
 		assert.equal(order.timeInForce, timeInForce);
 		assert.equal(order.time, time);
 		assert.equal(order.isOCO, false);
-		assert.deepEqual(order.toObject(), {
+		assert.deepStrictEqual(order.toObject(), {
 			id,
 			type,
 			side,
 			size,
 			price,
 			stopPrice,
+			isOCO: false,
 			timeInForce,
 			time,
 		});
@@ -260,6 +261,7 @@ void test("it should create StopLimitOrder", () => {
     size: ${size}
     price: ${price}
     stopPrice: ${stopPrice}
+	isOCO: false
     timeInForce: ${timeInForce}
     time: ${time}`,
 		);
@@ -272,6 +274,7 @@ void test("it should create StopLimitOrder", () => {
 				size,
 				price,
 				stopPrice,
+				isOCO: false,
 				timeInForce,
 				time,
 			}),
@@ -306,13 +309,14 @@ void test("it should create StopLimitOrder", () => {
 		assert.equal(order.timeInForce, timeInForce);
 		assert.equal(order.time, time);
 		assert.equal(order.isOCO, true);
-		assert.deepEqual(order.toObject(), {
+		assert.deepStrictEqual(order.toObject(), {
 			id,
 			type,
 			side,
 			size,
 			price,
 			stopPrice,
+			isOCO: true,
 			timeInForce,
 			time,
 		});
@@ -324,6 +328,7 @@ void test("it should create StopLimitOrder", () => {
     size: ${size}
     price: ${price}
     stopPrice: ${stopPrice}
+	isOCO: true
     timeInForce: ${timeInForce}
     time: ${time}`,
 		);
@@ -336,6 +341,7 @@ void test("it should create StopLimitOrder", () => {
 				size,
 				price,
 				stopPrice,
+				isOCO: true,
 				timeInForce,
 				time,
 			}),
@@ -376,7 +382,7 @@ void test("it should create order without passing a date or id", (t) => {
 	});
 	assert.equal(order.id, fakeId);
 	assert.equal(order.time, fakeTimestamp);
-	assert.deepEqual(order.toObject(), {
+	assert.deepStrictEqual(order.toObject(), {
 		id: fakeId,
 		type,
 		side,
