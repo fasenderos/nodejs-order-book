@@ -393,6 +393,8 @@ A `snapshot` represents the state of the order book at a specific point in time.
 Snapshots are crucial for restoring the order book to a previous state. The orderbook can restore from a snapshot before processing any journal logs, ensuring consistency and accuracy.
 After taking the snapshot, you can safely remove all logs preceding the `lastOp` id.
 
+**Note**: The snapshot of the order book returns an object containing an `array` of `bids` and `asks`, which in turn are arrays of order objects. If the snapshot is saved to the database as a `string`, make sure to pass the snapshot in its original format when initializing the order book. For example, you can achieve this by using `JSON.parse` to convert the string back into its original object form.
+
 ```js
 const ob = new OrderBook({ enableJournaling: true})
 
