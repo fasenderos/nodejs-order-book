@@ -387,6 +387,7 @@ A `snapshot` represents the state of the order book at a specific point in time.
 
  - `asks`: List of ask orders, each with a `price` and a list of associated `orders`.
  - `bids`: List of bid orders, each with a `price` and a list of associated `orders`.
+ - `stopBook`: an object with `bids` and `asks` properties related to every `StopOrder` in the orderbook.
  - `ts`: A timestamp indicating when the snapshot was taken, in Unix timestamp format.
  - `lastOp`: The id of the last operation included in the snapshot
 
@@ -405,7 +406,7 @@ await saveLog(order.log)
 // ... after some time take a snapshot of the order book and save it on the database
 
 const snapshot = ob.snapshot()
-await saveSnapshot(snapshot)
+await saveSnapshot(JSON.stringify(snapshot))
 
 // If you want you can safely remove all logs preceding the `lastOp` id of the snapshot, and continue to save each subsequent log to the database
 await removePreviousLogs(snapshot.lastOp)
@@ -414,7 +415,7 @@ await removePreviousLogs(snapshot.lastOp)
 const logs = await getLogs()
 const snapshot = await getSnapshot()
 
-const ob = new OrderBook({ snapshot, journal: log, enableJournaling: true })
+const ob = new OrderBook({ snapshot: JSON.parse(snapshot), journal: log, enableJournaling: true })
 ```
 
 ### Journal Logs

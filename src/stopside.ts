@@ -77,5 +77,9 @@ export class StopSide {
 		);
 		return queues;
 	};
+
+	priceTree = (): createRBTree.Tree<number, StopQueue> => {
+		return this._priceTree;
+	};
 	/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 }

@@ -4,6 +4,7 @@ import { ERROR, ErrorCodes, ErrorMessages } from "../src/errors";
 import type { LimitOrder } from "../src/order";
 import { OrderBook } from "../src/orderbook";
 import type { OrderQueue } from "../src/orderqueue";
+import type { StopQueue } from "../src/stopqueue";
 import {
 	type ILimitOrder,
 	type IProcessOrder,
@@ -12,6 +13,7 @@ import {
 	type JournalLog,
 	OrderType,
 	Side,
+	type StopOrder,
 	TimeInForce,
 } from "../src/types";
 
@@ -1561,12 +1563,48 @@ void test("orderbook replayJournal test wrong journal", () => {
 });
 
 void test("orderbook test snapshot", () => {
-	const ob = new OrderBook();
+	const ob = new OrderBook({ experimentalConditionalOrders: true });
+	const addStopOrder = (
+		side: Side,
+		orderId: string,
+		stopPrice: number,
+	): void => {
+		ob.createOrder({
+			id: orderId,
+			type: OrderType.STOP_LIMIT,
+			side,
+			size: 10,
+			price: stopPrice,
+			stopPrice,
+			timeInForce: TimeInForce.GTC,
+		});
+	};
+	// Inizialize order book with some orders
 	addDepth(ob, "", 10);
+
+	// Add some stop orders
+	//  Start with SELL side
+	addStopOrder(Side.SELL, "sell-1", 110);
+	addStopOrder(Side.SELL, "sell-2", 110); // Same price as before
+	addStopOrder(Side.SELL, "sell-3", 120);
+	addStopOrder(Side.SELL, "sell-4", 130);
+	addStopOrder(Side.SELL, "sell-5", 140);
+
+	// Test BUY side
+	addStopOrder(Side.BUY, "buy-1", 100);
+	addStopOrder(Side.BUY, "buy-2", 100); // Same price as before
+	addStopOrder(Side.BUY, "buy-3", 90);
+	addStopOrder(Side.BUY, "buy-4", 80);
+	addStopOrder(Side.BUY, "buy-5", 70);
+
 	const snapshot = ob.snapshot();
 
 	assert.equal(Array.isArray(snapshot.asks), true);
 	assert.equal(Array.isArray(snapshot.bids), true);
+
+	assert.equal(Array.isArray(snapshot.stopBook.asks), true);
+	assert.equal(Array.isArray(snapshot.stopBook.bids), true);
+
 	assert.equal(typeof snapshot.ts, "number");
 	snapshot.asks.forEach((level) => {
 		assert.equal(typeof level.price, "number");
@@ -1591,15 +1629,84 @@ void test("orderbook test snapshot", () => {
 			assert.equal(order.origSize, 10);
 		});
 	});
+
+	snapshot.stopBook.asks.forEach((level) => {
+		assert.equal(typeof level.price, "number");
+		assert.equal(Array.isArray(level.orders), true);
+		level.orders.forEach((order) => {
+			assert.equal(typeof order.id, "string");
+			assert.equal(order.type, OrderType.STOP_LIMIT);
+			assert.equal(order.side, Side.BUY);
+			assert.equal(order.size, 10);
+			// @ts-expect-error we know exists for IStopLimitOrder
+			assert.equal(typeof order.price, "number");
+			assert.equal(typeof order.stopPrice, "number");
+		});
+	});
+
+	snapshot.stopBook.bids.forEach((level) => {
+		assert.equal(typeof level.price, "number");
+		assert.equal(Array.isArray(level.orders), true);
+		level.orders.forEach((order) => {
+			assert.equal(typeof order.id, "string");
+			assert.equal(order.type, OrderType.STOP_LIMIT);
+			assert.equal(order.side, Side.BUY);
+			assert.equal(order.size, 10);
+			// @ts-expect-error we know exists for IStopLimitOrder
+			assert.equal(typeof order.price, "number");
+			assert.equal(typeof order.stopPrice, "number");
+		});
+	});
 });
 
 void test("orderbook restore from snapshot", () => {
 	// Create a new orderbook with 3 orders for price levels and make a snapshot
 	const journal: JournalLog[] = [];
-	const ob = new OrderBook({ enableJournaling: true });
+	const ob = new OrderBook({
+		enableJournaling: true,
+		experimentalConditionalOrders: true,
+	});
+
+	const addStopOrder = (
+		side: Side,
+		orderId: string,
+		stopPrice: number,
+	): void => {
+		ob.createOrder({
+			id: orderId,
+			type: OrderType.STOP_LIMIT,
+			side,
+			size: 10,
+			price: stopPrice,
+			stopPrice,
+			timeInForce: TimeInForce.GTC,
+		});
+	};
+
+	// Inizialize order book with some orders
 	addDepth(ob, "first-run-", 10, journal);
-	// addDepth(ob, "second-run-", 10, journal);
-	// addDepth(ob, "third-run-", 10, journal);
+	addDepth(ob, "second-run-", 10, journal);
+	addDepth(ob, "third-run-", 10, journal);
+
+	// Add some stop orders
+	// Test BUY side
+	addStopOrder(Side.BUY, "buy-1", 100);
+	addStopOrder(Side.BUY, "buy-2", 100); // Same price as before
+	addStopOrder(Side.BUY, "buy-3", 90);
+	addStopOrder(Side.BUY, "buy-4", 80);
+	addStopOrder(Side.BUY, "buy-5", 70);
+
+	//  Start with SELL side
+	const prevMarketprice = ob.marketPrice;
+	// @ts-expect-error we should hack the marketPrice in order to let stop order to be executed
+	ob._marketPrice = 150;
+	addStopOrder(Side.SELL, "sell-1", 110);
+	addStopOrder(Side.SELL, "sell-2", 110); // Same price as before
+	addStopOrder(Side.SELL, "sell-3", 120);
+	addStopOrder(Side.SELL, "sell-4", 130);
+	addStopOrder(Side.SELL, "sell-5", 140);
+	// @ts-expect-error restore marketPrice to the original market price
+	ob._marketPrice = prevMarketprice;
 
 	const snapshot = ob.snapshot();
 	{
@@ -1608,6 +1715,30 @@ void test("orderbook restore from snapshot", () => {
 
 		assert.equal(ob.toString(), ob2.toString());
 		assert.deepStrictEqual(ob.depth(), ob2.depth());
+		assert.equal(
+			// @ts-expect-error these are private properties
+			ob.stopBook.bids
+				.priceTree()
+				.values.map((queue) => queue.toArray())
+				.join(","),
+			// @ts-expect-error these are private properties
+			ob2.stopBook.bids
+				.priceTree()
+				.values.map((queue) => queue.toArray())
+				.join(","),
+		);
+		assert.equal(
+			// @ts-expect-error these are private properties
+			ob.stopBook.asks
+				.priceTree()
+				.values.map((queue) => queue.toArray())
+				.join(","),
+			// @ts-expect-error these are private properties
+			ob2.stopBook.asks
+				.priceTree()
+				.values.map((queue) => queue.toArray())
+				.join(","),
+		);
 
 		// @ts-expect-error these are private properties
 		Object.entries(ob.orders).forEach(([key, order]) => {
@@ -1661,10 +1792,42 @@ void test("orderbook restore from snapshot", () => {
 			);
 		});
 
+		const prevStopBook: Record<number, StopOrder[]> = {};
+		const restoredStopBook: Record<number, StopOrder[]> = {};
+
+		// @ts-expect-error these are private properties
+		ob.stopBook.asks.priceTree().forEach((price: number, level: StopQueue) => {
+			prevStopBook[price] = level.toArray();
+		});
+
+		// @ts-expect-error these are private properties
+		ob.stopBook.bids.priceTree().forEach((price: number, level: StopQueue) => {
+			prevStopBook[price] = level.toArray();
+		});
+
+		// @ts-expect-error these are private properties
+		ob2.stopBook.asks.priceTree().forEach((price: number, level: StopQueue) => {
+			restoredStopBook[price] = level.toArray();
+		});
+
+		// @ts-expect-error these are private properties
+		ob2.stopBook.bids.priceTree().forEach((price: number, level: StopQueue) => {
+			restoredStopBook[price] = level.toArray();
+		});
+
+		Object.entries(prevStopBook).forEach(([price, orders]) => {
+			assert.deepStrictEqual(
+				orders.map((order) => order.toObject()),
+				restoredStopBook[price].map((order) => order.toObject()),
+			);
+		});
+
 		// Compare also the snapshot from the original order book and the restored one
 		const snapshot2 = ob2.snapshot();
 		assert.deepStrictEqual(snapshot.asks, snapshot2.asks);
 		assert.deepStrictEqual(snapshot.bids, snapshot2.bids);
+		assert.deepStrictEqual(snapshot.stopBook.asks, snapshot2.stopBook.asks);
+		assert.deepStrictEqual(snapshot.stopBook.bids, snapshot2.stopBook.bids);
 	}
 
 	{

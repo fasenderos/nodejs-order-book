@@ -52,5 +52,9 @@ export class StopQueue {
 		}
 		return deletedOrder;
 	};
+
+	toArray = (): StopOrder[] => {
+		return this._orders.toArray();
+	};
 	/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 }

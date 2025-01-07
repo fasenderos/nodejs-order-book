@@ -399,6 +399,16 @@ export interface Snapshot {
 		/** List of orders associated with this price */
 		orders: ILimitOrder[];
 	}>;
+	stopBook: {
+		asks: Array<{
+			price: number;
+			orders: IStopOrder[];
+		}>;
+		bids: Array<{
+			price: number;
+			orders: IStopOrder[];
+		}>;
+	};
 	/** Unix timestamp representing when the snapshot was taken */
 	ts: number;
 	/** The id of the last operation inserted in the orderbook */
