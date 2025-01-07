@@ -1,5 +1,11 @@
 # Changelog
 
+## 9.1.0 (2025-01-07)
+
+* docs: snapshot with stopbook ([c48ae23](https://github.com/fasenderos/nodejs-order-book/commit/c48ae23))
+* test: stopbook in snapshot ([367d6fb](https://github.com/fasenderos/nodejs-order-book/commit/367d6fb))
+* feat: add stopbook on snapshot ([176fa5e](https://github.com/fasenderos/nodejs-order-book/commit/176fa5e))
+
 ## 9.0.0 (2025-01-07)
 
 * docs: center align project description [skip ci] ([5053024](https://github.com/fasenderos/nodejs-order-book/commit/5053024))
