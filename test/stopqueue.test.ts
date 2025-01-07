@@ -35,8 +35,8 @@ void test("it should append/remove orders from queue", () => {
 
 	assert.equal(head instanceof StopLimitOrder, true);
 	assert.equal(tail instanceof StopLimitOrder, true);
-	assert.deepEqual(head, order1);
-	assert.deepEqual(tail, order2);
+	assert.deepStrictEqual(head, order1);
+	assert.deepStrictEqual(tail, order2);
 	assert.equal(oq.len(), 2);
 
 	const order3 = OrderFactory.createOrder({
@@ -63,16 +63,16 @@ void test("it should append/remove orders from queue", () => {
 	oq.append(order4);
 	assert.equal(oq.len(), 4);
 
-	assert.deepEqual(oq.removeFromHead(), order1);
-	assert.deepEqual(oq.remove(order4.id), order4);
+	assert.deepStrictEqual(oq.removeFromHead(), order1);
+	assert.deepStrictEqual(oq.remove(order4.id), order4);
 	assert.equal(oq.len(), 2);
 
-	assert.deepEqual(oq.removeFromHead(), order2);
+	assert.deepStrictEqual(oq.removeFromHead(), order2);
 	assert.equal(oq.len(), 1);
 
 	assert.equal(oq.remove("fake-id"), undefined);
 	assert.equal(oq.len(), 1);
 
-	assert.deepEqual(oq.remove(order3.id), order3);
+	assert.deepStrictEqual(oq.remove(order3.id), order3);
 	assert.equal(oq.len(), 0);
 });

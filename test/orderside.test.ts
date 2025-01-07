@@ -48,8 +48,8 @@ void test("it should append/update/remove orders from queue on BUY side", () => 
 	);
 	assert.equal(os.len(), 2);
 	assert.equal(os.priceTree().length, 2);
-	assert.deepEqual(os.orders()[0], order1);
-	assert.deepEqual(os.orders()[1], order2);
+	assert.deepStrictEqual(os.orders()[0], order1);
+	assert.deepStrictEqual(os.orders()[1], order2);
 
 	assert.equal(os.lowerThan(21)?.price(), 20);
 	assert.equal(os.lowerThan(19)?.price(), 10);
@@ -72,7 +72,7 @@ void test("it should append/update/remove orders from queue on BUY side", () => 
 	assert.equal(os.len(), 2);
 	assert.equal(os.orders()[0].id, order1.id);
 	assert.equal(os.orders()[0].size, 10);
-	assert.deepEqual(os.orders()[1], order2);
+	assert.deepStrictEqual(os.orders()[1], order2);
 	assert.equal(os.toString(), "\n20 -> 5\n10 -> 10");
 
 	// Update order size without passing price, so the old order price will be used
@@ -83,7 +83,7 @@ void test("it should append/update/remove orders from queue on BUY side", () => 
 	assert.equal(os.len(), 2);
 	assert.equal(os.orders()[0].id, order1.id);
 	assert.equal(os.orders()[0].size, 5);
-	assert.deepEqual(os.orders()[1], order2);
+	assert.deepStrictEqual(os.orders()[1], order2);
 	assert.equal(os.toString(), "\n20 -> 5\n10 -> 5");
 
 	// When price is updated a new order will be created, so we can't match entire object, only properties
@@ -98,7 +98,7 @@ void test("it should append/update/remove orders from queue on BUY side", () => 
 	let updateOrder1 = os.orders()[0];
 	assert.equal(updateOrder1.size, 10);
 	assert.equal(updateOrder1.price, 15);
-	assert.deepEqual(os.orders()[1], order2);
+	assert.deepStrictEqual(os.orders()[1], order2);
 	assert.equal(os.toString(), "\n20 -> 5\n15 -> 10");
 
 	// Test for error when price level not exists
@@ -122,7 +122,7 @@ void test("it should append/update/remove orders from queue on BUY side", () => 
 	assert.equal(os.volume(), 15);
 	assert.equal(os.depth(), 1);
 	assert.equal(os.len(), 2);
-	assert.deepEqual(os.orders()[0], order2);
+	assert.deepStrictEqual(os.orders()[0], order2);
 	updateOrder1 = os.orders()[1];
 	assert.equal(updateOrder1.size, 10);
 	assert.equal(updateOrder1.price, 20);
@@ -136,7 +136,7 @@ void test("it should append/update/remove orders from queue on BUY side", () => 
 	assert.equal(os.volume(), 15);
 	assert.equal(os.depth(), 2);
 	assert.equal(os.len(), 2);
-	assert.deepEqual(os.orders()[0], order2);
+	assert.deepStrictEqual(os.orders()[0], order2);
 	updateOrder1 = os.orders()[1];
 	assert.equal(updateOrder1.size, 10);
 	assert.equal(updateOrder1.price, 25);
@@ -158,7 +158,7 @@ void test("it should append/update/remove orders from queue on BUY side", () => 
 	assert.equal(os.depth(), 1);
 	assert.equal(os.volume(), 5);
 	assert.equal(os.len(), 1);
-	assert.deepEqual(os.orders()[0], order2);
+	assert.deepStrictEqual(os.orders()[0], order2);
 
 	assert.equal(os.toString(), "\n20 -> 5");
 
@@ -215,8 +215,8 @@ void test("it should append/update/remove orders from queue on SELL side", () =>
 	);
 	assert.equal(os.len(), 2);
 	assert.equal(os.priceTree().length, 2);
-	assert.deepEqual(os.orders()[0], order1);
-	assert.deepEqual(os.orders()[1], order2);
+	assert.deepStrictEqual(os.orders()[0], order1);
+	assert.deepStrictEqual(os.orders()[1], order2);
 
 	assert.equal(os.lowerThan(21)?.price(), 20);
 	assert.equal(os.lowerThan(19)?.price(), 10);
@@ -239,7 +239,7 @@ void test("it should append/update/remove orders from queue on SELL side", () =>
 	assert.equal(os.len(), 2);
 	assert.equal(os.orders()[0].id, order1.id);
 	assert.equal(os.orders()[0].size, 10);
-	assert.deepEqual(os.orders()[1], order2);
+	assert.deepStrictEqual(os.orders()[1], order2);
 	assert.equal(os.toString(), "\n20 -> 5\n10 -> 10");
 
 	// When price is updated a new order will be created, so we can't match entire object, only properties
@@ -254,7 +254,7 @@ void test("it should append/update/remove orders from queue on SELL side", () =>
 	let updateOrder1 = os.orders()[0];
 	assert.equal(updateOrder1.size, 10);
 	assert.equal(updateOrder1.price, 15);
-	assert.deepEqual(os.orders()[1], order2);
+	assert.deepStrictEqual(os.orders()[1], order2);
 	assert.equal(os.toString(), "\n20 -> 5\n15 -> 10");
 
 	// Test for error when price level not exists
@@ -279,7 +279,7 @@ void test("it should append/update/remove orders from queue on SELL side", () =>
 	assert.equal(os.volume(), 15);
 	assert.equal(os.depth(), 1);
 	assert.equal(os.len(), 2);
-	assert.deepEqual(os.orders()[0], order2);
+	assert.deepStrictEqual(os.orders()[0], order2);
 	updateOrder1 = os.orders()[1];
 	assert.equal(updateOrder1.size, 10);
 	assert.equal(updateOrder1.price, 20);
@@ -293,7 +293,7 @@ void test("it should append/update/remove orders from queue on SELL side", () =>
 	assert.equal(os.volume(), 15);
 	assert.equal(os.depth(), 2);
 	assert.equal(os.len(), 2);
-	assert.deepEqual(os.orders()[0], order2);
+	assert.deepStrictEqual(os.orders()[0], order2);
 	updateOrder1 = os.orders()[1];
 	assert.equal(updateOrder1.size, 10);
 	assert.equal(updateOrder1.price, 25);
@@ -315,7 +315,7 @@ void test("it should append/update/remove orders from queue on SELL side", () =>
 	assert.equal(os.depth(), 1);
 	assert.equal(os.volume(), 5);
 	assert.equal(os.len(), 1);
-	assert.deepEqual(os.orders()[0], order2);
+	assert.deepStrictEqual(os.orders()[0], order2);
 
 	assert.equal(os.toString(), "\n20 -> 5");
 

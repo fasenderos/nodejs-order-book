@@ -152,6 +152,7 @@ export interface IStopLimitOrder {
 	stopPrice: number;
 	timeInForce: TimeInForce;
 	time: number;
+	isOCO: boolean;
 }
 
 /**
@@ -168,16 +169,19 @@ export type StopOrderOptions =
 	| StopLimitOrderOptions
 	| OCOOrderOptions;
 
+export type IStopOrder = IStopLimitOrder | IStopMarketOrder;
+export type IOrder = ILimitOrder | IStopOrder;
+
 /**
  * Represents the result of processing an order.
  */
 export interface IProcessOrder {
 	/** Array of fully processed orders. */
-	done: Order[];
+	done: IOrder[];
 	/** Array of activated (stop limit or stop market) orders */
-	activated: StopOrder[];
+	activated: IStopOrder[];
 	/** The partially processed order, if any. */
-	partial: LimitOrder | null;
+	partial: ILimitOrder | null;
 	/** The quantity that has been processed in the partial order. */
 	partialQuantityProcessed: number;
 	/** The remaining quantity that needs to be processed. */
@@ -331,8 +335,8 @@ export type CreateOrderOptions =
  * Represents a cancel order operation.
  */
 export interface ICancelOrder {
-	order: LimitOrder;
-	stopOrder?: StopOrder;
+	order: ILimitOrder;
+	stopOrder?: IStopOrder;
 	/** Optional log related to the order cancellation. */
 	log?: CancelOrderJournalLog;
 }
@@ -386,14 +390,14 @@ export interface Snapshot {
 		/** Price of the ask order */
 		price: number;
 		/** List of orders associated with this price */
-		orders: LimitOrder[];
+		orders: ILimitOrder[];
 	}>;
 	/** List of bid orders, each with a price and a list of associated orders */
 	bids: Array<{
 		/** Price of the bid order */
 		price: number;
 		/** List of orders associated with this price */
-		orders: LimitOrder[];
+		orders: ILimitOrder[];
 	}>;
 	/** Unix timestamp representing when the snapshot was taken */
 	ts: number;
