@@ -421,7 +421,8 @@ export class OrderBook {
 		this.asks.priceTree().forEach((price: number, orders: OrderQueue) => {
 			asks.push({ price, orders: orders.toArray().map((o) => o.toObject()) });
 		});
-		return { bids, asks, ts: Date.now(), lastOp: this._lastOp };
+		const stopBook = this.stopBook.snapshot();
+		return { bids, asks, stopBook, ts: Date.now(), lastOp: this._lastOp };
 	};
 
 	private readonly _market = (
@@ -570,6 +571,28 @@ export class OrderBook {
 				const newOrder = OrderFactory.createOrder(order);
 				this.orders[newOrder.id] = newOrder;
 				this.asks.append(newOrder);
+			}
+		}
+
+		if (snapshot.stopBook?.bids?.length > 0) {
+			for (const level of snapshot.stopBook.bids) {
+				for (const order of level.orders) {
+					// @ts-expect-error // TODO fix types
+					const newOrder = OrderFactory.createOrder(order);
+					// @ts-expect-error // TODO fix types
+					this.stopBook.add(newOrder);
+				}
+			}
+		}
+
+		if (snapshot.stopBook?.asks?.length > 0) {
+			for (const level of snapshot.stopBook.asks) {
+				for (const order of level.orders) {
+					// @ts-expect-error // TODO fix types
+					const newOrder = OrderFactory.createOrder(order);
+					// @ts-expect-error // TODO fix types
+					this.stopBook.add(newOrder);
+				}
 			}
 		}
 	};

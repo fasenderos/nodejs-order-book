@@ -1,7 +1,7 @@
 /* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import type { StopQueue } from "./stopqueue";
 import { StopSide } from "./stopside";
-import { OrderType, Side, type StopOrder } from "./types";
+import { type IStopOrder, OrderType, Side, type StopOrder } from "./types";
 
 export class StopBook {
 	private readonly bids: StopSide;
@@ -75,6 +75,18 @@ export class StopBook {
 			if (side === Side.SELL && marketPrice > stopPrice) response = true;
 		}
 		return response;
+	};
+
+	snapshot = () => {
+		const bids: Array<{ price: number; orders: IStopOrder[] }> = [];
+		const asks: Array<{ price: number; orders: IStopOrder[] }> = [];
+		this.bids.priceTree().forEach((price: number, orders: StopQueue) => {
+			bids.push({ price, orders: orders.toArray().map((o) => o.toObject()) });
+		});
+		this.asks.priceTree().forEach((price: number, orders: StopQueue) => {
+			asks.push({ price, orders: orders.toArray().map((o) => o.toObject()) });
+		});
+		return { bids, asks };
 	};
 	/* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 }
