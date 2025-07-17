@@ -1,5 +1,37 @@
 # Changelog
 
+## <small>9.1.1 (2025-07-17)</small>
+
+* chore: remove browser build ([a607627](https://github.com/fasenderos/nodejs-order-book/commit/a607627))
+* chore: remove browser build ([f439f69](https://github.com/fasenderos/nodejs-order-book/commit/f439f69))
+* chore(deps-dev): bump @biomejs/biome from 1.9.4 to 2.1.2 ([47151d7](https://github.com/fasenderos/nodejs-order-book/commit/47151d7))
+* chore(deps-dev): bump @commitlint/cli from 19.6.1 to 19.7.1 ([e020b8d](https://github.com/fasenderos/nodejs-order-book/commit/e020b8d))
+* chore(deps-dev): bump @commitlint/cli from 19.7.1 to 19.8.0 ([56c512f](https://github.com/fasenderos/nodejs-order-book/commit/56c512f))
+* chore(deps-dev): bump @commitlint/cli from 19.8.0 to 19.8.1 ([41eb497](https://github.com/fasenderos/nodejs-order-book/commit/41eb497))
+* chore(deps-dev): bump @commitlint/config-conventional ([30ec858](https://github.com/fasenderos/nodejs-order-book/commit/30ec858))
+* chore(deps-dev): bump @commitlint/config-conventional ([8c2600c](https://github.com/fasenderos/nodejs-order-book/commit/8c2600c))
+* chore(deps-dev): bump @commitlint/config-conventional ([460936d](https://github.com/fasenderos/nodejs-order-book/commit/460936d))
+* chore(deps-dev): bump @release-it/conventional-changelog ([8740136](https://github.com/fasenderos/nodejs-order-book/commit/8740136))
+* chore(deps-dev): bump elliptic from 6.6.0 to 6.6.1 ([8c98aee](https://github.com/fasenderos/nodejs-order-book/commit/8c98aee))
+* chore(deps-dev): bump release-it and @release-it/conventional-changelog ([c64ba5e](https://github.com/fasenderos/nodejs-order-book/commit/c64ba5e))
+* chore(deps-dev): bump release-it from 17.11.0 to 19.0.2 ([97b7208](https://github.com/fasenderos/nodejs-order-book/commit/97b7208))
+* chore(deps-dev): bump release-it from 19.0.2 to 19.0.4 ([9320e49](https://github.com/fasenderos/nodejs-order-book/commit/9320e49))
+* chore(deps-dev): bump ts-loader from 9.5.1 to 9.5.2 ([0739f6c](https://github.com/fasenderos/nodejs-order-book/commit/0739f6c))
+* chore(deps-dev): bump tsx from 4.19.2 to 4.19.3 ([e361b8c](https://github.com/fasenderos/nodejs-order-book/commit/e361b8c))
+* chore(deps-dev): bump tsx from 4.19.3 to 4.19.4 ([01532a5](https://github.com/fasenderos/nodejs-order-book/commit/01532a5))
+* chore(deps-dev): bump tsx from 4.19.4 to 4.20.3 ([84dd5df](https://github.com/fasenderos/nodejs-order-book/commit/84dd5df))
+* chore(deps-dev): bump typescript from 5.7.2 to 5.7.3 ([c0464fe](https://github.com/fasenderos/nodejs-order-book/commit/c0464fe))
+* chore(deps-dev): bump typescript from 5.7.3 to 5.8.2 ([79e9c93](https://github.com/fasenderos/nodejs-order-book/commit/79e9c93))
+* chore(deps-dev): bump typescript from 5.8.2 to 5.8.3 ([3eb30be](https://github.com/fasenderos/nodejs-order-book/commit/3eb30be))
+* chore(deps-dev): bump webpack from 5.97.1 to 5.98.0 ([d48f446](https://github.com/fasenderos/nodejs-order-book/commit/d48f446))
+* chore(deps-dev): bump webpack from 5.98.0 to 5.99.0 ([b21f7c2](https://github.com/fasenderos/nodejs-order-book/commit/b21f7c2))
+* chore(deps-dev): bump webpack from 5.99.0 to 5.99.3 ([ff9abaf](https://github.com/fasenderos/nodejs-order-book/commit/ff9abaf))
+* chore(deps-dev): bump webpack from 5.99.3 to 5.99.5 ([d36787c](https://github.com/fasenderos/nodejs-order-book/commit/d36787c))
+* chore(deps-dev): bump webpack from 5.99.5 to 5.99.6 ([d09eb21](https://github.com/fasenderos/nodejs-order-book/commit/d09eb21))
+* chore(deps-dev): bump webpack from 5.99.6 to 5.99.7 ([dc91e8c](https://github.com/fasenderos/nodejs-order-book/commit/dc91e8c))
+* chore(deps-dev): bump webpack from 5.99.7 to 5.99.8 ([8cf3e18](https://github.com/fasenderos/nodejs-order-book/commit/8cf3e18))
+* chore(deps-dev): bump webpack-cli from 5.1.4 to 6.0.1 ([1dc0284](https://github.com/fasenderos/nodejs-order-book/commit/1dc0284))
+
 ## 9.1.0 (2025-01-07)
 
 * docs: snapshot with stopbook ([c48ae23](https://github.com/fasenderos/nodejs-order-book/commit/c48ae23))
