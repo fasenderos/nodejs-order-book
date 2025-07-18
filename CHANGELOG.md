@@ -1,5 +1,9 @@
 # Changelog
 
+## 10.0.0 (2025-07-18)
+
+* feat: remove experimental conditional orders flag ([96d864f](https://github.com/fasenderos/nodejs-order-book/commit/96d864f))
+
 ## <small>9.1.1 (2025-07-17)</small>
 
 * chore: remove browser build ([a607627](https://github.com/fasenderos/nodejs-order-book/commit/a607627))
