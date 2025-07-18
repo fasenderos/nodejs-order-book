@@ -444,7 +444,7 @@ void test("createOrder error", () => {
  *    Sell: marketPrice > stopPrice
  */
 void test("test stop_market order", () => {
-	const ob = new OrderBook({ experimentalConditionalOrders: true });
+	const ob = new OrderBook();
 
 	addDepth(ob, "", 2);
 	// We need to create at least on maket order in order to set
@@ -601,7 +601,7 @@ void test("test stop_market order", () => {
  *    Sell: marketPrice > stopPrice >= price
  */
 void test("test stop_limit order", () => {
-	const ob = new OrderBook({ experimentalConditionalOrders: true });
+	const ob = new OrderBook();
 
 	addDepth(ob, "", 2);
 	// We need to create at least on maket order in order to set
@@ -808,7 +808,7 @@ void test("test stop_limit order", () => {
  *    Sell: price > marketPrice > stopPrice
  */
 void test("test oco order", () => {
-	const ob = new OrderBook({ experimentalConditionalOrders: true });
+	const ob = new OrderBook();
 
 	addDepth(ob, "", 2);
 	// We need to create at least on maket order in order to set
@@ -1284,10 +1284,7 @@ void test("orderbook enableJournaling option", () => {
 });
 
 void test("orderbook replayJournal", () => {
-	const ob = new OrderBook({
-		enableJournaling: true,
-		experimentalConditionalOrders: true,
-	});
+	const ob = new OrderBook({ enableJournaling: true });
 
 	const journal: JournalLog[] = [];
 
@@ -1388,7 +1385,7 @@ void test("orderbook replayJournal", () => {
 		if (deleteOrder?.log != null) journal.push(deleteOrder.log);
 	}
 
-	const ob2 = new OrderBook({ journal, experimentalConditionalOrders: true });
+	const ob2 = new OrderBook({ journal });
 
 	assert.equal(ob.toString(), ob2.toString());
 	assert.equal(
@@ -1563,7 +1560,7 @@ void test("orderbook replayJournal test wrong journal", () => {
 });
 
 void test("orderbook test snapshot", () => {
-	const ob = new OrderBook({ experimentalConditionalOrders: true });
+	const ob = new OrderBook();
 	const addStopOrder = (
 		side: Side,
 		orderId: string,
@@ -1662,10 +1659,7 @@ void test("orderbook test snapshot", () => {
 void test("orderbook restore from snapshot", () => {
 	// Create a new orderbook with 3 orders for price levels and make a snapshot
 	const journal: JournalLog[] = [];
-	const ob = new OrderBook({
-		enableJournaling: true,
-		experimentalConditionalOrders: true,
-	});
+	const ob = new OrderBook({ enableJournaling: true });
 
 	const addStopOrder = (
 		side: Side,

@@ -19,7 +19,7 @@ Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency tra
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Experimental Conditional Orders](#conditional-orders-)
+- [Conditional Orders](#conditional-orders)
 - [About Primary Functions](#about-primary-functions)
   - [Create order `createOrder()`](#create-order)
   - [Create Limit order `limit()`](#create-limit-order)
@@ -48,7 +48,7 @@ Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency tra
 - Standard price-time priority
 - Supports both market and limit orders
 - Supports `post-only` limit order <img src="https://img.shields.io/badge/New-green" alt="New">
-- Supports conditional orders [**Stop Limit, Stop Market and OCO**](#conditional-orders-) <img src="https://img.shields.io/badge/New-green" alt="New"> <img src="https://img.shields.io/badge/Experimental-blue" alt="Experimental">
+- Supports conditional orders [**Stop Limit, Stop Market and OCO**](#conditional-orders) <img src="https://img.shields.io/badge/New-green" alt="New">
 - Supports time in force GTC, FOK and IOC <img src="https://img.shields.io/badge/New-green" alt="New">
 - Supports order cancelling
 - Supports order price and/or size updating <img src="https://img.shields.io/badge/New-green" alt="New">
@@ -102,20 +102,49 @@ ob.modify(orderID: string, { side: 'buy' | 'sell', size: number, price: number }
 
 ob.cancel(orderID: string)
 ```
-### Conditional Orders ![Experimental](https://img.shields.io/badge/Experimental-blue)
-The version `v6.1.0` introduced support for Conditional Orders `Stop Market`, `Stop Limit` and `OCO`. Even though the test coverage for these new features is at 100%, they are not yet considered stable because they have not been tested with real-world scenarios. For this reason, if you want to use conditional orders, you need to instantiate the order book with the `experimentalConditionalOrders` option set to `true`.
+### Conditional Orders
+Currently `Stop Market`, `Stop Limit` and `OCO` orders are supported.
 ```js
 import { OrderBook } from 'nodejs-order-book'
 
-const ob = new OrderBook({ experimentalConditionalOrders: true })
+const ob = new OrderBook()
 
-ob.createOrder({ type: 'stop_limit' | 'stop_market' | 'oco', side: 'buy' | 'sell', size: number, price?: number, id?: string, stopPrice?: number, timeInForce?: 'GTC' | 'FOK' | 'IOC', stopLimitTimeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.createOrder({ 
+      type: 'stop_limit' | 'stop_market' | 'oco',
+      side: 'buy' | 'sell',
+      size: number,
+      price?: number,
+      id?: string,
+      stopPrice?: number,
+      timeInForce?: 'GTC' | 'FOK' | 'IOC',
+      stopLimitTimeInForce?: 'GTC' | 'FOK' | 'IOC'
+})
 
-ob.stopLimit({ id: string, side: 'buy' | 'sell', size: number, price: number, stopPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.stopLimit({
+      id: string,
+      side: 'buy' | 'sell',
+      size: number,
+      price: number,
+      stopPrice: number,
+      timeInForce?: 'GTC' | 'FOK' | 'IOC'
+})
 
-ob.stopMarket({ side: 'buy' | 'sell', size: number, stopPrice: number })
+ob.stopMarket({
+      side: 'buy' | 'sell',
+      size: number,
+      stopPrice: number
+})
 
-ob.oco({ id: string, side: 'buy' | 'sell', size: number, price: number, stopPrice: number, stopLimitPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC', stopLimitTimeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.oco({
+      id: string,
+      side: 'buy' | 'sell',
+      size: number,
+      price: number,
+      stopPrice: number,
+      stopLimitPrice: number,
+      timeInForce?: 'GTC' | 'FOK' | 'IOC',
+      stopLimitTimeInForce?: 'GTC' | 'FOK' | 'IOC'
+})
 ```
 
 ## About primary functions

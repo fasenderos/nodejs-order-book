@@ -41,26 +41,22 @@ export class OrderBook {
 	private readonly asks: OrderSide;
 	private readonly enableJournaling: boolean;
 	private readonly stopBook: StopBook;
-	private readonly experimentalConditionalOrders: boolean;
 	/**
 	 * Creates an instance of OrderBook.
 	 * @param {OrderBookOptions} [options={}] - Options for configuring the order book.
 	 * @param {JournalLog} [options.snapshot] - The orderbook snapshot will be restored before processing any journal logs, if any.
 	 * @param {JournalLog} [options.journal] - Array of journal logs (optional).
 	 * @param {boolean} [options.enableJournaling=false] - Flag to enable journaling. Default to false
-	 * @param {boolean} [options.experimentalConditionalOrders=false] - Flag to enable experimental Conditional Order (Stop Market, Stop Limit and OCO orders). Default to false
 	 */
 	constructor({
 		snapshot,
 		journal,
 		enableJournaling = false,
-		experimentalConditionalOrders = false,
 	}: OrderBookOptions = {}) {
 		this.bids = new OrderSide(Side.BUY);
 		this.asks = new OrderSide(Side.SELL);
 		this.enableJournaling = enableJournaling;
 		this.stopBook = new StopBook();
-		this.experimentalConditionalOrders = experimentalConditionalOrders;
 		// First restore from orderbook snapshot
 		if (snapshot != null) {
 			this.restoreSnapshot(snapshot);
@@ -156,11 +152,6 @@ export class OrderBook {
 	 * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
 	 */
 	public stopMarket = (options: StopMarketOrderOptions): IProcessOrder => {
-		/* node:coverage ignore next 4 - We don't need test for this */
-		if (!this.experimentalConditionalOrders)
-			throw new Error(
-				"In order to use conditional orders you need to instantiate the order book with the `experimentalConditionalOrders` option set to true",
-			);
 		const response = this._stopMarket(options);
 		if (this.enableJournaling && response.err === null) {
 			response.log = {
@@ -211,11 +202,6 @@ export class OrderBook {
 	 * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
 	 */
 	public stopLimit = (options: StopLimitOrderOptions): IProcessOrder => {
-		/* node:coverage ignore next 4 - We don't need test for this */
-		if (!this.experimentalConditionalOrders)
-			throw new Error(
-				"In order to use conditional orders you need to instantiate the order book with the `experimentalConditionalOrders` option set to true",
-			);
 		const response = this._stopLimit(options);
 		if (this.enableJournaling && response.err === null) {
 			response.log = {
@@ -252,11 +238,6 @@ export class OrderBook {
 	 * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
 	 */
 	public oco = (options: OCOOrderOptions): IProcessOrder => {
-		/* node:coverage ignore next 4 - We don't need test for this */
-		if (!this.experimentalConditionalOrders)
-			throw new Error(
-				"In order to use conditional orders you need to instantiate the order book with the `experimentalConditionalOrders` option set to true",
-			);
 		const response = this._oco(options);
 		if (this.enableJournaling && response.err === null) {
 			response.log = {
@@ -767,7 +748,6 @@ export class OrderBook {
 		priceBefore: number,
 		response: IProcessOrder,
 	): void => {
-		if (!this.experimentalConditionalOrders) return;
 		const pendingOrders = this.stopBook.getConditionalOrders(
 			side,
 			priceBefore,
@@ -956,10 +936,7 @@ export class OrderBook {
 						}
 					}
 					// Remove linked OCO Stop Order if any
-					if (
-						this.experimentalConditionalOrders &&
-						headOrder.ocoStopPrice !== undefined
-					) {
+					if (headOrder.ocoStopPrice !== undefined) {
 						this.stopBook.remove(
 							headOrder.side,
 							headOrder.id,

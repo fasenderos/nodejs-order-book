@@ -354,11 +354,6 @@ export interface OrderBookOptions {
 	enableJournaling?: boolean;
 	/** Array of journal logs. */
 	journal?: JournalLog[];
-	/**
-	 * Flag to enable experimental Conditional Order (Stop Market, Stop Limit and OCO orders).
-	 * Default to false
-	 */
-	experimentalConditionalOrders?: boolean;
 }
 
 /**
