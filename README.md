@@ -63,19 +63,19 @@ Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency tra
 
 Install with npm:
 
-```sh
+```
 npm install nodejs-order-book
 ```
 
 Install with yarn:
 
-```sh
+```
 yarn add nodejs-order-book
 ```
 
 Install with pnpm:
 
-```sh
+```
 pnpm add nodejs-order-book
 ```
 
@@ -83,7 +83,7 @@ pnpm add nodejs-order-book
 
 To start using order book you need to import `OrderBook` and create new instance:
 
-```js
+```ts
 import { OrderBook } from 'nodejs-order-book'
 
 const ob = new OrderBook()
@@ -91,20 +91,39 @@ const ob = new OrderBook()
 
 Then you'll be able to use next primary functions:
 
-```js
-ob.createOrder({ type: 'limit' | 'market', side: 'buy' | 'sell', size: number, price?: number, id?: string, postOnly?: boolean, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+```ts
+ob.createOrder({
+      type: 'limit' | 'market',
+      side: 'buy' | 'sell',
+      size: number,
+      price?: number,
+      id?: string,
+      postOnly?: boolean,
+      timeInForce?: 'GTC' | 'FOK' | 'IOC'
+})
 
-ob.limit({ id: string, side: 'buy' | 'sell', size: number, price: number, postOnly?: boolean, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.limit({
+      id: string,
+      side: 'buy' | 'sell',
+      size: number,
+      price: number,
+      postOnly?: boolean,
+      timeInForce?: 'GTC' | 'FOK' | 'IOC'
+})
 
 ob.market({ side: 'buy' | 'sell', size: number })
 
-ob.modify(orderID: string, { side: 'buy' | 'sell', size: number, price: number })
+ob.modify(orderID: string, { 
+      side: 'buy' | 'sell',
+      size: number,
+      price: number
+})
 
 ob.cancel(orderID: string)
 ```
 ### Conditional Orders
 Currently `Stop Market`, `Stop Limit` and `OCO` orders are supported.
-```js
+```ts
 import { OrderBook } from 'nodejs-order-book'
 
 const ob = new OrderBook()
@@ -153,26 +172,59 @@ To add an order to the order book you can call the general `createOrder()` funct
 
 ### Create Order
 
-```js
+```ts
 // Create limit order
-ob.createOrder({ type: 'limit', side: 'buy' | 'sell', size: number, price: number, id: string, postOnly?: boolean, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.createOrder({
+      type: 'limit',
+      side: 'buy' | 'sell',
+      size: number,
+      price: number,
+      id: string,
+      postOnly?: boolean,
+      timeInForce?: 'GTC' | 'FOK' | 'IOC'
+})
 
 // Create market order
-ob.createOrder({ type: 'market', side: 'buy' | 'sell', size: number })
+ob.createOrder({
+      type: 'market',
+      side: 'buy' | 'sell',
+      size: number
+})
 
 // Create stop limit order
-ob.createOrder({ type: 'stop_limit', side: 'buy' | 'sell', size: number, price: number, id: string, stopPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.createOrder({
+      type: 'stop_limit',
+      side: 'buy' | 'sell',
+      size: number,
+      price: number,
+      id: string,
+      stopPrice: number,
+      timeInForce?: 'GTC' | 'FOK' | 'IOC'
+})
 
 // Create stop market order
-ob.createOrder({ type: 'stop_market', side: 'buy' | 'sell', size: number, stopPrice: number })
+ob.createOrder({
+      type: 'stop_market',
+      side: 'buy' | 'sell',
+      size: number,
+      stopPrice: number
+})
 
 // Create OCO order
-ob.createOrder({ type: 'oco', side: 'buy' | 'sell', size: number, stopPrice: number, stopLimitPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC', stopLimitTimeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.createOrder({
+      type: 'oco',
+      side: 'buy' | 'sell',
+      size: number,
+      stopPrice: number,
+      stopLimitPrice: number,
+      timeInForce?: 'GTC' | 'FOK' | 'IOC',
+      stopLimitTimeInForce?: 'GTC' | 'FOK' | 'IOC'
+})
 ```
 
 ### Create Limit Order
 
-```js
+```ts
 /**
  * Create a limit order. See {@link LimitOrderOptions} for details.
  *
@@ -185,12 +237,19 @@ ob.createOrder({ type: 'oco', side: 'buy' | 'sell', size: number, stopPrice: num
  * @param options.timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
  * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
  */
-ob.limit({ side: 'buy' | 'sell', id: string, size: number, price: number, postOnly?: boolean, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.limit({
+      side: 'buy' | 'sell',
+      id: string,
+      size: number,
+      price: number,
+      postOnly?: boolean,
+      timeInForce?: 'GTC' | 'FOK' | 'IOC'
+})
 ```
 
 For example:
 
-```
+```ts
 ob.limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
 
 asks: 110 -> 5      110 -> 5
@@ -203,7 +262,7 @@ done    - null
 partial - null
 ```
 
-```
+```ts
 ob.limit({ side: "buy", id: "uniqueID", size: 7, price: 120 })
 
 asks: 110 -> 5
@@ -217,7 +276,7 @@ done    - 2 (or more orders)
 partial - uniqueID order
 ```
 
-```
+```ts
 ob.limit({ side: "buy", id: "uniqueID", size: 3, price: 120 })
 
 asks: 110 -> 5
@@ -232,7 +291,7 @@ partial - 1 order with price 110
 
 ### Create Market Order
 
-```js
+```ts
 /**
  * Create a market order. See {@link MarketOrderOptions} for details.
  *
@@ -246,7 +305,7 @@ ob.market({ side: 'buy' | 'sell', size: number })
 
 For example:
 
-```
+```ts
 ob.market({ side: 'sell', size: 6 })
 
 asks: 110 -> 5      110 -> 5
@@ -260,7 +319,7 @@ partial      - 1 order with price 80
 quantityLeft - 0
 ```
 
-```
+```ts
 ob.market({ side: 'buy', size: 10 })
 
 asks: 110 -> 5
@@ -276,7 +335,7 @@ quantityLeft - 4
 
 ### Create Stop Limit Order
 
-```js
+```ts
 /**
  * Create a stop limit order. See {@link StopLimitOrderOptions} for details.
  *
@@ -289,12 +348,19 @@ quantityLeft - 4
  * @param options.timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
  * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
  */
-ob.stopLimit({ side: 'buy' | 'sell', id: string, size: number, price: number, stopPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.stopLimit({
+      side: 'buy' | 'sell',
+      id: string,
+      size: number,
+      price: number,
+      stopPrice: number,
+      timeInForce?: 'GTC' | 'FOK' | 'IOC'
+})
 ```
 
 ### Create Stop Market Order
 
-```js
+```ts
 /**
  * Create a stop market order. See {@link StopMarketOrderOptions} for details.
  *
@@ -304,12 +370,16 @@ ob.stopLimit({ side: 'buy' | 'sell', id: string, size: number, price: number, st
  * @param options.stopPrice - The price at which the order will be triggered.
  * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
  */
-ob.stopMarket({ side: 'buy' | 'sell', size: number, stopPrice: number })
+ob.stopMarket({
+      side: 'buy' | 'sell',
+      size: number,
+      stopPrice: number
+})
 ```
 
 ### Create OCO (One-Cancels-the-Other) Order
 
-```js
+```ts
 /**
  * Create an OCO (One-Cancels-the-Other) order.
  * OCO order combines a `stop_limit` order and a `limit` order, where if stop price
@@ -333,12 +403,21 @@ ob.stopMarket({ side: 'buy' | 'sell', size: number, stopPrice: number })
  * @param options.stopLimitTimeInForce - Time-in-force of the `stop_limit` order. Type supported are: GTC, FOK, IOC. Default is GTC
  * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
  */
-ob.oco({ side: 'buy' | 'sell', id: string, size: number, price: number, stopPrice: number, stopLimitPrice: number, timeInForce?: 'GTC' | 'FOK' | 'IOC', stopLimitTimeInForce?: 'GTC' | 'FOK' | 'IOC' })
+ob.oco({
+      side: 'buy' | 'sell',
+      id: string,
+      size: number,
+      price: number,
+      stopPrice: number,
+      stopLimitPrice: number,
+      timeInForce?: 'GTC' | 'FOK' | 'IOC',
+      stopLimitTimeInForce?: 'GTC' | 'FOK' | 'IOC'
+})
 ```
 
 ### Modify an existing order
 
-```js
+```ts
 /**
  * Modify an existing order with given ID. When an order is modified by price or quantity,
  * it will be deemed as a new entry. Under the price-time-priority algorithm, orders are
@@ -354,7 +433,7 @@ ob.modify(orderID: string, { size: number, price: number })
 
 For example:
 
-```
+```ts
 ob.limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
 
 asks: 110 -> 5      110 -> 5
@@ -385,7 +464,7 @@ bids: 90  -> 5      90  -> 5
 
 ### Cancel Order
 
-```js
+```ts
 /**
  * Remove an existing order with given ID from the order book
  *
@@ -397,7 +476,7 @@ ob.cancel(orderID: string)
 
 For example:
 
-```
+```ts
 ob.cancel("myUniqueID-Sell-1-with-100")
 
 asks: 110 -> 5
@@ -425,7 +504,7 @@ After taking the snapshot, you can safely remove all logs preceding the `lastOp`
 
 **Note**: The snapshot of the order book returns an object containing an `array` of `bids` and `asks`, which in turn are arrays of order objects. If the snapshot is saved to the database as a `string`, make sure to pass the snapshot in its original format when initializing the order book. For example, you can achieve this by using `JSON.parse` to convert the string back into its original object form.
 
-```js
+```ts
 const ob = new OrderBook({ enableJournaling: true})
 
 // after every order save the log to the database
@@ -449,7 +528,7 @@ const ob = new OrderBook({ snapshot: JSON.parse(snapshot), journal: log, enableJ
 
 ### Journal Logs
 The `journal` option expects an array of journal logs that you can get by setting `enableJournaling` to true. When the journal is provided, the order book will replay all the operations, bringing the order book to the same state as the last log.
-```js
+```ts
 // Assuming 'logs' is an array of log entries retrieved from the database
 
 const logs = await getLogs()
@@ -459,7 +538,7 @@ By combining snapshots with journaling, you can effectively restore and audit th
 
 ### Enable Journaling
 `enabledJournaling` is a configuration setting that determines whether journaling is enabled or disabled. When enabled, the property `log` will be added to the body of the response for each operation. The logs must be saved to the database and can then be used when a new instance of the order book is instantiated.
-```js
+```ts
 const ob = new OrderBook({ enableJournaling: true }) // false by default
 
 // after every order save the log to the database
@@ -473,7 +552,7 @@ await saveLog(order.log)
 
 Build production (distribution) files in your dist folder:
 
-```sh
+```
 npm run build
 ```
 
@@ -481,7 +560,7 @@ npm run build
 
 To run all the unit-test
 
-```sh
+```
 npm run test
 ```
 
@@ -489,7 +568,7 @@ npm run test
 
 Run testing coverage
 
-```sh
+```
 npm run test:cov
 ```
 
@@ -497,7 +576,7 @@ npm run test:cov
 
 Before running benchmark, make sure to have built the source code with `npm run build` first
 
-```sh
+```
 npm run bench
 ```
 
