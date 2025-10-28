@@ -971,6 +971,7 @@ export class OrderBook {
 		}
 
 		let cumulativeSize = 0;
+		// biome-ignore lint/suspicious/useIterableCallbackReturn: the forEach of the priceTree must return true to break the loop
 		orderSide.priceTree().forEach((_: number, level: OrderQueue) => {
 			if (price >= level.price() && cumulativeSize < size) {
 				cumulativeSize += level.volume();
@@ -991,6 +992,7 @@ export class OrderBook {
 		}
 
 		let cumulativeSize = 0;
+		// biome-ignore lint/suspicious/useIterableCallbackReturn: the forEach of the priceTree must return true to break the loop
 		orderSide.priceTree().forEach((_: number, level: OrderQueue) => {
 			if (price <= level.price() && cumulativeSize < size) {
 				cumulativeSize += level.volume();

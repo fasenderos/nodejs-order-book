@@ -1424,7 +1424,7 @@ void test("orderbook replayJournal test wrong journal", () => {
 			o: { orderID: "bar" },
 		};
 		// @ts-expect-error journal log must be an array
-		const ob = new OrderBook({ journal: journalLog });
+		new OrderBook({ journal: journalLog });
 	} catch (error) {
 		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
 		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
@@ -1440,7 +1440,7 @@ void test("orderbook replayJournal test wrong journal", () => {
 			},
 		];
 		// @ts-expect-error invalid "op" provided
-		const ob = new OrderBook({ journal: wrongOp });
+		new OrderBook({ journal: wrongOp });
 	} catch (error) {
 		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
 		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
@@ -1456,7 +1456,7 @@ void test("orderbook replayJournal test wrong journal", () => {
 			},
 		];
 		// @ts-expect-error invalid market order "o" prop in journal log
-		const ob = new OrderBook({ journal: wrongOp });
+		new OrderBook({ journal: wrongOp });
 	} catch (error) {
 		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
 		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
@@ -1472,7 +1472,7 @@ void test("orderbook replayJournal test wrong journal", () => {
 			},
 		];
 		// @ts-expect-error invalid limit order "o" prop in journal log
-		const ob = new OrderBook({ journal: wrongOp });
+		new OrderBook({ journal: wrongOp });
 	} catch (error) {
 		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
 		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
@@ -1488,7 +1488,7 @@ void test("orderbook replayJournal test wrong journal", () => {
 			},
 		];
 		// @ts-expect-error invalid market order "o" prop in journal log
-		const ob = new OrderBook({ journal: wrongOp });
+		new OrderBook({ journal: wrongOp });
 	} catch (error) {
 		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
 		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
@@ -1504,7 +1504,7 @@ void test("orderbook replayJournal test wrong journal", () => {
 			},
 		];
 		// @ts-expect-error invalid market order "o" prop in journal log
-		const ob = new OrderBook({ journal: wrongOp });
+		new OrderBook({ journal: wrongOp });
 	} catch (error) {
 		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
 		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
@@ -1520,7 +1520,7 @@ void test("orderbook replayJournal test wrong journal", () => {
 			},
 		];
 		// @ts-expect-error invalid market order "o" prop in journal log
-		const ob = new OrderBook({ journal: wrongOp });
+		new OrderBook({ journal: wrongOp });
 	} catch (error) {
 		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
 		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
@@ -1536,7 +1536,7 @@ void test("orderbook replayJournal test wrong journal", () => {
 			},
 		];
 		// @ts-expect-error invalid update order "o" prop in journal log
-		const ob = new OrderBook({ journal: wrongOp });
+		new OrderBook({ journal: wrongOp });
 	} catch (error) {
 		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
 		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
@@ -1552,7 +1552,7 @@ void test("orderbook replayJournal test wrong journal", () => {
 			},
 		];
 		// @ts-expect-error invalid delete order "o" prop in journal log
-		const ob = new OrderBook({ journal: wrongOp });
+		new OrderBook({ journal: wrongOp });
 	} catch (error) {
 		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
 		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);

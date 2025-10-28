@@ -365,7 +365,7 @@ void test("it should create order without passing a date or id", (t) => {
 	// biome-ignore lint: we need to mock the returned value
 	t.after(() => (randomUUID = originalRandomUUID));
 
-	Date.now = (...m) => fakeTimestamp;
+	Date.now = (..._m) => fakeTimestamp;
 	// @ts-expect-error cannot assign because is readonly
 	// biome-ignore lint: we need to mock the returned value
 	randomUUID = () => fakeId;

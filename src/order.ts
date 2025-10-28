@@ -3,11 +3,11 @@ import { randomUUID } from "node:crypto";
 import { CustomError, ERROR } from "./errors";
 import {
 	type ILimitOrder,
-	type IStopLimitOrder,
-	type IStopMarketOrder,
 	type InternalLimitOrderOptions,
 	type InternalStopLimitOrderOptions,
 	type InternalStopMarketOrderOptions,
+	type IStopLimitOrder,
+	type IStopMarketOrder,
 	type OrderOptions,
 	OrderType,
 	type Side,

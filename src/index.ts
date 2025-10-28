@@ -1,6 +1,5 @@
 /* node:coverage disable */
 import { OrderBook } from "./orderbook";
-import { OrderType, Side } from "./types";
 import type {
 	CreateOrderOptions,
 	ICancelOrder,
@@ -15,6 +14,7 @@ import type {
 	StopLimitOrderOptions,
 	StopMarketOrderOptions,
 } from "./types";
+import { OrderType, Side } from "./types";
 
 export {
 	type CreateOrderOptions,

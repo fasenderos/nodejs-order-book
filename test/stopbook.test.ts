@@ -101,7 +101,6 @@ void test("it should validate conditional order", () => {
 	const validate = (
 		orderType: OrderType.STOP_LIMIT | OrderType.STOP_MARKET,
 		side: Side,
-		// biome-ignore lint: I prefer to leave price here for a better readability when invocking this function
 		price: number | null = null,
 		stopPrice: number,
 		expect: boolean,
