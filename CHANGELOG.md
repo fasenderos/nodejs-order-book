@@ -1,5 +1,26 @@
 # Changelog
 
+## <small>10.0.1 (2025-10-28)</small>
+
+* style: export IOrder closes #536 ([691473a](https://github.com/fasenderos/nodejs-order-book/commit/691473a)), closes [#536](https://github.com/fasenderos/nodejs-order-book/issues/536)
+* style: improve readme readability ([535fefc](https://github.com/fasenderos/nodejs-order-book/commit/535fefc))
+* style: update biome and lint all project ([a0887fa](https://github.com/fasenderos/nodejs-order-book/commit/a0887fa))
+* chore(deps-dev): bump @biomejs/biome from 2.1.2 to 2.1.3 ([1ca10e0](https://github.com/fasenderos/nodejs-order-book/commit/1ca10e0))
+* chore(deps-dev): bump @biomejs/biome from 2.1.3 to 2.1.4 ([ae88956](https://github.com/fasenderos/nodejs-order-book/commit/ae88956))
+* chore(deps-dev): bump @biomejs/biome from 2.1.4 to 2.2.0 ([3441264](https://github.com/fasenderos/nodejs-order-book/commit/3441264))
+* chore(deps-dev): bump @biomejs/biome from 2.2.0 to 2.2.2 ([27ce7ab](https://github.com/fasenderos/nodejs-order-book/commit/27ce7ab))
+* chore(deps-dev): bump @biomejs/biome from 2.2.2 to 2.2.3 ([ee927e5](https://github.com/fasenderos/nodejs-order-book/commit/ee927e5))
+* chore(deps-dev): bump @biomejs/biome from 2.2.3 to 2.2.4 ([82c4a82](https://github.com/fasenderos/nodejs-order-book/commit/82c4a82))
+* chore(deps-dev): bump @biomejs/biome from 2.2.4 to 2.2.5 ([7b5f206](https://github.com/fasenderos/nodejs-order-book/commit/7b5f206))
+* chore(deps-dev): bump @biomejs/biome from 2.2.5 to 2.2.6 ([8108117](https://github.com/fasenderos/nodejs-order-book/commit/8108117))
+* chore(deps-dev): bump @biomejs/biome from 2.2.6 to 2.2.7 ([d01e96f](https://github.com/fasenderos/nodejs-order-book/commit/d01e96f))
+* chore(deps-dev): bump @biomejs/biome from 2.2.7 to 2.3.0 ([3bb3245](https://github.com/fasenderos/nodejs-order-book/commit/3bb3245))
+* chore(deps-dev): bump @biomejs/biome from 2.3.0 to 2.3.1 ([9d8603d](https://github.com/fasenderos/nodejs-order-book/commit/9d8603d))
+* chore(deps-dev): bump release-it from 19.0.4 to 19.0.5 ([8de1669](https://github.com/fasenderos/nodejs-order-book/commit/8de1669))
+* chore(deps-dev): bump tsx from 4.20.3 to 4.20.4 ([36ffaf4](https://github.com/fasenderos/nodejs-order-book/commit/36ffaf4))
+* chore(deps-dev): bump tsx from 4.20.4 to 4.20.5 ([fcbd5e3](https://github.com/fasenderos/nodejs-order-book/commit/fcbd5e3))
+* chore(deps-dev): bump tsx from 4.20.5 to 4.20.6 ([0a4773f](https://github.com/fasenderos/nodejs-order-book/commit/0a4773f))
+
 ## 10.0.0 (2025-07-18)
 
 * feat: remove experimental conditional orders flag ([96d864f](https://github.com/fasenderos/nodejs-order-book/commit/96d864f))
