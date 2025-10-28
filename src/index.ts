@@ -4,6 +4,7 @@ import { OrderType, Side } from "./types";
 import type {
 	CreateOrderOptions,
 	ICancelOrder,
+	IOrder,
 	IProcessOrder,
 	LimitOrderOptions,
 	MarketOrderOptions,
@@ -18,6 +19,7 @@ import type {
 export {
 	type CreateOrderOptions,
 	type ICancelOrder,
+	type IOrder,
 	type IProcessOrder,
 	type LimitOrderOptions,
 	type MarketOrderOptions,
