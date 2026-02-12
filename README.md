@@ -29,6 +29,7 @@ Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency tra
   - [Create OCO (One-Cancels-the-Other) order `oco()`](#create-oco-one-cancels-the-other-order)
   - [Modify an existing order `modifiy()`](#modify-an-existing-order)
   - [Cancel order `cancel()`](#cancel-order)
+- [Understanding Order Results](#understanding-order-results)
 - [Order Book Options](#order-book-options)
   - [Snapshot](#snapshot)
   - [Journal Logs](#journal-logs)
@@ -113,7 +114,7 @@ ob.limit({
 
 ob.market({ side: 'buy' | 'sell', size: number })
 
-ob.modify(orderID: string, { 
+ob.modify(orderID: string, {
       side: 'buy' | 'sell',
       size: number,
       price: number
@@ -128,7 +129,7 @@ import { OrderBook } from 'nodejs-order-book'
 
 const ob = new OrderBook()
 
-ob.createOrder({ 
+ob.createOrder({
       type: 'stop_limit' | 'stop_market' | 'oco',
       side: 'buy' | 'sell',
       size: number,
@@ -484,6 +485,113 @@ asks: 110 -> 5
 --------------  ->  --------------
 bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
+```
+
+## Understanding Order Results
+
+When creating an order, the library returns an `IProcessOrder` object:
+
+```ts
+interface IProcessOrder {
+  done: IOrder[];                    // Fully consumed orders
+  partial: ILimitOrder | null;       // Partially consumed limit order (if any)
+  quantityLeft: number;              // Unfilled quantity of the taker order
+  partialQuantityProcessed: number;  // Quantity consumed from the order in 'partial'
+  err: OrderBookError | null;
+}
+```
+
+### When Does the Taker Appear in Results?
+
+**The taker order does NOT always appear in the result arrays.**
+
+| Order Type | Fill Status | Taker in `done[]` | Taker in `partial` | `quantityLeft` |
+|------------|-------------|-------------------|--------------------|----------------|
+| LIMIT | Fully filled | ✅ YES | ❌ NO | `0` |
+| LIMIT | Partially filled | ❌ NO | ✅ YES | `> 0` |
+| MARKET | Fully or partially filled | ❌ NO | ❌ NO | `>= 0` |
+
+**Key facts:**
+- **Market orders never appear in `done[]` or `partial`** - only the matched maker orders appear
+- **Limit orders fully filled**: Taker appears in `done[]` alongside matched makers
+- **Limit orders partially filled**: Taker appears in `partial`, matched makers appear in `done[]`
+- **`quantityLeft`**: Always represents unfilled quantity of the taker, regardless of where it appears
+
+### What is `partialQuantityProcessed`?
+
+This represents **how much of the order in `partial` was processed**, not how much is left.
+
+- If `partial` contains the **taker** (partially filled limit order): represents amount of taker that was filled
+- If `partial` contains a **maker** (partially consumed resting order): represents amount of maker that was consumed
+
+**Example 1 - Taker in partial:**
+```ts
+// 10-unit buy order, only 5 available
+{
+  done: [{ id: 'maker-1', size: 5 }],       // Fully consumed maker
+  partial: { id: 'taker', size: 5 },        // Taker (5 still unfilled)
+  quantityLeft: 5,                          // 5 units of taker unfilled
+  partialQuantityProcessed: 5               // 5 units of taker were filled
+}
+```
+
+**Example 2 - Maker in partial:**
+```ts
+// 8-unit buy order, 20 available from one maker
+{
+  done: [{ id: 'taker', size: 8 }],         // Fully filled taker
+  partial: { id: 'maker-1', size: 12 },     // Maker (12 still unfilled)
+  quantityLeft: 0,                          // Taker fully filled
+  partialQuantityProcessed: 8               // 8 units of maker were consumed
+}
+```
+
+### Example: Market Order (Fully Filled)
+
+```ts
+// Market order for 10 units (10 available)
+book.createOrder({ type: 'market', id: 'buy-1', size: 10, side: 'buy' })
+
+// Result:
+{
+  done: [{ id: 'sell-1', side: 'sell', size: 10 }],  // Matched maker only
+  partial: null,                                      // Taker NOT here
+  quantityLeft: 0,                                    // Fully filled
+  partialQuantityProcessed: 0
+}
+```
+
+### Example: Limit Order (Fully Filled)
+
+```ts
+// Limit order for 10 units (10 available)
+book.createOrder({ type: 'limit', id: 'buy-1', price: 100, size: 10, side: 'buy' })
+
+// Result:
+{
+  done: [
+    { id: 'sell-1', side: 'sell', size: 10 },  // Matched maker
+    { id: 'buy-1', side: 'buy', size: 10 }     // Taker ✅
+  ],
+  partial: null,
+  quantityLeft: 0,
+  partialQuantityProcessed: 0
+}
+```
+
+### Example: Limit Order (Partially Filled)
+
+```ts
+// Limit order for 10 units (only 5 available)
+book.createOrder({ type: 'limit', id: 'buy-1', price: 100, size: 10, side: 'buy' })
+
+// Result:
+{
+  done: [{ id: 'sell-1', side: 'sell', size: 5 }],  // Fully consumed maker
+  partial: { id: 'buy-1', side: 'buy', size: 5 },   // Taker ✅ (5 unfilled)
+  quantityLeft: 5,                                  // 5 units unfilled
+  partialQuantityProcessed: 5                       // 5 units filled
+}
 ```
 
 ## Order Book Options
