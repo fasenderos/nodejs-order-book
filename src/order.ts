@@ -10,6 +10,7 @@ import {
 	type IStopMarketOrder,
 	type OrderOptions,
 	OrderType,
+	SelfTradePreventionMode,
 	type Side,
 	type TimeInForce,
 } from "./types";
@@ -20,11 +21,16 @@ abstract class BaseOrder {
 	readonly _side: Side;
 	_size: number;
 	_time: number;
+	readonly _accountId: string;
+	readonly _selfTradePreventionMode: SelfTradePreventionMode;
 	constructor(options: OrderOptions) {
 		this._id = options.id ?? randomUUID();
 		this._side = options.side;
 		this._size = options.size;
 		this._time = options.time ?? Date.now();
+		this._accountId = options.accountId ?? "";
+		this._selfTradePreventionMode =
+			options.selfTradePreventionMode ?? SelfTradePreventionMode.NONE;
 	}
 
 	// Getter for order ID
@@ -55,6 +61,16 @@ abstract class BaseOrder {
 	// Setter for order timestamp
 	set time(time: number) {
 		this._time = time;
+	}
+
+	// Getter for account ID (self-trade prevention)
+	get accountId(): string {
+		return this._accountId;
+	}
+
+	// Getter for self-trade prevention mode
+	get selfTradePreventionMode(): SelfTradePreventionMode {
+		return this._selfTradePreventionMode;
 	}
 
 	// This method returns a string representation of the order
@@ -155,6 +171,10 @@ export class LimitOrder extends BaseOrder {
 		timeInForce: this._timeInForce,
 		makerQty: this._makerQty,
 		takerQty: this._takerQty,
+		...(this._accountId ? { accountId: this._accountId } : {}),
+		...(this._selfTradePreventionMode !== SelfTradePreventionMode.NONE
+			? { selfTradePreventionMode: this._selfTradePreventionMode }
+			: {}),
 	});
 }
 
@@ -194,6 +214,10 @@ export class StopMarketOrder extends BaseOrder {
 		size: this._size,
 		stopPrice: this._stopPrice,
 		time: this._time,
+		...(this._accountId ? { accountId: this._accountId } : {}),
+		...(this._selfTradePreventionMode !== SelfTradePreventionMode.NONE
+			? { selfTradePreventionMode: this._selfTradePreventionMode }
+			: {}),
 	});
 }
 
@@ -266,6 +290,10 @@ export class StopLimitOrder extends BaseOrder {
 		isOCO: this.isOCO,
 		timeInForce: this._timeInForce,
 		time: this._time,
+		...(this._accountId ? { accountId: this._accountId } : {}),
+		...(this._selfTradePreventionMode !== SelfTradePreventionMode.NONE
+			? { selfTradePreventionMode: this._selfTradePreventionMode }
+			: {}),
 	});
 }
 

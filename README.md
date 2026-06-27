@@ -17,6 +17,7 @@ Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency tra
 ## Table of Contents
 
 - [Features](#features)
+- [Self-Trade Prevention (STP)](#self-trade-prevention-stp)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Conditional Orders](#conditional-orders)
@@ -58,6 +59,202 @@ Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency tra
 **Machine:** ASUS ExpertBook, 11th Gen Intel(R) Core(TM) i7-1165G7, 2.80Ghz, 16GB RAM, Node.js v18.4.0.
 
 <img src="https://user-images.githubusercontent.com/1219087/181792292-8619ee25-bf75-4871-a06c-bd6c82157f33.png" alt="nodejs-order-book-benchmark" title="nodejs-order-book benchmark" />
+
+## Self-Trade Prevention (STP)
+
+> Inspired by [Binance's Self-Trade Prevention](https://developers.binance.com/docs/derivatives/usds-margined-futures/faq/stp-faq) — prevents orders from the same account from matching against each other.
+
+### How it works
+
+Each order can carry an `accountId` and a `selfTradePreventionMode`. When a taker order enters the book and would match against a maker order with the same `accountId`, the STP mode of the **taker order** determines what happens:
+
+| Mode | Effect |
+|------|--------|
+| `NONE` | No prevention — orders match normally |
+| `EXPIRE_MAKER` | The resting maker order(s) expire; the taker order continues |
+| `EXPIRE_TAKER` | The taker order is rejected; the resting maker order(s) stay on the book |
+| `EXPIRE_BOTH` | Both the taker and the matching maker order(s) expire |
+
+The STP mode of the **taker** order always takes precedence — the mode stored on a resting maker order is ignored for STP purposes.
+
+### API reference
+
+Add `accountId` and `selfTradePreventionMode` to any order:
+
+```ts
+import { OrderBook, SelfTradePreventionMode, Side } from 'nodejs-order-book'
+
+const ob = new OrderBook()
+
+// Place a resting limit order from account "alice"
+ob.limit({
+  side: Side.BUY,
+  id: 'maker-order',
+  size: 5,
+  price: 100,
+  accountId: 'alice',
+})
+
+// Taker from the same account with STP enabled
+const result = ob.limit({
+  side: Side.SELL,
+  id: 'taker-order',
+  size: 3,
+  price: 90,
+  accountId: 'alice',
+  selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+})
+
+// Check which orders expired due to STP
+console.log(result.stpExpired) // [{ id: 'maker-order', ... }]
+```
+
+### Response fields
+
+When STP is triggered, the response (`IProcessOrder`) includes:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `stpExpired` | `IOrder[] \| undefined` | Orders that were removed from the book due to STP |
+| `err` | `OrderBookError \| null` | Error with `code: 1202` and `message: "Self-trade prevention triggered"` for `EXPIRE_TAKER` / `EXPIRE_BOTH` |
+
+### Error code
+
+STP rejections return error code `1202`:
+
+```ts
+import { ErrorCodes } from 'nodejs-order-book'
+
+assert.equal(result.err?.code, ErrorCodes.STP_TRIGGERED)
+// → 1202
+assert.equal(result.err?.message, 'Self-trade prevention triggered')
+```
+
+### Scenarios
+
+#### A) EXPIRE_MAKER — maker expires, taker continues
+
+```
+Maker BUY  @ 100  qty: 5  account: "alice"
+Maker BUY  @  90  qty: 5  account: "alice"
+Taker SELL @  90  qty: 3  account: "alice"  mode: EXPIRE_MAKER
+```
+
+The two resting buy orders share the same account as the taker. With `EXPIRE_MAKER`, they are removed from the book and reported in `stpExpired[]`. The taker order (size 3) is placed on the book as a new maker.
+
+```
+stpExpired → [maker-buy-100, maker-buy-90]
+err        → null
+```
+
+#### B) EXPIRE_TAKER — taker expires, maker stays
+
+```
+Maker BUY @ 100  qty: 5  account: "alice"
+Taker SELL @ 90  qty: 3  account: "alice"  mode: EXPIRE_TAKER
+```
+
+The taker order is rejected immediately. The resting maker order remains untouched on the book.
+
+```
+stpExpired → undefined
+err        → { code: 1202, message: "Self-trade prevention triggered" }
+```
+
+#### C) EXPIRE_BOTH — both orders expire
+
+```
+Maker BUY @ 100  qty: 5  account: "alice"
+Taker SELL @ 90  qty: 3  account: "alice"  mode: EXPIRE_BOTH
+```
+
+The maker is removed from the book and the taker is rejected. Both sides expire.
+
+```
+stpExpired → [maker-buy-100]
+err        → { code: 1202, message: "Self-trade prevention triggered" }
+```
+
+#### D) Different accounts — normal matching (no STP)
+
+```
+Maker BUY @ 100  qty: 5  account: "alice"
+Taker SELL @ 90  qty: 3  account: "bob"  mode: EXPIRE_MAKER
+```
+
+The accounts differ, so STP does **not** trigger. The orders match normally.
+
+```
+done   → [filled trade summary]
+stpExpired → undefined
+```
+
+#### E) Mode NONE — no prevention
+
+```
+Maker BUY @ 100  qty: 5  account: "alice"
+Taker SELL @ 90  qty: 3  account: "alice"  mode: NONE
+```
+
+Even though both orders are from the same account, `NONE` mode allows the match.
+
+```
+done   → [filled trade summary]
+stpExpired → undefined
+```
+
+#### F) Market order with EXPIRE_MAKER
+
+```
+Maker BUY @ 100  qty: 5  account: "alice"
+Taker SELL (market)  qty: 3  account: "alice"  mode: EXPIRE_MAKER
+```
+
+The resting maker is expired via STP. The market order has no remaining liquidity, so it also expires.
+
+```
+stpExpired → [maker-buy-100]
+err        → null
+```
+
+#### G) Mixed accounts at the same price level
+
+```
+Maker "alice" BUY @ 100  qty: 5
+Maker "bob"   BUY @ 100  qty: 5
+Taker "alice" SELL @ 90  qty: 8  mode: EXPIRE_MAKER
+```
+
+At price level 100, alice's maker is expired (`stpExpired`), while bob's maker matches normally (`done`). The remaining taker quantity (3) rests on the book.
+
+```
+stpExpired → [maker-alice-100]
+done       → [maker-bob-100]
+```
+
+#### H) STP carries through triggered stop orders
+
+Stop orders preserve the `selfTradePreventionMode` they were created with. When a stop order is triggered and becomes a taker, its STP mode is applied at match time.
+
+```ts
+ob.createOrder({
+  type: OrderType.STOP_LIMIT,
+  side: Side.BUY,
+  size: 3,
+  price: 110,
+  stopPrice: 108,
+  accountId: 'alice',
+  selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+})
+```
+
+### Important notes
+
+- STP is evaluated using the **taker order's** mode, regardless of what mode the resting maker orders carry.
+- If no `accountId` is specified on either side, STP is **not** triggered (backward compatible).
+- If no `selfTradePreventionMode` is specified, it defaults to `NONE` (no prevention).
+- Stop market and stop limit orders preserve the `selfTradePreventionMode` and apply it when triggered.
+- Modify operations reset `selfTradePreventionMode` to `NONE`.
 
 ## Installation
 
