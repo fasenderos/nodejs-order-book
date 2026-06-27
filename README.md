@@ -66,7 +66,7 @@ Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency tra
 
 ### How it works
 
-Each order can carry an `accountId` and a `selfTradePreventionMode`. When a taker order enters the book and would match against a maker order with the same `accountId`, the STP mode of the **taker order** determines what happens:
+Each order can carry an `accountId` and a `stpMode`. When a taker order enters the book and would match against a maker order with the same `accountId`, the STP mode of the **taker order** determines what happens:
 
 | Mode | Effect |
 |------|--------|
@@ -79,7 +79,7 @@ The STP mode of the **taker** order always takes precedence — the mode stored 
 
 ### API reference
 
-Add `accountId` and `selfTradePreventionMode` to any order:
+Add `accountId` and `stpMode` to any order:
 
 ```ts
 import { OrderBook, SelfTradePreventionMode, Side } from 'nodejs-order-book'
@@ -102,7 +102,7 @@ const result = ob.limit({
   size: 3,
   price: 90,
   accountId: 'alice',
-  selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+  stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
 })
 
 // Check which orders expired due to STP
@@ -234,7 +234,7 @@ done       → [maker-bob-100]
 
 #### H) STP carries through triggered stop orders
 
-Stop orders preserve the `selfTradePreventionMode` they were created with. When a stop order is triggered and becomes a taker, its STP mode is applied at match time.
+Stop orders preserve the `stpMode` they were created with. When a stop order is triggered and becomes a taker, its STP mode is applied at match time.
 
 ```ts
 ob.createOrder({
@@ -244,7 +244,7 @@ ob.createOrder({
   price: 110,
   stopPrice: 108,
   accountId: 'alice',
-  selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+  stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
 })
 ```
 
@@ -252,9 +252,9 @@ ob.createOrder({
 
 - STP is evaluated using the **taker order's** mode, regardless of what mode the resting maker orders carry.
 - If no `accountId` is specified on either side, STP is **not** triggered (backward compatible).
-- If no `selfTradePreventionMode` is specified, it defaults to `NONE` (no prevention).
-- Stop market and stop limit orders preserve the `selfTradePreventionMode` and apply it when triggered.
-- Modify operations reset `selfTradePreventionMode` to `NONE`.
+- If no `stpMode` is specified, it defaults to `NONE` (no prevention).
+- Stop market and stop limit orders preserve the `stpMode` and apply it when triggered.
+- Modify operations reset `stpMode` to `NONE`.
 
 ## Installation
 

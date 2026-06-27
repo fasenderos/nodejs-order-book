@@ -418,7 +418,7 @@ export class OrderBook {
 		if (response.err !== null) return response;
 
 		const takerAccountId = options.accountId;
-		const takerStpMode = options.selfTradePreventionMode;
+		const takerStpMode = options.stpMode;
 
 		let quantityToTrade = options.size;
 		let iter: () => OrderQueue | undefined;
@@ -490,7 +490,7 @@ export class OrderBook {
 			options.timeInForce ?? TimeInForce.GTC,
 			options.ocoStopPrice,
 			options.accountId,
-			options.selfTradePreventionMode,
+			options.stpMode,
 		);
 		return response;
 	};
@@ -763,7 +763,7 @@ export class OrderBook {
 				takerQty,
 				makerQty,
 				accountId: takerAccountId,
-				selfTradePreventionMode: stpMode,
+				stpMode: stpMode,
 				...(ocoStopPrice !== undefined ? { ocoStopPrice } : {}),
 			});
 			if (response.done.length > 0) {
@@ -798,7 +798,7 @@ export class OrderBook {
 				takerQty,
 				makerQty,
 				accountId: takerAccountId,
-				selfTradePreventionMode: stpMode,
+				stpMode: stpMode,
 			});
 			response.done.push(order.toObject());
 		}
@@ -841,7 +841,7 @@ export class OrderBook {
 							side: stopOrder.side,
 							size: stopOrder.size,
 							accountId: stopOrder.accountId,
-							selfTradePreventionMode: stopOrder.selfTradePreventionMode,
+							stpMode: stopOrder.stpMode,
 						},
 						response,
 					);
@@ -857,7 +857,7 @@ export class OrderBook {
 							price: stopOrder.price,
 							timeInForce: stopOrder.timeInForce,
 							accountId: stopOrder.accountId,
-							selfTradePreventionMode: stopOrder.selfTradePreventionMode,
+							stpMode: stopOrder.stpMode,
 						},
 						response,
 					);

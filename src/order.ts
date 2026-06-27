@@ -22,15 +22,14 @@ abstract class BaseOrder {
 	_size: number;
 	_time: number;
 	readonly _accountId: string;
-	readonly _selfTradePreventionMode: SelfTradePreventionMode;
+	readonly _stpMode: SelfTradePreventionMode;
 	constructor(options: OrderOptions) {
 		this._id = options.id ?? randomUUID();
 		this._side = options.side;
 		this._size = options.size;
 		this._time = options.time ?? Date.now();
 		this._accountId = options.accountId ?? "";
-		this._selfTradePreventionMode =
-			options.selfTradePreventionMode ?? SelfTradePreventionMode.NONE;
+		this._stpMode = options.stpMode ?? SelfTradePreventionMode.NONE;
 	}
 
 	// Getter for order ID
@@ -69,8 +68,8 @@ abstract class BaseOrder {
 	}
 
 	// Getter for self-trade prevention mode
-	get selfTradePreventionMode(): SelfTradePreventionMode {
-		return this._selfTradePreventionMode;
+	get stpMode(): SelfTradePreventionMode {
+		return this._stpMode;
 	}
 
 	// This method returns a string representation of the order
@@ -172,8 +171,8 @@ export class LimitOrder extends BaseOrder {
 		makerQty: this._makerQty,
 		takerQty: this._takerQty,
 		...(this._accountId ? { accountId: this._accountId } : {}),
-		...(this._selfTradePreventionMode !== SelfTradePreventionMode.NONE
-			? { selfTradePreventionMode: this._selfTradePreventionMode }
+		...(this._stpMode !== SelfTradePreventionMode.NONE
+			? { stpMode: this._stpMode }
 			: {}),
 	});
 }
@@ -215,8 +214,8 @@ export class StopMarketOrder extends BaseOrder {
 		stopPrice: this._stopPrice,
 		time: this._time,
 		...(this._accountId ? { accountId: this._accountId } : {}),
-		...(this._selfTradePreventionMode !== SelfTradePreventionMode.NONE
-			? { selfTradePreventionMode: this._selfTradePreventionMode }
+		...(this._stpMode !== SelfTradePreventionMode.NONE
+			? { stpMode: this._stpMode }
 			: {}),
 	});
 }
@@ -291,8 +290,8 @@ export class StopLimitOrder extends BaseOrder {
 		timeInForce: this._timeInForce,
 		time: this._time,
 		...(this._accountId ? { accountId: this._accountId } : {}),
-		...(this._selfTradePreventionMode !== SelfTradePreventionMode.NONE
-			? { selfTradePreventionMode: this._selfTradePreventionMode }
+		...(this._stpMode !== SelfTradePreventionMode.NONE
+			? { stpMode: this._stpMode }
 			: {}),
 	});
 }

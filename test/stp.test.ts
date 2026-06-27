@@ -73,7 +73,7 @@ void test("STP Scenario A: EXPIRE_MAKER — maker expires, taker continues", () 
 		size: 3,
 		price: 90,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
 	});
 
 	// The maker orders should have been expired via STP
@@ -118,7 +118,7 @@ void test("STP Scenario B: EXPIRE_TAKER — taker expires, maker stays", () => {
 		size: 3,
 		price: 90,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_TAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_TAKER,
 	});
 
 	// The taker should have STP error
@@ -155,7 +155,7 @@ void test("STP Scenario C: EXPIRE_BOTH — both maker and taker expire", () => {
 		size: 3,
 		price: 90,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_BOTH,
+		stpMode: SelfTradePreventionMode.EXPIRE_BOTH,
 	});
 
 	// Both should be expired
@@ -183,7 +183,7 @@ void test("STP Scenario D: taker STP mode wins over maker mode", () => {
 		size: 5,
 		price: 100,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
 	});
 	assert.equal(maker.err, null);
 
@@ -194,7 +194,7 @@ void test("STP Scenario D: taker STP mode wins over maker mode", () => {
 		size: 3,
 		price: 90,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_TAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_TAKER,
 	});
 
 	// Taker expires (EXPIRE_TAKER wins), maker stays
@@ -226,7 +226,7 @@ void test("STP Scenario E: market order with EXPIRE_MAKER", () => {
 		side: Side.SELL,
 		size: 3,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
 	});
 
 	// Maker should be expired via STP
@@ -258,7 +258,7 @@ void test("STP Scenario F: market order with EXPIRE_TAKER", () => {
 		side: Side.SELL,
 		size: 3,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_TAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_TAKER,
 	});
 
 	// Taker expired
@@ -293,7 +293,7 @@ void test("STP Scenario G: different accounts — normal matching", () => {
 		size: 3,
 		price: 90,
 		accountId: "bob",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
 	});
 
 	// Normal matching should occur (different accounts)
@@ -330,7 +330,7 @@ void test("STP Scenario H: no accountId — backward compatible", () => {
 		id: "taker-sell-90",
 		size: 3,
 		price: 90,
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
 	});
 
 	// Normal matching — STP not triggered because no accountId
@@ -371,7 +371,7 @@ void test("STP Scenario I: mixed accounts at same price level", () => {
 		size: 8,
 		price: 90,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
 	});
 
 	// Maker from alice should be expired via STP
@@ -424,7 +424,7 @@ void test("STP Scenario J: multiple price levels with same account", () => {
 		size: 3,
 		price: 80,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
 	});
 
 	// Both makers expired via STP
@@ -456,7 +456,7 @@ void test("STP Scenario K: market order with EXPIRE_BOTH", () => {
 		side: Side.SELL,
 		size: 3,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_BOTH,
+		stpMode: SelfTradePreventionMode.EXPIRE_BOTH,
 	});
 
 	// Both expired
@@ -492,7 +492,7 @@ void test("STP Scenario L: SelfTradePreventionMode.NONE — no prevention", () =
 		size: 3,
 		price: 90,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.NONE,
+		stpMode: SelfTradePreventionMode.NONE,
 	});
 
 	// Normal matching — same account but mode is NONE
@@ -521,7 +521,7 @@ void test("STP Scenario M: STP mode but no accountId — no prevention", () => {
 		id: "taker-sell-90",
 		size: 3,
 		price: 90,
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_TAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_TAKER,
 	});
 
 	// Normal matching — no accountId means no STP check
@@ -553,7 +553,7 @@ void test("STP Scenario N: STP via createOrder API", () => {
 		size: 3,
 		price: 90,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_TAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_TAKER,
 	});
 
 	// Taker expired
@@ -582,7 +582,7 @@ void test("STP Scenario O: STP carries through triggered stop orders", () => {
 		stopPrice: 108,
 		timeInForce: TimeInForce.GTC,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
 	});
 	assert.equal(stopResult.err, null);
 
@@ -617,7 +617,7 @@ void test("STP Scenario P: IOC order with EXPIRE_MAKER", () => {
 		price: 90,
 		timeInForce: TimeInForce.IOC,
 		accountId: "alice",
-		selfTradePreventionMode: SelfTradePreventionMode.EXPIRE_MAKER,
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
 	});
 
 	// Maker should be expired via STP

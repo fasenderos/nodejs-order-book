@@ -216,7 +216,7 @@ void test("it should create StopMarketOrder", () => {
 	);
 });
 
-void test("it should create StopMarketOrder with accountId and selfTradePreventionMode", () => {
+void test("it should create StopMarketOrder with accountId and stpMode", () => {
 	const id = "fakeId2";
 	const side = Side.BUY;
 	const type = OrderType.STOP_MARKET;
@@ -224,7 +224,7 @@ void test("it should create StopMarketOrder with accountId and selfTradePreventi
 	const stopPrice = 4;
 	const time = Date.now();
 	const accountId = "alice";
-	const selfTradePreventionMode = SelfTradePreventionMode.EXPIRE_MAKER;
+	const stpMode = SelfTradePreventionMode.EXPIRE_MAKER;
 	const order = OrderFactory.createOrder({
 		id,
 		type,
@@ -233,7 +233,7 @@ void test("it should create StopMarketOrder with accountId and selfTradePreventi
 		time,
 		stopPrice,
 		accountId,
-		selfTradePreventionMode,
+		stpMode,
 	});
 
 	assert.equal(order instanceof StopMarketOrder, true);
@@ -245,7 +245,7 @@ void test("it should create StopMarketOrder with accountId and selfTradePreventi
 		stopPrice,
 		time,
 		accountId,
-		selfTradePreventionMode,
+		stpMode,
 	});
 	assert.equal(
 		order.toJSON(),
@@ -257,7 +257,7 @@ void test("it should create StopMarketOrder with accountId and selfTradePreventi
 			stopPrice,
 			time,
 			accountId,
-			selfTradePreventionMode,
+			stpMode,
 		}),
 	);
 });

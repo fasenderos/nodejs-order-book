@@ -40,13 +40,13 @@ interface BaseOrderOptions {
 	side: Side;
 	size: number;
 	accountId?: string;
-	selfTradePreventionMode?: SelfTradePreventionMode;
+	stpMode?: SelfTradePreventionMode;
 }
 interface InternalBaseOrderOptions extends BaseOrderOptions {
 	type: OrderType;
 	time?: number;
 	accountId?: string;
-	selfTradePreventionMode?: SelfTradePreventionMode;
+	stpMode?: SelfTradePreventionMode;
 }
 /**
  * Specific options for a market order.
@@ -79,7 +79,7 @@ export interface InternalLimitOrderOptions extends ILimitOrderOptions {
 	postOnly?: boolean;
 	ocoStopPrice?: number;
 	accountId?: string;
-	selfTradePreventionMode?: SelfTradePreventionMode;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
@@ -92,7 +92,7 @@ export interface InternalStopMarketOrderOptions extends IMarketOrderOptions {
 	type: OrderType.STOP_MARKET;
 	stopPrice: number;
 	accountId?: string;
-	selfTradePreventionMode?: SelfTradePreventionMode;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
@@ -106,7 +106,7 @@ export interface InternalStopLimitOrderOptions extends ILimitOrderOptions {
 	stopPrice: number;
 	isOCO?: boolean;
 	accountId?: string;
-	selfTradePreventionMode?: SelfTradePreventionMode;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
@@ -144,7 +144,7 @@ export interface ILimitOrder {
 	takerQty: number;
 	makerQty: number;
 	accountId?: string;
-	selfTradePreventionMode?: SelfTradePreventionMode;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
@@ -158,7 +158,7 @@ export interface IStopMarketOrder {
 	stopPrice: number;
 	time: number;
 	accountId?: string;
-	selfTradePreventionMode?: SelfTradePreventionMode;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
@@ -175,7 +175,7 @@ export interface IStopLimitOrder {
 	time: number;
 	isOCO: boolean;
 	accountId?: string;
-	selfTradePreventionMode?: SelfTradePreventionMode;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
