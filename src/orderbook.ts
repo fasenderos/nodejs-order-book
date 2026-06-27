@@ -23,6 +23,7 @@ import {
 	OrderType,
 	type OrderUpdatePrice,
 	type OrderUpdateSize,
+	SelfTradePreventionMode,
 	Side,
 	type Snapshot,
 	type StopLimitOrderOptions,
@@ -289,6 +290,9 @@ export class OrderBook {
 					newPrice,
 					order.postOnly,
 					TimeInForce.GTC,
+					undefined,
+					"",
+					SelfTradePreventionMode.NONE,
 				);
 				if (this.enableJournaling) {
 					response.log = {
@@ -413,6 +417,9 @@ export class OrderBook {
 		const response = incomingResponse ?? this.validateMarketOrder(options);
 		if (response.err !== null) return response;
 
+		const takerAccountId = options.accountId;
+		const takerStpMode = options.stpMode;
+
 		let quantityToTrade = options.size;
 		let iter: () => OrderQueue | undefined;
 		let sideToProcess: OrderSide;
@@ -424,19 +431,45 @@ export class OrderBook {
 			sideToProcess = this.bids;
 		}
 		const priceBefore = this._marketPrice;
-		while (quantityToTrade > 0 && sideToProcess.len() > 0) {
+		while (
+			quantityToTrade > 0 &&
+			sideToProcess.len() > 0 &&
+			response.err === null
+		) {
 			// if sideToProcess.len > 0 it is not necessary to verify that bestPrice exists
 			const bestPrice = iter() as OrderQueue;
-			const { done, partial, partialQuantityProcessed, quantityLeft } =
-				this.processQueue(bestPrice, quantityToTrade);
+			const {
+				done,
+				partial,
+				partialQuantityProcessed,
+				quantityLeft,
+				stpExpired,
+				err,
+			} = this.processQueue(
+				bestPrice,
+				quantityToTrade,
+				takerAccountId,
+				takerStpMode,
+			);
 			response.done = response.done.concat(done);
 			response.partial = partial;
 			response.partialQuantityProcessed = partialQuantityProcessed;
 			quantityToTrade = quantityLeft;
+			if (err !== null) {
+				response.err = err;
+			}
+			if (stpExpired !== undefined) {
+				if (response.stpExpired === undefined) {
+					response.stpExpired = [];
+				}
+				response.stpExpired = response.stpExpired.concat(stpExpired);
+			}
 		}
 		response.quantityLeft = quantityToTrade;
 
-		this.executeConditionalOrder(options.side, priceBefore, response);
+		if (response.err === null) {
+			this.executeConditionalOrder(options.side, priceBefore, response);
+		}
 
 		return response;
 	};
@@ -456,6 +489,8 @@ export class OrderBook {
 			options.postOnly ?? false,
 			options.timeInForce ?? TimeInForce.GTC,
 			options.ocoStopPrice,
+			options.accountId,
+			options.stpMode,
 		);
 		return response;
 	};
@@ -634,6 +669,8 @@ export class OrderBook {
 		postOnly: boolean,
 		timeInForce: TimeInForce,
 		ocoStopPrice?: number,
+		takerAccountId?: string,
+		stpMode?: SelfTradePreventionMode,
 	): LimitOrder | undefined => {
 		let quantityToTrade = size;
 		let sideToProcess: OrderSide;
@@ -665,20 +702,46 @@ export class OrderBook {
 			quantityToTrade > 0 &&
 			sideToProcess.len() > 0 &&
 			bestPrice !== undefined &&
-			comparator(price, bestPrice.price())
+			comparator(price, bestPrice.price()) &&
+			response.err === null
 		) {
 			if (postOnly) {
 				response.err = CustomError(ERROR.LIMIT_ORDER_POST_ONLY);
 				return;
 			}
-			const { done, partial, partialQuantityProcessed, quantityLeft } =
-				this.processQueue(bestPrice, quantityToTrade);
+			const {
+				done,
+				partial,
+				partialQuantityProcessed,
+				quantityLeft,
+				stpExpired,
+				err,
+			} = this.processQueue(
+				bestPrice,
+				quantityToTrade,
+				takerAccountId,
+				stpMode,
+			);
 			response.done = response.done.concat(done);
 			response.partial = partial;
 			response.partialQuantityProcessed = partialQuantityProcessed;
 			quantityToTrade = quantityLeft;
 			response.quantityLeft = quantityToTrade;
+			if (err !== null) {
+				response.err = err;
+			}
+			if (stpExpired !== undefined) {
+				if (response.stpExpired === undefined) {
+					response.stpExpired = [];
+				}
+				response.stpExpired = response.stpExpired.concat(stpExpired);
+			}
 			bestPrice = iter();
+		}
+
+		// If STP triggered (EXPIRE_TAKER or EXPIRE_BOTH), don't add order to book
+		if (response.err !== null) {
+			return;
 		}
 
 		this.executeConditionalOrder(side, priceBefore, response);
@@ -699,6 +762,8 @@ export class OrderBook {
 				postOnly,
 				takerQty,
 				makerQty,
+				accountId: takerAccountId,
+				stpMode: stpMode,
 				...(ocoStopPrice !== undefined ? { ocoStopPrice } : {}),
 			});
 			if (response.done.length > 0) {
@@ -732,6 +797,8 @@ export class OrderBook {
 				postOnly,
 				takerQty,
 				makerQty,
+				accountId: takerAccountId,
+				stpMode: stpMode,
 			});
 			response.done.push(order.toObject());
 		}
@@ -773,6 +840,8 @@ export class OrderBook {
 							id: stopOrder.id,
 							side: stopOrder.side,
 							size: stopOrder.size,
+							accountId: stopOrder.accountId,
+							stpMode: stopOrder.stpMode,
 						},
 						response,
 					);
@@ -787,6 +856,8 @@ export class OrderBook {
 							size: stopOrder.size,
 							price: stopOrder.price,
 							timeInForce: stopOrder.timeInForce,
+							accountId: stopOrder.accountId,
+							stpMode: stopOrder.stpMode,
 						},
 						response,
 					);
@@ -904,6 +975,8 @@ export class OrderBook {
 	private readonly processQueue = (
 		orderQueue: OrderQueue,
 		quantityToTrade: number,
+		takerAccountId?: string,
+		stpMode?: SelfTradePreventionMode,
 	): IProcessOrder => {
 		const response: IProcessOrder = {
 			done: [],
@@ -917,6 +990,47 @@ export class OrderBook {
 			while (orderQueue.len() > 0 && response.quantityLeft > 0) {
 				const headOrder = orderQueue.head();
 				if (headOrder !== undefined) {
+					// Self-Trade Prevention check
+					if (
+						takerAccountId &&
+						headOrder.accountId === takerAccountId &&
+						stpMode != null &&
+						stpMode !== SelfTradePreventionMode.NONE
+					) {
+						switch (stpMode) {
+							case SelfTradePreventionMode.EXPIRE_MAKER: {
+								// Remove the maker order from the book, continue matching
+								const removedOrder = this._cancelOrder(headOrder.id, true);
+								if (removedOrder?.order !== undefined) {
+									if (response.stpExpired === undefined) {
+										response.stpExpired = [];
+									}
+									response.stpExpired.push(removedOrder.order);
+								}
+								continue;
+							}
+							case SelfTradePreventionMode.EXPIRE_TAKER: {
+								// Taker expires immediately, nothing matches
+								response.err = CustomError(ERROR.STP_TRIGGERED);
+								response.quantityLeft = quantityToTrade;
+								return response;
+							}
+							case SelfTradePreventionMode.EXPIRE_BOTH: {
+								// Remove maker from book AND expire taker
+								const removedOrder = this._cancelOrder(headOrder.id, true);
+								if (removedOrder?.order !== undefined) {
+									if (response.stpExpired === undefined) {
+										response.stpExpired = [];
+									}
+									response.stpExpired.push(removedOrder.order);
+								}
+								response.err = CustomError(ERROR.STP_TRIGGERED);
+								response.quantityLeft = quantityToTrade;
+								return response;
+							}
+						}
+					}
+
 					if (response.quantityLeft < headOrder.size) {
 						const partial = OrderFactory.createOrder({
 							...headOrder.toObject(),

@@ -1,5 +1,32 @@
 # Changelog
 
+## [10.1.1](https://github.com/fasenderos/nodejs-order-book/compare/v10.1.0...v10.1.1) (2026-06-27)
+
+## [10.1.0](https://github.com/fasenderos/nodejs-order-book/compare/v10.0.1...v10.1.0) (2026-06-27)
+
+### Features
+
+* add self trade prevention ([c745d06](https://github.com/fasenderos/nodejs-order-book/commit/c745d0651b1abec6db5b4cc239bdd8b4ccf769be))
+
+### Chore
+
+* **deps-dev:** bump @biomejs/biome from 2.3.1 to 2.3.2 ([db28011](https://github.com/fasenderos/nodejs-order-book/commit/db280112612cb4eb36e3de8482a7315d97d1d803))
+* **deps-dev:** bump @biomejs/biome from 2.3.2 to 2.3.3 ([d5b2e1a](https://github.com/fasenderos/nodejs-order-book/commit/d5b2e1aa13f28922097eaa4bb8a918ee37103cc9))
+* **deps-dev:** bump @biomejs/biome from 2.3.3 to 2.3.4 ([cbb37fa](https://github.com/fasenderos/nodejs-order-book/commit/cbb37faeddb5ed17efec4fc19a9193ace5160f49))
+* **deps-dev:** bump @biomejs/biome from 2.3.4 to 2.3.5 ([1063c74](https://github.com/fasenderos/nodejs-order-book/commit/1063c7417c33de371dde29c6f14809a8c54c67f3))
+* **deps-dev:** bump @biomejs/biome from 2.3.5 to 2.3.6 ([8f58121](https://github.com/fasenderos/nodejs-order-book/commit/8f58121152fbb6f35b91e793d883e1c34f66e8a9))
+* **deps-dev:** bump @biomejs/biome from 2.3.6 to 2.3.7 ([e7466b2](https://github.com/fasenderos/nodejs-order-book/commit/e7466b2cb40d8c22bb2d37063e8cd5f4b53e9eff))
+* **deps-dev:** bump @release-it/conventional-changelog ([65b7e39](https://github.com/fasenderos/nodejs-order-book/commit/65b7e3946d531a9399754f009143a32b471f6cd4))
+* **deps-dev:** bump js-yaml from 4.1.0 to 4.1.1 ([c39e34d](https://github.com/fasenderos/nodejs-order-book/commit/c39e34d264df1efae568ceb671f74b5201cb50bc))
+* **deps-dev:** bump release-it from 19.0.5 to 19.0.6 ([31be1c3](https://github.com/fasenderos/nodejs-order-book/commit/31be1c36042aaf440e63237ecf5372f461f51c4f))
+* init opencode ([5e241ea](https://github.com/fasenderos/nodejs-order-book/commit/5e241eaec03b71541002071d3541d0d80a99dac5))
+* update all dev dependencies ([888ff86](https://github.com/fasenderos/nodejs-order-book/commit/888ff867d36e8d34cb86dc84a83896243f6a6488))
+
+### Documentation
+
+* add missing link to STP on  README ([a3de4f8](https://github.com/fasenderos/nodejs-order-book/commit/a3de4f8333fe600f687f5fece6f8bc35ac5ae698))
+* reorder README info ([dbc1b5c](https://github.com/fasenderos/nodejs-order-book/commit/dbc1b5c7274caeef0fe0d65f23e58a366a60a86d))
+
 ## <small>10.0.1 (2025-10-28)</small>
 
 * style: export IOrder closes #536 ([691473a](https://github.com/fasenderos/nodejs-order-book/commit/691473a)), closes [#536](https://github.com/fasenderos/nodejs-order-book/issues/536)

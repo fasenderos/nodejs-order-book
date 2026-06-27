@@ -17,6 +17,7 @@ export enum ERROR {
 	LIMIT_ORDER_POST_ONLY = "LIMIT_ORDER_POST_ONLY",
 	ORDER_ALREDY_EXISTS = "ORDER_ALREDY_EXISTS",
 	ORDER_NOT_FOUND = "ORDER_NOT_FOUND",
+	STP_TRIGGERED = "STP_TRIGGERED",
 }
 
 export const ErrorCodes: Record<ERROR, number> = {
@@ -40,6 +41,7 @@ export const ErrorCodes: Record<ERROR, number> = {
 	[ERROR.INSUFFICIENT_QUANTITY]: 1200,
 	[ERROR.INVALID_PRICE_LEVEL]: 1201,
 	[ERROR.INVALID_JOURNAL_LOG]: 1201,
+	[ERROR.STP_TRIGGERED]: 1202,
 };
 
 export const ErrorMessages: Record<ERROR, string> = {
@@ -61,6 +63,7 @@ export const ErrorMessages: Record<ERROR, string> = {
 	[ERROR.ORDER_ALREDY_EXISTS]: "Order already exists",
 	[ERROR.ORDER_NOT_FOUND]: "Order not found",
 	[ERROR.INVALID_JOURNAL_LOG]: "Invalid journal log format",
+	[ERROR.STP_TRIGGERED]: "Self-trade prevention triggered",
 };
 
 export class OrderBookError implements IError {
