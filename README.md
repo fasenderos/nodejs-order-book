@@ -29,6 +29,7 @@ Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency tra
   - [Create OCO (One-Cancels-the-Other) order `oco()`](#create-oco-one-cancels-the-other-order)
   - [Modify an existing order `modifiy()`](#modify-an-existing-order)
   - [Cancel order `cancel()`](#cancel-order)
+- [Self-Trade Prevention (STP)](#self-trade-prevention-stp)
 - [Order Book Options](#order-book-options)
   - [Snapshot](#snapshot)
   - [Journal Logs](#journal-logs)
