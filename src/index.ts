@@ -14,7 +14,7 @@ import type {
 	StopLimitOrderOptions,
 	StopMarketOrderOptions,
 } from "./types";
-import { OrderType, Side } from "./types";
+import { OrderType, SelfTradePreventionMode, Side } from "./types";
 
 export {
 	type CreateOrderOptions,
@@ -29,6 +29,7 @@ export {
 	OrderType,
 	type OrderUpdatePrice,
 	type OrderUpdateSize,
+	SelfTradePreventionMode,
 	Side,
 	type StopLimitOrderOptions,
 	type StopMarketOrderOptions,

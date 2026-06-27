@@ -6,6 +6,13 @@ export enum Side {
 	SELL = "sell",
 }
 
+export enum SelfTradePreventionMode {
+	NONE = "NONE",
+	EXPIRE_TAKER = "EXPIRE_TAKER",
+	EXPIRE_MAKER = "EXPIRE_MAKER",
+	EXPIRE_BOTH = "EXPIRE_BOTH",
+}
+
 export enum OrderType {
 	LIMIT = "limit",
 	MARKET = "market",
@@ -32,10 +39,14 @@ interface BaseOrderOptions {
 	id?: string;
 	side: Side;
 	size: number;
+	accountId?: string;
+	stpMode?: SelfTradePreventionMode;
 }
 interface InternalBaseOrderOptions extends BaseOrderOptions {
 	type: OrderType;
 	time?: number;
+	accountId?: string;
+	stpMode?: SelfTradePreventionMode;
 }
 /**
  * Specific options for a market order.
@@ -67,6 +78,8 @@ export interface InternalLimitOrderOptions extends ILimitOrderOptions {
 	takerQty: number;
 	postOnly?: boolean;
 	ocoStopPrice?: number;
+	accountId?: string;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
@@ -78,6 +91,8 @@ export interface StopMarketOrderOptions extends MarketOrderOptions {
 export interface InternalStopMarketOrderOptions extends IMarketOrderOptions {
 	type: OrderType.STOP_MARKET;
 	stopPrice: number;
+	accountId?: string;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
@@ -90,6 +105,8 @@ export interface InternalStopLimitOrderOptions extends ILimitOrderOptions {
 	type: OrderType.STOP_LIMIT;
 	stopPrice: number;
 	isOCO?: boolean;
+	accountId?: string;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
@@ -126,6 +143,8 @@ export interface ILimitOrder {
 	timeInForce: TimeInForce;
 	takerQty: number;
 	makerQty: number;
+	accountId?: string;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
@@ -138,6 +157,8 @@ export interface IStopMarketOrder {
 	size: number;
 	stopPrice: number;
 	time: number;
+	accountId?: string;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
@@ -153,6 +174,8 @@ export interface IStopLimitOrder {
 	timeInForce: TimeInForce;
 	time: number;
 	isOCO: boolean;
+	accountId?: string;
+	stpMode?: SelfTradePreventionMode;
 }
 
 /**
@@ -190,6 +213,8 @@ export interface IProcessOrder {
 	err: OrderBookError | null;
 	/** Optional journal log entry related to the order processing. */
 	log?: JournalLog;
+	/** Orders expired due to Self-Trade Prevention (STP). */
+	stpExpired?: IOrder[];
 }
 
 export interface ConditionOrderOptions {

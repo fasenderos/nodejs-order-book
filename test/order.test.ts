@@ -8,7 +8,12 @@ import {
 	StopLimitOrder,
 	StopMarketOrder,
 } from "../src/order";
-import { OrderType, Side, TimeInForce } from "../src/types";
+import {
+	OrderType,
+	SelfTradePreventionMode,
+	Side,
+	TimeInForce,
+} from "../src/types";
 
 void test("it should create LimitOrder", () => {
 	const id = "fakeId";
@@ -207,6 +212,52 @@ void test("it should create StopMarketOrder", () => {
 			size,
 			stopPrice,
 			time,
+		}),
+	);
+});
+
+void test("it should create StopMarketOrder with accountId and stpMode", () => {
+	const id = "fakeId2";
+	const side = Side.BUY;
+	const type = OrderType.STOP_MARKET;
+	const size = 5;
+	const stopPrice = 4;
+	const time = Date.now();
+	const accountId = "alice";
+	const stpMode = SelfTradePreventionMode.EXPIRE_MAKER;
+	const order = OrderFactory.createOrder({
+		id,
+		type,
+		side,
+		size,
+		time,
+		stopPrice,
+		accountId,
+		stpMode,
+	});
+
+	assert.equal(order instanceof StopMarketOrder, true);
+	assert.deepStrictEqual(order.toObject(), {
+		id,
+		type,
+		side,
+		size,
+		stopPrice,
+		time,
+		accountId,
+		stpMode,
+	});
+	assert.equal(
+		order.toJSON(),
+		JSON.stringify({
+			id,
+			type,
+			side,
+			size,
+			stopPrice,
+			time,
+			accountId,
+			stpMode,
 		}),
 	);
 });
@@ -472,7 +523,8 @@ void test("test invalid order type", () => {
 			time,
 			timeInForce,
 		});
-	} catch (error) {
+		// biome-ignore lint/suspicious/noExplicitAny: use any for error
+	} catch (error: any) {
 		assert.equal(error?.message, ErrorMessages.INVALID_ORDER_TYPE);
 		assert.equal(error?.code, ErrorCodes.INVALID_ORDER_TYPE);
 	}
