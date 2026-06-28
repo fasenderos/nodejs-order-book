@@ -10,25 +10,30 @@
 # Node.js Order Book
 
 <p align="center">
-Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency trading (HFT) :rocket::rocket: </br></br>
+A fast, feature-complete limit order book engine for Node.js, written in TypeScript. </br>
+Designed for trading systems, exchanges, and HFT simulations. </br></br>
 :star: Star me on GitHub — it motivates me a lot!
 </p>
+
+**Why this library?** Originally ported from a [Go orderbook](https://github.com/i25959341/orderbook), this engine has been extended with conditional orders, Self-Trade Prevention (STP), snapshot/journaling for crash recovery, and full TypeScript support — while maintaining high throughput.
 
 ## Table of Contents
 
 - [Features](#features)
+- [Quick Start](#quick-start)
+- [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Conditional Orders](#conditional-orders)
-- [About Primary Functions](#about-primary-functions)
-  - [Create order `createOrder()`](#create-order)
-  - [Create Limit order `limit()`](#create-limit-order)
-  - [Create Market order `market()`](#create-market-order)
-  - [Create Stop Limit order `stopLimit()`](#create-stop-limit-order)
-  - [Create Stop Market order `stopMarket()`](#create-stop-market-order)
-  - [Create OCO (One-Cancels-the-Other) order `oco()`](#create-oco-one-cancels-the-other-order)
-  - [Modify an existing order `modifiy()`](#modify-an-existing-order)
-  - [Cancel order `cancel()`](#cancel-order)
+- [Primary Functions](#primary-functions)
+  - [createOrder()](#createorder)
+  - [limit()](#limit)
+  - [market()](#market)
+  - [stopLimit()](#stoplimit)
+  - [stopMarket()](#stopmarket)
+  - [oco()](#oco)
+  - [modify()](#modify)
+  - [cancel()](#cancel)
 - [Understanding Order Results](#understanding-order-results)
 - [Self-Trade Prevention (STP)](#self-trade-prevention-stp)
 - [Order Book Options](#order-book-options)
@@ -36,31 +41,44 @@ Ultra-fast Node.js Order Book written in TypeScript </br> for high-frequency tra
   - [Journal Logs](#journal-logs)
   - [Enable Journaling](#enable-journaling)
 - [Development](#development)
-  - [Build](#build)
-  - [Testing](#testing)
-  - [Coverage](#coverage)
-  - [Benchmarking](#benchmarking)
 - [Contributing](#contributing)
-- [Donation](#donation)
 - [License](#license)
+- [Donation](#donation)
 
 ## Features
-> Initially ported from [Go orderbook](https://github.com/i25959341/orderbook), this order book has been enhanced with new features
 
-- Standard price-time priority
-- Supports both market and limit orders
-- Supports `post-only` limit order <img src="https://img.shields.io/badge/New-green" alt="New">
-- Supports conditional orders [**Stop Limit, Stop Market and OCO**](#conditional-orders) <img src="https://img.shields.io/badge/New-green" alt="New">
-- Supports time in force GTC, FOK and IOC <img src="https://img.shields.io/badge/New-green" alt="New">
-- Support [Self-Trade Prevention (STP)](#self-trade-prevention-stp)
-- Supports order cancelling
-- Supports order price and/or size updating <img src="https://img.shields.io/badge/New-green" alt="New">
-- Snapshot and journaling functionalities for restoring the order book during server startup <img src="https://img.shields.io/badge/New-green" alt="New">
-- **High performance (above 300k trades per second)**
+- Standard price-time priority matching
+- Market, limit, and post-only limit orders
+- Conditional orders: Stop Limit, Stop Market, and OCO (One-Cancels-the-Other)
+- Time-in-force: GTC (Good-Til-Cancelled), FOK (Fill-Or-Kill), IOC (Immediate-Or-Cancel)
+- Self-Trade Prevention (STP) with 4 modes (NONE, EXPIRE_MAKER, EXPIRE_TAKER, EXPIRE_BOTH)
+- Order cancellation
+- Order price and/or size modification
+- Snapshot and journaling for order book state persistence and recovery
+- **High throughput** — benchmarked at 300k+ trades per second
+- Full TypeScript support with dual ESM/CJS exports
 
-**Machine:** ASUS ExpertBook, 11th Gen Intel(R) Core(TM) i7-1165G7, 2.80Ghz, 16GB RAM, Node.js v18.4.0.
+## Quick Start
 
-<img src="https://user-images.githubusercontent.com/1219087/181792292-8619ee25-bf75-4871-a06c-bd6c82157f33.png" alt="nodejs-order-book-benchmark" title="nodejs-order-book benchmark" />
+```ts
+import { OrderBook, Side } from 'nodejs-order-book'
+
+const ob = new OrderBook()
+
+// Place a sell limit order
+ob.limit({ side: Side.SELL, id: 'order-1', size: 55, price: 100 })
+
+// Place a buy market order
+const result = ob.market({ side: Side.BUY, size: 10 })
+
+console.log(result.done)     // Filled orders
+console.log(result.partial)  // Partial fill, if any
+```
+
+## Requirements
+
+- **Node.js** 18+ (ES2022 target)
+- **npm**, **yarn**, or **pnpm**
 
 ## Installation
 
@@ -84,7 +102,17 @@ pnpm add nodejs-order-book
 
 ## Usage
 
-To start using order book you need to import `OrderBook` and create new instance:
+The package supports both **ESM** and **CommonJS**:
+
+```ts
+// ESM (recommended)
+import { OrderBook, Side, OrderType, SelfTradePreventionMode } from 'nodejs-order-book'
+
+// CommonJS
+const { OrderBook, Side, OrderType, SelfTradePreventionMode } = require('nodejs-order-book')
+```
+
+To start using the order book you need to import `OrderBook` and create a new instance:
 
 ```ts
 import { OrderBook } from 'nodejs-order-book'
@@ -92,7 +120,7 @@ import { OrderBook } from 'nodejs-order-book'
 const ob = new OrderBook()
 ```
 
-Then you'll be able to use next primary functions:
+Then you'll be able to use the following primary functions:
 
 ```ts
 ob.createOrder({
@@ -124,8 +152,11 @@ ob.modify(orderID: string, {
 
 ob.cancel(orderID: string)
 ```
+
 ### Conditional Orders
-Currently `Stop Market`, `Stop Limit` and `OCO` orders are supported.
+
+`Stop Market`, `Stop Limit` and `OCO` orders are supported.
+
 ```ts
 import { OrderBook } from 'nodejs-order-book'
 
@@ -169,14 +200,16 @@ ob.oco({
 })
 ```
 
-## About primary functions
+## Primary Functions
 
-To add an order to the order book you can call the general `createOrder()` function or calling the underlying `limit()`, `market()`, `stopLimit()`, `stopMarket()` or `oco()` functions
+To add an order to the order book you can call the general `createOrder()` function or use the underlying `limit()`, `market()`, `stopLimit()`, `stopMarket()` or `oco()` directly.
 
-### Create Order
+### createOrder()
+
+A unified entry point that accepts a `type` field to dispatch to the correct handler:
 
 ```ts
-// Create limit order
+// Limit order
 ob.createOrder({
       type: 'limit',
       side: 'buy' | 'sell',
@@ -187,14 +220,14 @@ ob.createOrder({
       timeInForce?: 'GTC' | 'FOK' | 'IOC'
 })
 
-// Create market order
+// Market order
 ob.createOrder({
       type: 'market',
       side: 'buy' | 'sell',
       size: number
 })
 
-// Create stop limit order
+// Stop limit order
 ob.createOrder({
       type: 'stop_limit',
       side: 'buy' | 'sell',
@@ -205,7 +238,7 @@ ob.createOrder({
       timeInForce?: 'GTC' | 'FOK' | 'IOC'
 })
 
-// Create stop market order
+// Stop market order
 ob.createOrder({
       type: 'stop_market',
       side: 'buy' | 'sell',
@@ -213,7 +246,7 @@ ob.createOrder({
       stopPrice: number
 })
 
-// Create OCO order
+// OCO order
 ob.createOrder({
       type: 'oco',
       side: 'buy' | 'sell',
@@ -225,20 +258,19 @@ ob.createOrder({
 })
 ```
 
-### Create Limit Order
+### limit()
+
+Create a limit order. See {@link LimitOrderOptions} for details.
 
 ```ts
 /**
- * Create a limit order. See {@link LimitOrderOptions} for details.
- *
- * @param options
  * @param options.side - `sell` or `buy`
  * @param options.id - Unique order ID
  * @param options.size - How much of currency you want to trade in units of base currency
- * @param options.price - The price at which the order is to be fullfilled, in units of the quote currency
- * @param options.postOnly - When `true` the order will be rejected if immediately matches and trades as a taker. Default is `false`
- * @param options.timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
- * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+ * @param options.price - The price at which the order is to be fulfilled, in units of the quote currency
+ * @param options.postOnly - When `true` the order is rejected if it immediately matches as a taker. Default is `false`
+ * @param options.timeInForce - GTC, FOK, or IOC. Default is GTC
+ * @returns An object with the result of the processed order or an error. See {@link IProcessOrder}
  */
 ob.limit({
       side: 'buy' | 'sell',
@@ -292,16 +324,15 @@ done    - 1 order with 100 price, (may be also few orders with 110 price) + uniq
 partial - 1 order with price 110
 ```
 
-### Create Market Order
+### market()
+
+Create a market order. See {@link MarketOrderOptions} for details.
 
 ```ts
 /**
- * Create a market order. See {@link MarketOrderOptions} for details.
- *
- * @param options
  * @param options.side - `sell` or `buy`
  * @param options.size - How much of currency you want to trade in units of base currency
- * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+ * @returns An object with the result of the processed order or an error. See {@link IProcessOrder}
  */
 ob.market({ side: 'buy' | 'sell', size: number })
 ```
@@ -336,20 +367,19 @@ partial      - null
 quantityLeft - 4
 ```
 
-### Create Stop Limit Order
+### stopLimit()
+
+Create a stop limit order. See {@link StopLimitOrderOptions} for details.
 
 ```ts
 /**
- * Create a stop limit order. See {@link StopLimitOrderOptions} for details.
- *
- * @param options
  * @param options.side - `sell` or `buy`
  * @param options.id - Unique order ID
  * @param options.size - How much of currency you want to trade in units of base currency
- * @param options.price - The price at which the order is to be fullfilled, in units of the quote currency
- * @param options.stopPrice - The price at which the order will be triggered.
- * @param options.timeInForce - Time-in-force type supported are: GTC, FOK, IOC. Default is GTC
- * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+ * @param options.price - The price at which the order is to be fulfilled, in units of the quote currency
+ * @param options.stopPrice - The price at which the order is triggered
+ * @param options.timeInForce - GTC, FOK, or IOC. Default is GTC
+ * @returns An object with the result of the processed order or an error. See {@link IProcessOrder}
  */
 ob.stopLimit({
       side: 'buy' | 'sell',
@@ -361,17 +391,16 @@ ob.stopLimit({
 })
 ```
 
-### Create Stop Market Order
+### stopMarket()
+
+Create a stop market order. See {@link StopMarketOrderOptions} for details.
 
 ```ts
 /**
- * Create a stop market order. See {@link StopMarketOrderOptions} for details.
- *
- * @param options
  * @param options.side - `sell` or `buy`
  * @param options.size - How much of currency you want to trade in units of base currency
- * @param options.stopPrice - The price at which the order will be triggered.
- * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+ * @param options.stopPrice - The price at which the order is triggered
+ * @returns An object with the result of the processed order or an error. See {@link IProcessOrder}
  */
 ob.stopMarket({
       side: 'buy' | 'sell',
@@ -380,31 +409,26 @@ ob.stopMarket({
 })
 ```
 
-### Create OCO (One-Cancels-the-Other) Order
+### oco()
+
+Create an OCO (One-Cancels-the-Other) order. An OCO combines a `stop_limit` and a `limit` order: when one is triggered or filled, the other is automatically canceled. Both orders share the same `side` and `size`. If you cancel one, the entire OCO pair is canceled.
+
+For BUY orders: `stopPrice` must be above the current price, `price` below.
+For SELL orders: `stopPrice` must be below the current price, `price` above.
+
+See {@link OCOOrderOptions} for details.
 
 ```ts
 /**
- * Create an OCO (One-Cancels-the-Other) order.
- * OCO order combines a `stop_limit` order and a `limit` order, where if stop price
- * is triggered or limit order is fully or partially fulfilled, the other is canceled.
- * Both orders have the same `side` and `size`. If you cancel one of the orders, the
- * entire OCO order pair will be canceled.
- *
- * For BUY orders the `stopPrice` must be above the current price and the `price` below the current price
- * For SELL orders the `stopPrice` must be below the current price and the `price` above the current price
- *
- * See {@link OCOOrderOptions} for details.
- *
- * @param options
  * @param options.side - `sell` or `buy`
  * @param options.id - Unique order ID
  * @param options.size - How much of currency you want to trade in units of base currency
- * @param options.price - The price of the `limit` order at which the order is to be fullfilled, in units of the quote currency
- * @param options.stopPrice - The price at which the `stop_limit` order will be triggered.
- * @param options.stopLimitPrice - The price of the `stop_limit` order at which the order is to be fullfilled, in units of the quote currency.
- * @param options.timeInForce - Time-in-force of the `limit` order. Type supported are: GTC, FOK, IOC. Default is GTC
- * @param options.stopLimitTimeInForce - Time-in-force of the `stop_limit` order. Type supported are: GTC, FOK, IOC. Default is GTC
- * @returns An object with the result of the processed order or an error. See {@link IProcessOrder} for the returned data structure
+ * @param options.price - The limit order price, in units of the quote currency
+ * @param options.stopPrice - The stop trigger price
+ * @param options.stopLimitPrice - The stop_limit order price, in units of the quote currency
+ * @param options.timeInForce - Time-in-force of the limit order. GTC, FOK, IOC. Default is GTC
+ * @param options.stopLimitTimeInForce - Time-in-force of the stop_limit order. GTC, FOK, IOC. Default is GTC
+ * @returns An object with the result of the processed order or an error. See {@link IProcessOrder}
  */
 ob.oco({
       side: 'buy' | 'sell',
@@ -418,18 +442,15 @@ ob.oco({
 })
 ```
 
-### Modify an existing order
+### modify()
+
+Modify an existing order by ID. When an order is modified (price or quantity), it is treated as a new entry: under price-time-priority, it moves to the back of the matching queue.
 
 ```ts
 /**
- * Modify an existing order with given ID. When an order is modified by price or quantity,
- * it will be deemed as a new entry. Under the price-time-priority algorithm, orders are
- * prioritized according to their order price and order time. Hence, the latest orders
- * will be placed at the back of the matching order queue.
- *
- * @param orderID - The ID of the order to be modified
- * @param orderUpdate - An object with the modified size and/or price of an order. The shape of the object is `{size, price}`.
- * @returns An object with the result of the processed order or an error
+ * @param orderID - The ID of the order to modify
+ * @param orderUpdate - An object with `{size, price}`. Only provided fields are updated
+ * @returns An object with the result or an error
  */
 ob.modify(orderID: string, { size: number, price: number })
 ```
@@ -465,14 +486,14 @@ bids: 90  -> 5      90  -> 5
       80  -> 1      80  -> 1
 ```
 
-### Cancel Order
+### cancel()
+
+Remove an existing order by ID from the order book.
 
 ```ts
 /**
- * Remove an existing order with given ID from the order book
- *
- * @param orderID - The ID of the order to be removed
- * @returns The removed order if exists or `undefined`
+ * @param orderID - The ID of the order to remove
+ * @returns The removed order if found, or `undefined`
  */
 ob.cancel(orderID: string)
 ```
@@ -496,10 +517,13 @@ When creating an order, the library returns an `IProcessOrder` object:
 ```ts
 interface IProcessOrder {
   done: IOrder[];                    // Fully consumed orders
+  activated: IStopOrder[];           // Triggered stop orders (stop limit, stop market, OCO)
   partial: ILimitOrder | null;       // Partially consumed limit order (if any)
   quantityLeft: number;              // Unfilled quantity of the taker order
   partialQuantityProcessed: number;  // Quantity consumed from the order in 'partial'
   err: OrderBookError | null;
+  log?: JournalLog;                  // Journal entry (only when enableJournaling is true)
+  stpExpired?: IOrder[];             // Orders expired due to Self-Trade Prevention
 }
 ```
 
@@ -518,6 +542,10 @@ interface IProcessOrder {
 - **Limit orders fully filled**: Taker appears in `done[]` alongside matched makers
 - **Limit orders partially filled**: Taker appears in `partial`, matched makers appear in `done[]`
 - **`quantityLeft`**: Always represents unfilled quantity of the taker, regardless of where it appears
+
+> **Note on `activated[]`**: When a stop limit, stop market, or OCO order is triggered, the triggered order(s) appear in the `activated` array. These are orders that were resting in the stop book and have now been activated for matching.
+>
+> **Note on `stpExpired[]`**: When Self-Trade Prevention is configured and triggered, expired orders are listed in `stpExpired`. See [Self-Trade Prevention (STP)](#self-trade-prevention-stp) for details.
 
 ### What is `partialQuantityProcessed`?
 
@@ -542,11 +570,13 @@ This represents **how much of the order in `partial` was processed**, not how mu
 // 8-unit buy order, 20 available from one maker
 {
   done: [{ id: 'taker', size: 8 }],         // Fully filled taker
-  partial: { id: 'maker-1', size: 12 },     // Maker (12 still unfilled)
+  partial: { id: 'maker-1', size: 12 },     // Maker: 12 still unfilled (20 - 8)
   quantityLeft: 0,                          // Taker fully filled
   partialQuantityProcessed: 8               // 8 units of maker were consumed
 }
 ```
+
+> `partial.size` always represents the **remaining** quantity of that order, not what was consumed. In this example, the maker started with size 20, had 8 consumed, so `partial.size` is 12 (what's left on the book).
 
 ### Example: Market Order (Fully Filled)
 
@@ -651,7 +681,7 @@ When STP is triggered, the response (`IProcessOrder`) includes:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `stpExpired` | `IOrder[] \| undefined` | Orders that were removed from the book due to STP |
+| `stpExpired` | `IOrder[] \| undefined` | Orders removed from the book due to STP |
 | `err` | `OrderBookError \| null` | Error with `code: 1202` and `message: "Self-trade prevention triggered"` for `EXPIRE_TAKER` / `EXPIRE_BOTH` |
 
 ### Error code
@@ -794,118 +824,132 @@ ob.createOrder({
 
 ## Order Book Options
 
-The orderbook can be initialized with the following options by passing them to the constructor:
+The order book can be initialized with the following options by passing them to the constructor:
 
 ### Snapshot
-A `snapshot` represents the state of the order book at a specific point in time. It includes the following properties:
 
- - `asks`: List of ask orders, each with a `price` and a list of associated `orders`.
- - `bids`: List of bid orders, each with a `price` and a list of associated `orders`.
- - `stopBook`: an object with `bids` and `asks` properties related to every `StopOrder` in the orderbook.
- - `ts`: A timestamp indicating when the snapshot was taken, in Unix timestamp format.
- - `lastOp`: The id of the last operation included in the snapshot
+A `snapshot` represents the state of the order book at a specific point in time. It includes:
 
-Snapshots are crucial for restoring the order book to a previous state. The orderbook can restore from a snapshot before processing any journal logs, ensuring consistency and accuracy.
-After taking the snapshot, you can safely remove all logs preceding the `lastOp` id.
+- `asks`: List of ask orders, each with a `price` and a list of associated `orders`.
+- `bids`: List of bid orders, each with a `price` and a list of associated `orders`.
+- `stopBook`: An object with `bids` and `asks` properties related to every `StopOrder` in the order book.
+- `ts`: A Unix timestamp of when the snapshot was taken.
+- `lastOp`: The ID of the last operation included in the snapshot.
 
-**Note**: The snapshot of the order book returns an object containing an `array` of `bids` and `asks`, which in turn are arrays of order objects. If the snapshot is saved to the database as a `string`, make sure to pass the snapshot in its original format when initializing the order book. For example, you can achieve this by using `JSON.parse` to convert the string back into its original object form.
+Snapshots are crucial for restoring the order book to a previous state. The order book can restore from a snapshot before processing any journal logs, ensuring consistency and accuracy. After taking a snapshot, you can safely remove all logs preceding the `lastOp` id.
+
+**Note**: The snapshot returns an object containing arrays of `bids` and `asks`. If the snapshot is saved to the database as a string, use `JSON.parse` to restore it when initializing the order book.
 
 ```ts
-const ob = new OrderBook({ enableJournaling: true})
+const ob = new OrderBook({ enableJournaling: true })
 
-// after every order save the log to the database
+// After every order, save the log to the database
 const order = ob.limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
 await saveLog(order.log)
 
-// ... after some time take a snapshot of the order book and save it on the database
-
+// ... after some time, take a snapshot and save it
 const snapshot = ob.snapshot()
 await saveSnapshot(JSON.stringify(snapshot))
 
-// If you want you can safely remove all logs preceding the `lastOp` id of the snapshot, and continue to save each subsequent log to the database
+// Safe to remove logs before the snapshot's lastOp
 await removePreviousLogs(snapshot.lastOp)
 
-// On server restart get the snapshot and logs from the database and initialize the order book
+// On server restart, restore from snapshot + logs
 const logs = await getLogs()
 const snapshot = await getSnapshot()
 
-const ob = new OrderBook({ snapshot: JSON.parse(snapshot), journal: log, enableJournaling: true })
+const ob = new OrderBook({
+  snapshot: JSON.parse(snapshot),
+  journal: logs,
+  enableJournaling: true,
+})
 ```
 
 ### Journal Logs
-The `journal` option expects an array of journal logs that you can get by setting `enableJournaling` to true. When the journal is provided, the order book will replay all the operations, bringing the order book to the same state as the last log.
-```ts
-// Assuming 'logs' is an array of log entries retrieved from the database
 
+The `journal` option accepts an array of journal logs (obtained by setting `enableJournaling` to `true`). When provided, the order book replays all operations, restoring its state to match the last log.
+
+```ts
 const logs = await getLogs()
 const ob = new OrderBook({ journal: logs, enableJournalLog: true })
 ```
-By combining snapshots with journaling, you can effectively restore and audit the state of the order book.
+
+Combining snapshots with journaling gives you full state persistence and auditability.
 
 ### Enable Journaling
-`enabledJournaling` is a configuration setting that determines whether journaling is enabled or disabled. When enabled, the property `log` will be added to the body of the response for each operation. The logs must be saved to the database and can then be used when a new instance of the order book is instantiated.
+
+When `enableJournaling` is `true`, the property `log` is attached to every operation response. These logs should be persisted and can be used to restore the order book on restart.
+
 ```ts
 const ob = new OrderBook({ enableJournaling: true }) // false by default
 
-// after every order save the log to the database
+// After every operation, save the log
 const order = ob.limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
 await saveLog(order.log)
 ```
 
 ## Development
 
-### Build
+### Prerequisites
 
-Build production (distribution) files in your dist folder:
+- Node.js 18+
+- npm (or yarn / pnpm)
 
-```
+### Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Build all distributions (CJS, ESM, types)
 npm run build
-```
 
-### Testing
-
-To run all the unit-test
-
-```
+# Run tests
 npm run test
-```
 
-### Coverage
-
-Run testing coverage
-
-```
+# Run tests with coverage
 npm run test:cov
-```
 
-### Benchmarking
-
-Before running benchmark, make sure to have built the source code with `npm run build` first
-
-```
+# Run benchmarks (build first)
 npm run bench
 ```
 
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run build` | Build CJS, ESM, and type declarations |
+| `npm run test` | Run unit tests |
+| `npm run test:dev` | Run tests in watch mode |
+| `npm run test:cov` | Run tests with lcov coverage report |
+| `npm run bench` | Run performance benchmarks |
+| `npm run lint` | Check code style with Biome |
+| `npm run lint:fix` | Auto-fix lint issues |
+| `npm run clean` | Clean build output |
+| `npm run package` | Build and pack for local testing |
+
 ## Contributing
 
-I would greatly appreciate any contributions to make this project better. Please make sure to follow the below guidelines before getting your hands dirty.
+Contributions are welcome! Please read the [Contributing Guidelines](CONTRIBUTING.md) before getting started.
 
 1. Fork the repository
-2. Create your branch (git checkout -b my-branch)
-3. Commit any changes to your branch
-4. Push your changes to your remote branch
-5. Open a pull request
+2. Create your feature branch (`git checkout -b my-feature`)
+3. Commit your changes (`git commit -m 'feat: add my feature'`)
+4. Push to the branch (`git push origin my-feature`)
+5. Open a Pull Request
 
-## Donation
-
-If this project help you reduce time to develop, you can give me a cup of coffee 🍵 :)
-
-- USDT (TRC20): `TXArNxsq2Ee8Jvsk45PudVio52Joiq1yEe`
-- BTC: `1GYDVSAQNgG7MFhV5bk15XJy3qoE4NFenp`
-- BTC (BEP20): `0xf673ee099be8129ec05e2f549d96ebea24ac5d97`
-- ETH (ERC20): `0xf673ee099be8129ec05e2f549d96ebea24ac5d97`
-- BNB (BEP20): `0xf673ee099be8129ec05e2f549d96ebea24ac5d97`
+Please also refer to the [Code of Conduct](CODE_OF_CONDUCT.md) and [Security Policy](SECURITY.md).
 
 ## License
 
 Copyright [Andrea Fassina](https://github.com/fasenderos), Licensed under [MIT](LICENSE).
+
+## Donation
+
+If this project saves you time or helps your business, consider buying me a coffee.
+
+- **USDT (TRC20):** `TXArNxsq2Ee8Jvsk45PudVio52Joiq1yEe`
+- **BTC:** `1GYDVSAQNgG7MFhV5bk15XJy3qoE4NFenp`
+- **BTC (BEP20):** `0xf673ee099be8129ec05e2f549d96ebea24ac5d97`
+- **ETH (ERC20):** `0xf673ee099be8129ec05e2f549d96ebea24ac5d97`
+- **BNB (BEP20):** `0xf673ee099be8129ec05e2f549d96ebea24ac5d97`
