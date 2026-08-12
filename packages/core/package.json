@@ -16,7 +16,6 @@
 	"module": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
 	"scripts": {
-		"addscope": "node tools/packagejson name @fasenderos/nodejs-order-book",
 		"bench": "node benchmarks/benchmark_lob.js",
 		"build": "npm run build:cjs && npm run build:esm && npm run build:types",
 		"build:cjs": "rimraf dist/cjs && tsc -p config/tsconfig.cjs.json",
