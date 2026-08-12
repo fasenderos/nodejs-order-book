@@ -1,37 +1,37 @@
 {
-  "git": {
-    "commitMessage": "chore(release): nodejs-order-book@${version}",
-    "tagName": "v${version}",
-    "tagAnnotation": "Release v${version}",
-    "requireCommits": true,
-    "requireCleanWorkingDir": true
-  },
-  "github": {
-    "release": true,
-    "releaseName": "v${version}",
-    "commitArgs": ["-S"],
-    "tagArgs": ["-s"]
-  },
-  "npm": {
-    "publish": false
-  },
-  "plugins": {
-    "@release-it/conventional-changelog": {
-      "header": "# Changelog",
-      "infile": "CHANGELOG.md",
-      "preset": {
-        "name": "conventionalcommits",
-        "types": [
-          { "type": "feat", "section": "Features" },
-          { "type": "fix", "section": "Bug Fixes" },
-          { "type": "chore", "section": "Chore" },
-          { "type": "docs", "section": "Documentation" },
-          { "type": "refactor", "section": "Refactoring" },
-          { "type": "perf", "section": "Performance Improvement" },
-          { "type": "test", "section": "Test" },
-          { "type": "style", "hidden": true }
-        ]
-      }
-    }
-  }
+	"git": {
+		"commitMessage": "chore(release): nodejs-order-book@${version}",
+		"tagName": "v${version}",
+		"tagAnnotation": "Release v${version}",
+		"requireCommits": true,
+		"requireCleanWorkingDir": true
+	},
+	"github": {
+		"release": true,
+		"releaseName": "v${version}",
+		"commitArgs": ["-S"],
+		"tagArgs": ["-s"]
+	},
+	"npm": {
+		"publish": false
+	},
+	"plugins": {
+		"@release-it/conventional-changelog": {
+			"header": "# Changelog",
+			"infile": "CHANGELOG.md",
+			"preset": {
+				"name": "conventionalcommits",
+				"types": [
+					{ "type": "feat", "section": "Features" },
+					{ "type": "fix", "section": "Bug Fixes" },
+					{ "type": "chore", "section": "Chore" },
+					{ "type": "docs", "section": "Documentation" },
+					{ "type": "refactor", "section": "Refactoring" },
+					{ "type": "perf", "section": "Performance Improvement" },
+					{ "type": "test", "section": "Test" },
+					{ "type": "style", "hidden": true }
+				]
+			}
+		}
+	}
 }
