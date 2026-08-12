@@ -260,7 +260,7 @@ ob.createOrder({
 
 ### limit()
 
-Create a limit order. See {@link LimitOrderOptions} for details.
+Create a limit order.
 
 ```ts
 /**
@@ -270,7 +270,7 @@ Create a limit order. See {@link LimitOrderOptions} for details.
  * @param options.price - The price at which the order is to be fulfilled, in units of the quote currency
  * @param options.postOnly - When `true` the order is rejected if it immediately matches as a taker. Default is `false`
  * @param options.timeInForce - GTC, FOK, or IOC. Default is GTC
- * @returns An object with the result of the processed order or an error. See {@link IProcessOrder}
+ * @returns An object with the result of the processed order or an error.
  */
 ob.limit({
       side: 'buy' | 'sell',
@@ -326,13 +326,13 @@ partial - 1 order with price 110
 
 ### market()
 
-Create a market order. See {@link MarketOrderOptions} for details.
+Create a market order.
 
 ```ts
 /**
  * @param options.side - `sell` or `buy`
  * @param options.size - How much of currency you want to trade in units of base currency
- * @returns An object with the result of the processed order or an error. See {@link IProcessOrder}
+ * @returns An object with the result of the processed order or an error.
  */
 ob.market({ side: 'buy' | 'sell', size: number })
 ```
@@ -369,7 +369,7 @@ quantityLeft - 4
 
 ### stopLimit()
 
-Create a stop limit order. See {@link StopLimitOrderOptions} for details.
+Create a stop limit order.
 
 ```ts
 /**
@@ -379,7 +379,7 @@ Create a stop limit order. See {@link StopLimitOrderOptions} for details.
  * @param options.price - The price at which the order is to be fulfilled, in units of the quote currency
  * @param options.stopPrice - The price at which the order is triggered
  * @param options.timeInForce - GTC, FOK, or IOC. Default is GTC
- * @returns An object with the result of the processed order or an error. See {@link IProcessOrder}
+ * @returns An object with the result of the processed order or an error.
  */
 ob.stopLimit({
       side: 'buy' | 'sell',
@@ -393,14 +393,14 @@ ob.stopLimit({
 
 ### stopMarket()
 
-Create a stop market order. See {@link StopMarketOrderOptions} for details.
+Create a stop market order.
 
 ```ts
 /**
  * @param options.side - `sell` or `buy`
  * @param options.size - How much of currency you want to trade in units of base currency
  * @param options.stopPrice - The price at which the order is triggered
- * @returns An object with the result of the processed order or an error. See {@link IProcessOrder}
+ * @returns An object with the result of the processed order or an error.
  */
 ob.stopMarket({
       side: 'buy' | 'sell',
@@ -416,8 +416,6 @@ Create an OCO (One-Cancels-the-Other) order. An OCO combines a `stop_limit` and 
 For BUY orders: `stopPrice` must be above the current price, `price` below.
 For SELL orders: `stopPrice` must be below the current price, `price` above.
 
-See {@link OCOOrderOptions} for details.
-
 ```ts
 /**
  * @param options.side - `sell` or `buy`
@@ -428,7 +426,7 @@ See {@link OCOOrderOptions} for details.
  * @param options.stopLimitPrice - The stop_limit order price, in units of the quote currency
  * @param options.timeInForce - Time-in-force of the limit order. GTC, FOK, IOC. Default is GTC
  * @param options.stopLimitTimeInForce - Time-in-force of the stop_limit order. GTC, FOK, IOC. Default is GTC
- * @returns An object with the result of the processed order or an error. See {@link IProcessOrder}
+ * @returns An object with the result of the processed order or an error.
  */
 ob.oco({
       side: 'buy' | 'sell',
