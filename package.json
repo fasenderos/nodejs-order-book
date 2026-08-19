@@ -1,7 +1,23 @@
 {
 	"name": "nodejs-order-book",
-	"private": true,
 	"packageManager": "pnpm@10.5.2",
+	"main": "index.js",
+	"types": "index.d.ts",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.mjs",
+			"require": "./index.js"
+		}
+	},
+	"files": [
+		"index.js",
+		"index.mjs",
+		"index.d.ts"
+	],
+	"dependencies": {
+		"@nodejs-order-book/core": "workspace:*"
+	},
 	"scripts": {
 		"build": "turbo run build",
 		"dev": "turbo run dev",

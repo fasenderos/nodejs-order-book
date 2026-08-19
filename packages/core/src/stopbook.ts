@@ -1,7 +1,7 @@
 /* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
-import type { StopQueue } from "./stopqueue";
-import { StopSide } from "./stopside";
-import { type IStopOrder, OrderType, Side, type StopOrder } from "./types";
+import type { StopQueue } from "./stopqueue.js";
+import { StopSide } from "./stopside.js";
+import { type IStopOrder, OrderType, Side, type StopOrder } from "./types.js";
 
 export class StopBook {
 	private readonly bids: StopSide;

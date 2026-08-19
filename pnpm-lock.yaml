@@ -101,6 +101,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@nodejs-order-book/core':
+        specifier: workspace:*
+        version: link:packages/core
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.5.8
@@ -135,6 +139,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@nodejs-order-book/plugin-journaling':
+        specifier: workspace:*
+        version: link:../plugin-journaling
       denque:
         specifier: 2.1.0
         version: 2.1.0
@@ -154,6 +161,25 @@ importers:
       nanobench:
         specifier: ^3.0.0
         version: 3.0.0
+      pinst:
+        specifier: ^3.0.0
+        version: 3.0.0
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
+
+  packages/plugin-journaling:
+    dependencies:
+      '@nodejs-order-book/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^26.2.0
+        version: 26.2.0
+      c8:
+        specifier: ^11.0.0
+        version: 11.0.0
       pinst:
         specifier: ^3.0.0
         version: 3.0.0

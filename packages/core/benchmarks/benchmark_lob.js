@@ -1,6 +1,6 @@
-const bench = require("nanobench");
-const hft = require("../dist/cjs/index.js");
-const gaussian = require("gaussian");
+import gaussian from "gaussian";
+import bench from "nanobench";
+import * as hft from "../dist/esm/index.js";
 
 /* New Limits */
 function spamLimitOrders(book, count) {

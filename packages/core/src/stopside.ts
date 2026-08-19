@@ -1,8 +1,8 @@
 /* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import createRBTree from "functional-red-black-tree";
-import { CustomError, ERROR } from "./errors";
-import { StopQueue } from "./stopqueue";
-import { Side, type StopOrder } from "./types";
+import { CustomError, ERROR } from "./errors.js";
+import { StopQueue } from "./stopqueue.js";
+import { Side, type StopOrder } from "./types.js";
 
 export class StopSide {
 	private _priceTree: createRBTree.Tree<number, StopQueue>;

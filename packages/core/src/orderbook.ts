@@ -1,14 +1,16 @@
 /* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
-import { CustomError, ERROR, type OrderBookError } from "./errors";
+import { CustomError, ERROR, type OrderBookError } from "./errors.js";
+import { EventBus } from "./event-bus.js";
+import { lazyRequire } from "./lazy-require.js";
 import {
 	type LimitOrder,
 	OrderFactory,
 	type StopLimitOrder,
 	type StopMarketOrder,
-} from "./order";
-import type { OrderQueue } from "./orderqueue";
-import { OrderSide } from "./orderside";
-import { StopBook } from "./stopbook";
+} from "./order.js";
+import type { OrderQueue } from "./orderqueue.js";
+import { OrderSide } from "./orderside.js";
+import { StopBook } from "./stopbook.js";
 import {
 	type CreateOrderOptions,
 	type ICancelOrder,
@@ -19,7 +21,11 @@ import {
 	type LimitOrderOptions,
 	type MarketOrderOptions,
 	type OCOOrderOptions,
+	type OrderBookEvent,
+	type OrderBookEventMap,
 	type OrderBookOptions,
+	type OrderBookPlugin,
+	type OrderRequestOptions,
 	OrderType,
 	type OrderUpdatePrice,
 	type OrderUpdateSize,
@@ -30,7 +36,7 @@ import {
 	type StopMarketOrderOptions,
 	type StopOrder,
 	TimeInForce,
-} from "./types";
+} from "./types.js";
 
 const validTimeInForce = Object.values(TimeInForce);
 
@@ -40,36 +46,34 @@ export class OrderBook {
 	private _marketPrice = 0;
 	private readonly bids: OrderSide;
 	private readonly asks: OrderSide;
-	private readonly enableJournaling: boolean;
 	private readonly stopBook: StopBook;
+	private readonly eventBus = new EventBus<OrderBookEventMap>();
 	/**
 	 * Creates an instance of OrderBook.
 	 * @param {OrderBookOptions} [options={}] - Options for configuring the order book.
-	 * @param {JournalLog} [options.snapshot] - The orderbook snapshot will be restored before processing any journal logs, if any.
-	 * @param {JournalLog} [options.journal] - Array of journal logs (optional).
-	 * @param {boolean} [options.enableJournaling=false] - Flag to enable journaling. Default to false
+	 * @param {Snapshot} [options.snapshot] - The orderbook snapshot will be restored before processing any journal logs, if any.
+	 * @param {JournalLog[]} [options.journal] - Array of journal logs (optional). Deprecated: use the `@nodejs-order-book/plugin-journaling` plugin instead.
+	 * @param {boolean} [options.enableJournaling=false] - Flag to enable journaling. Deprecated: use the `@nodejs-order-book/plugin-journaling` plugin instead.
 	 */
-	constructor({
-		snapshot,
-		journal,
-		enableJournaling = false,
-	}: OrderBookOptions = {}) {
+	constructor({ snapshot, journal, enableJournaling }: OrderBookOptions = {}) {
 		this.bids = new OrderSide(Side.BUY);
 		this.asks = new OrderSide(Side.SELL);
-		this.enableJournaling = enableJournaling;
 		this.stopBook = new StopBook();
 		// First restore from orderbook snapshot
 		if (snapshot != null) {
 			this.restoreSnapshot(snapshot);
 		}
-		// Than replay from journal log
-		if (journal != null) {
-			if (!Array.isArray(journal)) throw CustomError(ERROR.INVALID_JOURNAL_LOG);
-			// If a snapshot is available be sure to remove logs before the last restored operation
-			if (snapshot != null && snapshot.lastOp > 0) {
-				journal = journal.filter((log) => log.opId > snapshot.lastOp);
-			}
-			this.replayJournal(journal);
+		// Deprecated journaling options: warn and initialize the journaling plugin
+		if (enableJournaling || journal != null) {
+			console.warn(
+				"[nodejs-order-book] The 'enableJournaling' and 'journal' options are deprecated and will be removed in the next major version (v12). Use the '@nodejs-order-book/plugin-journaling' plugin instead: const journaling = journalingPlugin(); ob.use(journaling);",
+			);
+			const { journalingPlugin } = lazyRequire<{
+				journalingPlugin: (options?: {
+					journal?: JournalLog[];
+				}) => OrderBookPlugin;
+			}>("@nodejs-order-book/plugin-journaling");
+			this.use(journalingPlugin({ journal }));
 		}
 	}
 
@@ -82,6 +86,81 @@ export class OrderBook {
 	get lastOp(): number {
 		return this._lastOp;
 	}
+
+	/**
+	 * Register an event handler for the given order book event.
+	 * @template K - The event name, a key of {@link OrderBookEventMap}.
+	 * @param event - The event name to subscribe to.
+	 * @param handler - The handler invoked with the event payload.
+	 */
+	public on<K extends OrderBookEvent>(
+		event: K,
+		handler: (payload: OrderBookEventMap[K]) => void,
+	): void {
+		this.eventBus.on(event, handler);
+	}
+
+	/**
+	 * Remove a previously registered event handler.
+	 * @template K - The event name, a key of {@link OrderBookEventMap}.
+	 * @param event - The event name to unsubscribe from.
+	 * @param handler - The handler to remove.
+	 */
+	public off<K extends OrderBookEvent>(
+		event: K,
+		handler: (payload: OrderBookEventMap[K]) => void,
+	): void {
+		this.eventBus.off(event, handler);
+	}
+
+	/**
+	 * Install a plugin into the order book. The plugin's `install` method is
+	 * invoked with the order book instance so it can subscribe to events.
+	 * @param plugin - The plugin to install.
+	 * @returns The order book instance, allowing method chaining.
+	 */
+	public use(plugin: OrderBookPlugin): OrderBook {
+		plugin.install(this);
+		return this;
+	}
+
+	/**
+	 * Emit a `trade` event for every match contained in the response
+	 * (fully filled maker orders plus the partial fill, if any).
+	 * @param opId - The operation id shared with the originating event.
+	 * @param options - The options of the taker order.
+	 * @param response - The processed order response.
+	 */
+	private readonly emitTrades = (
+		opId: number,
+		options: OrderRequestOptions,
+		response: IProcessOrder,
+	): void => {
+		for (const order of response.done) {
+			// When a limit taker is fully filled it is pushed into `done` as well;
+			// skip it so only the resting (maker) orders are reported as trades.
+			if (order.id === options.id) continue;
+			this.eventBus.emit("trade", {
+				opId,
+				price: (order as ILimitOrder).price,
+				size: order.size,
+				makerOrderId: order.id,
+				takerOrderId: options.id,
+				side: options.side,
+			});
+		}
+		if (response.partial !== null && response.partialQuantityProcessed > 0) {
+			this.eventBus.emit("trade", {
+				opId,
+				price: response.partial.price,
+				size: response.partialQuantityProcessed,
+				makerOrderId: response.partial.id,
+				takerOrderId: options.id,
+				side: options.side,
+			});
+		}
+	};
+
 	/**
 	 * Create new order. See {@link CreateOrderOptions} for details.
 	 *
@@ -110,15 +189,22 @@ export class OrderBook {
 				return this.stopLimit(options);
 			case OrderType.OCO:
 				return this.oco(options);
-			default:
+			default: {
+				const error = CustomError(ERROR.INVALID_ORDER_TYPE);
+				this.eventBus.emit("order.rejected", {
+					opId: ++this._lastOp,
+					options,
+					error,
+				});
 				return {
 					done: [],
 					activated: [],
 					partial: null,
 					partialQuantityProcessed: 0,
 					quantityLeft: 0,
-					err: CustomError(ERROR.INVALID_ORDER_TYPE),
+					err: error,
 				};
+			}
 		}
 	}
 
@@ -132,13 +218,21 @@ export class OrderBook {
 	 */
 	public market(options: MarketOrderOptions): IProcessOrder {
 		const response = this._market(options);
-		if (this.enableJournaling && response.err === null) {
-			response.log = {
+		if (response.err === null) {
+			const opId = ++this._lastOp;
+			this.eventBus.emit("order.processed", {
+				opId,
+				type: OrderType.MARKET,
+				options,
+				response,
+			});
+			this.emitTrades(opId, options, response);
+		} else {
+			this.eventBus.emit("order.rejected", {
 				opId: ++this._lastOp,
-				ts: Date.now(),
-				op: "m",
-				o: options,
-			};
+				options,
+				error: response.err,
+			});
 		}
 		return response;
 	}
@@ -154,13 +248,21 @@ export class OrderBook {
 	 */
 	public stopMarket = (options: StopMarketOrderOptions): IProcessOrder => {
 		const response = this._stopMarket(options);
-		if (this.enableJournaling && response.err === null) {
-			response.log = {
+		if (response.err === null) {
+			const opId = ++this._lastOp;
+			this.eventBus.emit("order.processed", {
+				opId,
+				type: OrderType.STOP_MARKET,
+				options,
+				response,
+			});
+			this.emitTrades(opId, options, response);
+		} else {
+			this.eventBus.emit("order.rejected", {
 				opId: ++this._lastOp,
-				ts: Date.now(),
-				op: "sm",
-				o: options,
-			};
+				options,
+				error: response.err,
+			});
 		}
 		return response;
 	};
@@ -179,13 +281,21 @@ export class OrderBook {
 	 */
 	public limit(options: LimitOrderOptions): IProcessOrder {
 		const response = this._limit(options);
-		if (this.enableJournaling && response.err === null) {
-			response.log = {
+		if (response.err === null) {
+			const opId = ++this._lastOp;
+			this.eventBus.emit("order.processed", {
+				opId,
+				type: OrderType.LIMIT,
+				options,
+				response,
+			});
+			this.emitTrades(opId, options, response);
+		} else {
+			this.eventBus.emit("order.rejected", {
 				opId: ++this._lastOp,
-				ts: Date.now(),
-				op: "l",
-				o: options,
-			};
+				options,
+				error: response.err,
+			});
 		}
 		return response;
 	}
@@ -204,13 +314,21 @@ export class OrderBook {
 	 */
 	public stopLimit = (options: StopLimitOrderOptions): IProcessOrder => {
 		const response = this._stopLimit(options);
-		if (this.enableJournaling && response.err === null) {
-			response.log = {
+		if (response.err === null) {
+			const opId = ++this._lastOp;
+			this.eventBus.emit("order.processed", {
+				opId,
+				type: OrderType.STOP_LIMIT,
+				options,
+				response,
+			});
+			this.emitTrades(opId, options, response);
+		} else {
+			this.eventBus.emit("order.rejected", {
 				opId: ++this._lastOp,
-				ts: Date.now(),
-				op: "sl",
-				o: options,
-			};
+				options,
+				error: response.err,
+			});
 		}
 		return response;
 	};
@@ -240,13 +358,21 @@ export class OrderBook {
 	 */
 	public oco = (options: OCOOrderOptions): IProcessOrder => {
 		const response = this._oco(options);
-		if (this.enableJournaling && response.err === null) {
-			response.log = {
+		if (response.err === null) {
+			const opId = ++this._lastOp;
+			this.eventBus.emit("order.processed", {
+				opId,
+				type: OrderType.OCO,
+				options,
+				response,
+			});
+			this.emitTrades(opId, options, response);
+		} else {
+			this.eventBus.emit("order.rejected", {
 				opId: ++this._lastOp,
-				ts: Date.now(),
-				op: "oco",
-				o: options,
-			};
+				options,
+				error: response.err,
+			});
 		}
 		return response;
 	};
@@ -267,13 +393,19 @@ export class OrderBook {
 	): IProcessOrder => {
 		const order = this.orders[orderID];
 		if (order === undefined) {
+			const error = CustomError(ERROR.ORDER_NOT_FOUND);
+			this.eventBus.emit("order.rejected", {
+				opId: ++this._lastOp,
+				options: { orderID, orderUpdate },
+				error,
+			});
 			return {
 				done: [],
 				activated: [],
 				partial: null,
 				partialQuantityProcessed: 0,
 				quantityLeft: 0,
-				err: CustomError(ERROR.ORDER_NOT_FOUND),
+				err: error,
 			};
 		}
 		if (orderUpdate?.price !== undefined || orderUpdate?.size !== undefined) {
@@ -294,25 +426,29 @@ export class OrderBook {
 					"",
 					SelfTradePreventionMode.NONE,
 				);
-				if (this.enableJournaling) {
-					response.log = {
-						opId: ++this._lastOp,
-						ts: Date.now(),
-						op: "u",
-						o: { orderID, orderUpdate },
-					};
-				}
+				this.eventBus.emit("order.modified", {
+					opId: ++this._lastOp,
+					orderID,
+					orderUpdate,
+					response,
+				});
 				return response;
 			}
 		}
 		// Missing one of price and/or size, or the provided ones are not greater than zero
+		const error = CustomError(ERROR.INVALID_PRICE_OR_QUANTITY);
+		this.eventBus.emit("order.rejected", {
+			opId: ++this._lastOp,
+			options: { orderID, orderUpdate },
+			error,
+		});
 		return {
 			done: [],
 			activated: [],
 			partial: null,
 			partialQuantityProcessed: 0,
 			quantityLeft: orderUpdate?.size ?? 0,
-			err: CustomError(ERROR.INVALID_PRICE_OR_QUANTITY),
+			err: error,
 		};
 	};
 
@@ -323,7 +459,21 @@ export class OrderBook {
 	 * @returns The removed order if exists or `undefined`
 	 */
 	public cancel = (orderID: string): ICancelOrder | undefined => {
-		return this._cancelOrder(orderID);
+		const response = this._cancelOrder(orderID);
+		if (response !== undefined) {
+			this.eventBus.emit("order.cancelled", {
+				opId: ++this._lastOp,
+				orderID,
+				response,
+			});
+		} else {
+			this.eventBus.emit("order.rejected", {
+				opId: ++this._lastOp,
+				options: { orderID },
+				error: CustomError(ERROR.ORDER_NOT_FOUND),
+			});
+		}
+		return response;
 	};
 
 	/**
@@ -638,14 +788,6 @@ export class OrderBook {
 				?.toObject();
 		}
 
-		if (this.enableJournaling) {
-			response.log = {
-				opId: internalDeletion ? this._lastOp : ++this._lastOp,
-				ts: Date.now(),
-				op: "d",
-				o: { orderID },
-			};
-		}
 		return response;
 	};
 
@@ -864,79 +1006,6 @@ export class OrderBook {
 				}
 				response.activated.push(stopOrder.toObject());
 			});
-		}
-	};
-
-	private readonly replayJournal = (journal: JournalLog[]): void => {
-		for (const log of journal) {
-			switch (log.op) {
-				case "m": {
-					const { side, size } = log.o;
-					if (side == null || size == null) {
-						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
-					}
-					this.market(log.o);
-					break;
-				}
-				case "l": {
-					const { side, id, size, price } = log.o;
-					if (side == null || id == null || size == null || price == null) {
-						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
-					}
-					this.limit(log.o);
-					break;
-				}
-				case "sm": {
-					const { side, size, stopPrice } = log.o;
-					if (side == null || size == null || stopPrice == null) {
-						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
-					}
-					this.stopMarket(log.o);
-					break;
-				}
-				case "sl": {
-					const { side, id, size, price, stopPrice } = log.o;
-					if (
-						side == null ||
-						id == null ||
-						size == null ||
-						price == null ||
-						stopPrice == null
-					) {
-						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
-					}
-					this.stopLimit(log.o);
-					break;
-				}
-				case "oco": {
-					const { side, id, size, price, stopPrice, stopLimitPrice } = log.o;
-					if (
-						side == null ||
-						id == null ||
-						size == null ||
-						price == null ||
-						stopPrice == null ||
-						stopLimitPrice == null
-					) {
-						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
-					}
-					this.oco(log.o);
-					break;
-				}
-				case "d":
-					if (log.o.orderID == null)
-						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
-					this.cancel(log.o.orderID);
-					break;
-				case "u":
-					if (log.o.orderID == null || log.o.orderUpdate == null) {
-						throw CustomError(ERROR.INVALID_JOURNAL_LOG);
-					}
-					this.modify(log.o.orderID, log.o.orderUpdate);
-					break;
-				default:
-					throw CustomError(ERROR.INVALID_JOURNAL_LOG);
-			}
 		}
 	};
 

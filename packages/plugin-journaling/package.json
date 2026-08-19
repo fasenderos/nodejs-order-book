@@ -1,7 +1,7 @@
 {
-	"name": "@nodejs-order-book/core",
+	"name": "@nodejs-order-book/plugin-journaling",
 	"version": "10.1.1",
-	"description": "Node.js Lmit Order Book for high-frequency trading (HFT).",
+	"description": "Add Journaling functionalities to the Node.js Lmit Order Book.",
 	"type": "module",
 	"author": "Andrea Fassina <fasenderos@gmail.com>",
 	"license": "MIT",
@@ -16,7 +16,6 @@
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
 	"scripts": {
-		"bench": "node benchmarks/benchmark_lob.js",
 		"build": "npm run build:esm && npm run build:types",
 		"build:esm": "rimraf dist/esm && tsc -p config/tsconfig.esm.json",
 		"build:types": "rimraf dist/types && tsc -p config/tsconfig.types.json",
@@ -37,22 +36,11 @@
 		"test:cov": "c8 --reporter=lcov node --import=tsx --test ./test/*.test.ts"
 	},
 	"dependencies": {
-		"denque": "2.1.0",
-		"functional-red-black-tree": "1.0.1"
-	},
-	"peerDependencies": {
-		"@nodejs-order-book/plugin-journaling": "workspace:*"
-	},
-	"peerDependenciesMeta": {
-		"@nodejs-order-book/plugin-journaling": {
-			"optional": true
-		}
+		"@nodejs-order-book/core": "workspace:*"
 	},
 	"devDependencies": {
-		"@types/functional-red-black-tree": "^1.0.6",
+		"@types/node": "^26.2.0",
 		"c8": "^11.0.0",
-		"gaussian": "^1.3.0",
-		"nanobench": "^3.0.0",
 		"pinst": "^3.0.0",
 		"tsx": "^4.23.12"
 	},

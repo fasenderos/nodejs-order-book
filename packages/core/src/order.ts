@@ -1,6 +1,6 @@
 /* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import { randomUUID } from "node:crypto";
-import { CustomError, ERROR } from "./errors";
+import { CustomError, ERROR } from "./errors.js";
 import {
 	type ILimitOrder,
 	type InternalLimitOrderOptions,
@@ -13,8 +13,8 @@ import {
 	SelfTradePreventionMode,
 	type Side,
 	type TimeInForce,
-} from "./types";
-import { safeStringify } from "./utils";
+} from "./types.js";
+import { safeStringify } from "./utils.js";
 
 abstract class BaseOrder {
 	readonly _id: string;

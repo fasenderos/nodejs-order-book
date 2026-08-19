@@ -106,3 +106,6 @@ dist
 .pnp.*
 
 .turbo
+
+# opencode temp files
+.tmp

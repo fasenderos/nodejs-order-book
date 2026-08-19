@@ -1,6 +1,7 @@
 /* node:coverage disable */
-import type { OrderBookError } from "./errors";
-import type { LimitOrder, StopLimitOrder, StopMarketOrder } from "./order";
+import type { OrderBookError } from "./errors.js";
+import type { LimitOrder, StopLimitOrder, StopMarketOrder } from "./order.js";
+import type { OrderBook } from "./orderbook.js";
 export enum Side {
 	BUY = "buy",
 	SELL = "sell",
@@ -375,9 +376,17 @@ export interface OrderBookOptions {
 	 * will be executed before processing any journal logs, if any.
 	 */
 	snapshot?: Snapshot;
-	/** Flag to enable journaling. */
+	/**
+	 * @deprecated The `enableJournaling` option is deprecated and will be removed in the next major version (v12).
+	 * Use the `@nodejs-order-book/plugin-journaling` plugin instead:
+	 * `const journaling = journalingPlugin(); ob.use(journaling);`
+	 */
 	enableJournaling?: boolean;
-	/** Array of journal logs. */
+	/**
+	 * @deprecated The `journal` option is deprecated and will be removed in the next major version (v12).
+	 * Use the `@nodejs-order-book/plugin-journaling` plugin instead:
+	 * `ob.use(journalingPlugin({ journal }));`
+	 */
 	journal?: JournalLog[];
 }
 
@@ -433,5 +442,82 @@ export interface Snapshot {
 	ts: number;
 	/** The id of the last operation inserted in the orderbook */
 	lastOp: number;
+}
+
+/**
+ * Options accepted by order-creating operations (market, limit, stop, OCO).
+ */
+export type OrderRequestOptions =
+	| MarketOrderOptions
+	| LimitOrderOptions
+	| StopMarketOrderOptions
+	| StopLimitOrderOptions
+	| OCOOrderOptions;
+
+/**
+ * Options accepted by any order book operation.
+ */
+export type OrderOperationOptions =
+	| OrderRequestOptions
+	| ModifyOrderOptions
+	| CancelOrderOptions;
+
+/**
+ * Map of order book events emitted by the OrderBook EventBus.
+ * Each event payload carries the operation id (`opId`) and the data
+ * relevant to the domain event.
+ */
+export type OrderBookEventMap = {
+	/** Emitted when a trade (match) occurs between a taker and a maker order. */
+	trade: {
+		opId: number;
+		/** Price at which the trade executed. */
+		price: number;
+		/** Quantity traded. */
+		size: number;
+		/** ID of the resting (maker) order. */
+		makerOrderId: string;
+		/** ID of the incoming (taker) order, if any. */
+		takerOrderId?: string;
+		/** Side of the taker order. */
+		side: Side;
+	};
+	/** Emitted after an order is successfully processed (market, limit, stop, OCO). */
+	"order.processed": {
+		opId: number;
+		/** Type of the processed order. */
+		type: OrderType;
+		options: OrderRequestOptions;
+		response: IProcessOrder;
+	};
+	/** Emitted after an order is cancelled. */
+	"order.cancelled": {
+		opId: number;
+		orderID: string;
+		response: ICancelOrder;
+	};
+	/** Emitted after an order is modified. */
+	"order.modified": {
+		opId: number;
+		orderID: string;
+		orderUpdate: OrderUpdatePrice | OrderUpdateSize;
+		response: IProcessOrder;
+	};
+	/** Emitted when an order operation fails validation. */
+	"order.rejected": {
+		opId: number;
+		options: OrderOperationOptions;
+		error: OrderBookError;
+	};
+};
+
+/**
+ * Union of all order book event names.
+ */
+export type OrderBookEvent = keyof OrderBookEventMap;
+
+export interface OrderBookPlugin {
+	name: string;
+	install(book: OrderBook): void;
 }
 /* node:coverage enable */

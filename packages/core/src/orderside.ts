@@ -1,9 +1,9 @@
 /* node:coverage ignore next - Don't know why first and last line of each file count as uncovered */
 import createRBTree from "functional-red-black-tree";
-import { CustomError, ERROR } from "./errors";
-import { type LimitOrder, OrderFactory } from "./order";
-import { OrderQueue } from "./orderqueue";
-import { type OrderUpdatePrice, type OrderUpdateSize, Side } from "./types";
+import { CustomError, ERROR } from "./errors.js";
+import { type LimitOrder, OrderFactory } from "./order.js";
+import { OrderQueue } from "./orderqueue.js";
+import { type OrderUpdatePrice, type OrderUpdateSize, Side } from "./types.js";
 
 export class OrderSide {
 	private _priceTree: createRBTree.Tree<number, OrderQueue>;

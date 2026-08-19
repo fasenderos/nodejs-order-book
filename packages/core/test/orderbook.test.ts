@@ -11,35 +11,30 @@ import {
 	type IStopLimitOrder,
 	type IStopMarketOrder,
 	type JournalLog,
+	type OrderBookEventMap,
+	type OrderBookPlugin,
 	OrderType,
 	Side,
 	type StopOrder,
 	TimeInForce,
 } from "../src/types";
 
-const addDepth = (
-	ob: OrderBook,
-	prefix: string,
-	quantity: number,
-	journal?: JournalLog[],
-): void => {
+const addDepth = (ob: OrderBook, prefix: string, quantity: number): void => {
 	for (let index = 50; index < 100; index += 10) {
-		const response = ob.limit({
+		ob.limit({
 			side: Side.BUY,
 			id: `${prefix}buy-${index}`,
 			size: quantity,
 			price: index,
 		});
-		if (journal != null && response.log != null) journal.push(response.log);
 	}
 	for (let index = 100; index < 150; index += 10) {
-		const response = ob.limit({
+		ob.limit({
 			side: Side.SELL,
 			id: `${prefix}sell-${index}`,
 			size: quantity,
 			price: index,
 		});
-		if (journal != null && response.log != null) journal.push(response.log);
 	}
 };
 
@@ -1229,10 +1224,356 @@ void test("test priceCalculation", () => {
 	assert.equal(calc4.price, 10500);
 });
 
-void test("orderbook enableJournaling option", () => {
-	const ob = new OrderBook({ enableJournaling: true });
+void test("orderbook event order.processed market payload", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
 
-	{
+	let captured: OrderBookEventMap["order.processed"] | undefined;
+	ob.on("order.processed", (payload) => {
+		captured = payload;
+	});
+
+	const options = { side: Side.BUY, size: 3 };
+	const response = ob.market(options);
+
+	assert.equal(captured?.opId, 11);
+	assert.equal(captured?.opId, ob.lastOp);
+	assert.equal(captured?.type, OrderType.MARKET);
+	assert.deepStrictEqual(captured?.options, options);
+	assert.equal(captured?.response, response);
+});
+
+void test("orderbook event order.processed limit payload", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+
+	let captured: OrderBookEventMap["order.processed"] | undefined;
+	ob.on("order.processed", (payload) => {
+		captured = payload;
+	});
+
+	const options = { side: Side.BUY, id: "order-b100", size: 1, price: 100 };
+	const response = ob.limit(options);
+
+	assert.equal(captured?.opId, 11);
+	assert.equal(captured?.opId, ob.lastOp);
+	assert.equal(captured?.type, OrderType.LIMIT);
+	assert.deepStrictEqual(captured?.options, options);
+	assert.equal(captured?.response, response);
+});
+
+void test("orderbook event order.processed stop_market payload", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+	ob.market({ side: Side.BUY, size: 3 });
+
+	let captured: OrderBookEventMap["order.processed"] | undefined;
+	ob.on("order.processed", (payload) => {
+		captured = payload;
+	});
+
+	const options = { side: Side.BUY, size: 1, stopPrice: 120 };
+	const response = ob.stopMarket(options);
+
+	assert.equal(captured?.opId, 12);
+	assert.equal(captured?.opId, ob.lastOp);
+	assert.equal(captured?.type, OrderType.STOP_MARKET);
+	assert.deepStrictEqual(captured?.options, options);
+	assert.equal(captured?.response, response);
+});
+
+void test("orderbook event order.processed stop_limit payload", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+	ob.market({ side: Side.BUY, size: 3 });
+
+	let captured: OrderBookEventMap["order.processed"] | undefined;
+	ob.on("order.processed", (payload) => {
+		captured = payload;
+	});
+
+	const options = {
+		side: Side.BUY,
+		id: "stop-limit-buy-1",
+		size: 1,
+		price: 130,
+		stopPrice: 120,
+	};
+	const response = ob.stopLimit(options);
+
+	assert.equal(captured?.opId, 12);
+	assert.equal(captured?.opId, ob.lastOp);
+	assert.equal(captured?.type, OrderType.STOP_LIMIT);
+	assert.deepStrictEqual(captured?.options, options);
+	assert.equal(captured?.response, response);
+});
+
+void test("orderbook event order.processed oco payload", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+	ob.market({ side: Side.BUY, size: 3 });
+
+	let captured: OrderBookEventMap["order.processed"] | undefined;
+	ob.on("order.processed", (payload) => {
+		captured = payload;
+	});
+
+	const options = {
+		side: Side.BUY,
+		id: "oco-buy-1",
+		size: 1,
+		price: 100,
+		stopPrice: 120,
+		stopLimitPrice: 121,
+	};
+	const response = ob.oco(options);
+
+	assert.equal(captured?.opId, 12);
+	assert.equal(captured?.opId, ob.lastOp);
+	assert.equal(captured?.type, OrderType.OCO);
+	assert.deepStrictEqual(captured?.options, options);
+	assert.equal(captured?.response, response);
+});
+
+void test("orderbook event order.cancelled payload", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+
+	let captured: OrderBookEventMap["order.cancelled"] | undefined;
+	ob.on("order.cancelled", (payload) => {
+		captured = payload;
+	});
+
+	const response = ob.cancel("sell-100");
+
+	assert.equal(captured?.opId, 11);
+	assert.equal(captured?.opId, ob.lastOp);
+	assert.equal(captured?.orderID, "sell-100");
+	assert.equal(captured?.response, response);
+});
+
+void test("orderbook event order.modified payload", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+
+	let captured: OrderBookEventMap["order.modified"] | undefined;
+	ob.on("order.modified", (payload) => {
+		captured = payload;
+	});
+
+	const orderUpdate = { size: 55 };
+	const response = ob.modify("buy-50", orderUpdate);
+
+	assert.equal(captured?.opId, 11);
+	assert.equal(captured?.opId, ob.lastOp);
+	assert.equal(captured?.orderID, "buy-50");
+	assert.deepStrictEqual(captured?.orderUpdate, orderUpdate);
+	assert.equal(captured?.response, response);
+});
+
+void test("orderbook event trade emitted for fully filled and partial maker orders", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+
+	const trades: OrderBookEventMap["trade"][] = [];
+	ob.on("trade", (payload) => {
+		trades.push(payload);
+	});
+
+	ob.market({ side: Side.BUY, size: 3 });
+
+	// 2 units fully filled at 100 (sell-100) + 1 unit partial at 110 (sell-110)
+	assert.equal(trades.length, 2);
+	assert.deepStrictEqual(trades[0], {
+		opId: 11,
+		price: 100,
+		size: 2,
+		makerOrderId: "sell-100",
+		takerOrderId: undefined,
+		side: Side.BUY,
+	});
+	assert.deepStrictEqual(trades[1], {
+		opId: 11,
+		price: 110,
+		size: 1,
+		makerOrderId: "sell-110",
+		takerOrderId: undefined,
+		side: Side.BUY,
+	});
+});
+
+void test("orderbook event trade includes taker order id", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+
+	const trades: OrderBookEventMap["trade"][] = [];
+	ob.on("trade", (payload) => {
+		trades.push(payload);
+	});
+
+	ob.limit({ side: Side.BUY, id: "taker-1", size: 1, price: 100 });
+
+	assert.equal(trades.length, 1);
+	assert.equal(trades[0]?.opId, 11);
+	assert.equal(trades[0]?.price, 100);
+	assert.equal(trades[0]?.size, 1);
+	assert.equal(trades[0]?.makerOrderId, "sell-100");
+	assert.equal(trades[0]?.takerOrderId, "taker-1");
+	assert.equal(trades[0]?.side, Side.BUY);
+});
+
+void test("orderbook event no trade emitted when order rests", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+
+	let trades = 0;
+	ob.on("trade", () => {
+		trades++;
+	});
+
+	const response = ob.limit({
+		side: Side.BUY,
+		id: "rest-1",
+		size: 1,
+		price: 95,
+	});
+
+	assert.equal(response.err, null);
+	assert.equal(trades, 0);
+});
+
+void test("orderbook event order.rejected on invalid market order", () => {
+	const ob = new OrderBook();
+
+	let captured: OrderBookEventMap["order.rejected"] | undefined;
+	ob.on("order.rejected", (payload) => {
+		captured = payload;
+	});
+
+	const options = { side: Side.BUY, size: 0 };
+	const response = ob.market(options);
+
+	assert.equal(response.err?.code, ErrorCodes.INSUFFICIENT_QUANTITY);
+	assert.equal(captured?.opId, 1);
+	assert.equal(captured?.opId, ob.lastOp);
+	assert.deepStrictEqual(captured?.options, options);
+	assert.equal(captured?.error, response.err);
+});
+
+void test("orderbook event order.rejected on cancel of missing order", () => {
+	const ob = new OrderBook();
+
+	let captured: OrderBookEventMap["order.rejected"] | undefined;
+	ob.on("order.rejected", (payload) => {
+		captured = payload;
+	});
+
+	const response = ob.cancel("missing");
+
+	assert.equal(response, undefined);
+	assert.equal(captured?.opId, 1);
+	assert.equal(captured?.error.code, ErrorCodes.ORDER_NOT_FOUND);
+	assert.deepStrictEqual(captured?.options, { orderID: "missing" });
+});
+
+void test("orderbook event order.rejected on modify of missing order", () => {
+	const ob = new OrderBook();
+
+	let captured: OrderBookEventMap["order.rejected"] | undefined;
+	ob.on("order.rejected", (payload) => {
+		captured = payload;
+	});
+
+	const response = ob.modify("missing", { size: 5 });
+
+	assert.equal(response.err?.code, ErrorCodes.ORDER_NOT_FOUND);
+	assert.equal(captured?.opId, 1);
+	assert.equal(captured?.error.code, ErrorCodes.ORDER_NOT_FOUND);
+	assert.deepStrictEqual(captured?.options, {
+		orderID: "missing",
+		orderUpdate: { size: 5 },
+	});
+});
+
+void test("orderbook off removes event handler", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+
+	let called = 0;
+	const handler = (): void => {
+		called++;
+	};
+
+	// Removing a handler from an event with no listeners is a no-op
+	ob.off("order.processed", handler);
+
+	ob.on("order.processed", handler);
+	const response1 = ob.limit({
+		side: Side.BUY,
+		id: "order-b100",
+		size: 1,
+		price: 100,
+	});
+	assert.equal(response1.err, null);
+	assert.equal(called, 1);
+
+	ob.off("order.processed", handler);
+	const response2 = ob.limit({
+		side: Side.BUY,
+		id: "order-b101",
+		size: 1,
+		price: 101,
+	});
+	assert.equal(response2.err, null);
+	assert.equal(called, 1);
+});
+
+void test("orderbook event handler errors do not break operations", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+
+	let called = 0;
+	ob.on("order.processed", () => {
+		called++;
+		throw new Error("plugin error");
+	});
+	ob.on("order.processed", () => {
+		called++;
+	});
+
+	const response = ob.limit({
+		side: Side.BUY,
+		id: "order-b100",
+		size: 1,
+		price: 100,
+	});
+	assert.equal(response.err, null);
+	assert.equal(called, 2);
+});
+
+void test("orderbook use installs plugin and returns the orderbook", () => {
+	const ob = new OrderBook();
+
+	let installedWith: OrderBook | undefined;
+	const plugin: OrderBookPlugin = {
+		name: "test-plugin",
+		install: (book) => {
+			installedWith = book;
+		},
+	};
+
+	const result = ob.use(plugin);
+
+	assert.equal(result, ob);
+	assert.equal(installedWith, ob);
+});
+
+void test("orderbook deprecated enableJournaling option", () => {
+	const warn = console.warn;
+	console.warn = () => {};
+	try {
+		const ob = new OrderBook({ enableJournaling: true });
+
 		const response = ob.limit({
 			side: Side.BUY,
 			id: "first-order",
@@ -1248,314 +1589,79 @@ void test("orderbook enableJournaling option", () => {
 			size: 50,
 			price: 100,
 		});
-	}
-
-	{
-		const response = ob.market({ side: Side.BUY, size: 50 });
-		assert.equal(response.log?.opId, 2);
-		assert.equal(typeof response.log?.ts, "number");
-		assert.equal(response.log?.op, "m");
-		assert.deepStrictEqual(response.log?.o, {
-			side: Side.BUY,
-			size: 50,
-		});
-	}
-
-	{
-		const response = ob.modify("first-order", { size: 55 });
-		assert.equal(response.log?.opId, 3);
-		assert.equal(typeof response.log?.ts, "number");
-		assert.equal(response.log?.op, "u");
-		assert.deepStrictEqual(response.log?.o, {
-			orderID: "first-order",
-			orderUpdate: { size: 55 },
-		});
-	}
-
-	{
-		const response = ob.cancel("first-order");
-		assert.equal(response?.log?.opId, 4);
-		assert.equal(typeof response?.log?.ts, "number");
-		assert.equal(response?.log?.op, "d");
-		assert.deepStrictEqual(response?.log?.o, {
-			orderID: "first-order",
-		});
+	} finally {
+		console.warn = warn;
 	}
 });
 
-void test("orderbook replayJournal", () => {
-	const ob = new OrderBook({ enableJournaling: true });
-
-	const journal: JournalLog[] = [];
-
-	addDepth(ob, "", 2, journal);
-
-	{
-		// Add Market Order
-		const response = ob.market({ side: Side.BUY, size: 3 });
-		if (response.log != null) journal.push(response.log);
-	}
-
-	{
-		// Add Limit Order
-		const response = ob.limit({
-			side: Side.BUY,
-			id: "limit-order-b100",
-			size: 1,
-			price: 100,
-		});
-		if (response.log != null) journal.push(response.log);
-	}
-
-	{
-		// Add Stop Market BUY Order
-		const response = ob.stopMarket({
-			side: Side.BUY,
-			size: 1,
-			stopPrice: 120,
-		});
-		if (response.log != null) journal.push(response.log);
-	}
-
-	{
-		// Add Stop Market SELL Order
-		const response = ob.stopMarket({
-			side: Side.SELL,
-			size: 1,
-			stopPrice: 80,
-		});
-		if (response.log != null) journal.push(response.log);
-	}
-
-	{
-		// Add Stop Limit BUY Order
-		const response = ob.stopLimit({
-			side: Side.BUY,
-			id: "stop-limit-order-b130",
-			size: 1,
-			price: 130,
-			stopPrice: 125,
-		});
-		if (response.log != null) journal.push(response.log);
-	}
-
-	{
-		// Add Stop Limit SELL Order
-		const response = ob.stopLimit({
-			side: Side.SELL,
-			id: "stop-limit-order-b70",
-			size: 1,
-			price: 70,
-			stopPrice: 75,
-		});
-		if (response.log != null) journal.push(response.log);
-	}
-
-	{
-		// Add OCO BUY Order
-		const response = ob.oco({
-			side: Side.BUY,
-			id: "oco-order-b-90-130/140",
-			size: 1,
-			price: 90,
-			stopPrice: 130,
-			stopLimitPrice: 140,
-		});
-		if (response.log != null) journal.push(response.log);
-	}
-
-	{
-		// Add OCO SELL Order
-		const response = ob.oco({
-			side: Side.SELL,
-			id: "oco-order-s-130-90/80",
-			size: 1,
-			price: 130,
-			stopPrice: 90,
-			stopLimitPrice: 80,
-		});
-		if (response.log != null) journal.push(response.log);
-	}
-
-	{
-		// Modify and delete the order
-		const modifyOrder = ob.modify("limit-order-b100", { size: 2 });
-		if (modifyOrder.log != null) journal.push(modifyOrder.log);
-		const deleteOrder = ob.cancel("limit-order-b100");
-		if (deleteOrder?.log != null) journal.push(deleteOrder.log);
-	}
-
-	const ob2 = new OrderBook({ journal });
-
-	assert.equal(ob.toString(), ob2.toString());
-	assert.equal(
-		// @ts-expect-error stopBook is private
-		ob.stopBook.bids._priceTree.length,
-		// @ts-expect-error stopBook is private
-		ob2.stopBook.bids._priceTree.length,
-	);
-	assert.equal(
-		// @ts-expect-error stopBook is private
-		ob.stopBook.bids._priceTree.keys.join(),
-		// @ts-expect-error stopBook is private
-		ob2.stopBook.bids._priceTree.keys.join(),
-	);
-	assert.equal(
-		// @ts-expect-error stopBook is private
-		ob.stopBook.asks._priceTree.length,
-		// @ts-expect-error stopBook is private
-		ob2.stopBook.asks._priceTree.length,
-	);
-	assert.equal(
-		// @ts-expect-error stopBook is private
-		ob.stopBook.asks._priceTree.keys.join(),
-		// @ts-expect-error stopBook is private
-		ob2.stopBook.asks._priceTree.keys.join(),
-	);
-});
-
-void test("orderbook replayJournal test wrong journal", () => {
-	// Test valid journal log that is not an array
+void test("orderbook deprecated journal option replays journal", () => {
+	const warn = console.warn;
+	console.warn = () => {};
 	try {
-		const journalLog: JournalLog = {
-			opId: 1,
-			ts: Date.now(),
-			op: "d",
-			o: { orderID: "bar" },
-		};
-		// @ts-expect-error journal log must be an array
-		new OrderBook({ journal: journalLog });
-	} catch (error) {
-		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
-		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
-	}
-
-	// Test wrong op in journal log
-	try {
-		const wrongOp = [
+		const journal: JournalLog[] = [
 			{
-				ts: Date.now(),
-				op: "x",
-				o: { foo: "bar" },
-			},
-		];
-		// @ts-expect-error invalid "op" provided
-		new OrderBook({ journal: wrongOp });
-	} catch (error) {
-		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
-		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
-	}
-
-	// Test wrong market order journal log
-	try {
-		const wrongOp = [
-			{
-				ts: Date.now(),
-				op: "m",
-				o: { foo: "bar" },
-			},
-		];
-		// @ts-expect-error invalid market order "o" prop in journal log
-		new OrderBook({ journal: wrongOp });
-	} catch (error) {
-		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
-		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
-	}
-
-	// Test wrong limit order journal log
-	try {
-		const wrongOp = [
-			{
+				opId: 1,
 				ts: Date.now(),
 				op: "l",
-				o: { foo: "bar" },
+				o: { side: Side.BUY, id: "buy-50", size: 2, price: 50 },
 			},
-		];
-		// @ts-expect-error invalid limit order "o" prop in journal log
-		new OrderBook({ journal: wrongOp });
-	} catch (error) {
-		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
-		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
-	}
-
-	// Test wrong market order journal log
-	try {
-		const wrongOp = [
 			{
+				opId: 2,
 				ts: Date.now(),
-				op: "sm",
-				o: { foo: "bar" },
+				op: "l",
+				o: { side: Side.SELL, id: "sell-100", size: 2, price: 100 },
 			},
 		];
-		// @ts-expect-error invalid market order "o" prop in journal log
-		new OrderBook({ journal: wrongOp });
-	} catch (error) {
-		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
-		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
-	}
 
-	// Test wrong market order journal log
-	try {
-		const wrongOp = [
-			{
-				ts: Date.now(),
-				op: "sl",
-				o: { foo: "bar" },
-			},
-		];
-		// @ts-expect-error invalid market order "o" prop in journal log
-		new OrderBook({ journal: wrongOp });
-	} catch (error) {
-		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
-		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
-	}
+		const ob = new OrderBook({ journal });
 
-	// Test wrong oco order journal log
-	try {
-		const wrongOp = [
-			{
-				ts: Date.now(),
-				op: "oco",
-				o: { foo: "bar" },
-			},
-		];
-		// @ts-expect-error invalid market order "o" prop in journal log
-		new OrderBook({ journal: wrongOp });
-	} catch (error) {
-		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
-		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
+		assert.equal(ob.order("buy-50")?.price, 50);
+		assert.equal(ob.order("buy-50")?.size, 2);
+		assert.equal(ob.order("sell-100")?.price, 100);
+		assert.equal(ob.order("sell-100")?.size, 2);
+		assert.equal(ob.lastOp, 2);
+	} finally {
+		console.warn = warn;
 	}
+});
 
-	// Test wrong update order journal log
+void test("orderbook deprecated journal option replays and records new logs", () => {
+	const warn = console.warn;
+	console.warn = () => {};
 	try {
-		const wrongOp = [
+		const journal: JournalLog[] = [
 			{
+				opId: 1,
 				ts: Date.now(),
-				op: "u",
-				o: { foo: "bar" },
+				op: "l",
+				o: { side: Side.BUY, id: "buy-50", size: 2, price: 50 },
 			},
 		];
-		// @ts-expect-error invalid update order "o" prop in journal log
-		new OrderBook({ journal: wrongOp });
-	} catch (error) {
-		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
-		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
-	}
 
-	// Test wrong delete order journal log
-	try {
-		const wrongOp = [
-			{
-				ts: Date.now(),
-				op: "d",
-				o: { foo: "bar" },
-			},
-		];
-		// @ts-expect-error invalid delete order "o" prop in journal log
-		new OrderBook({ journal: wrongOp });
-	} catch (error) {
-		assert.equal(error?.message, ErrorMessages.INVALID_JOURNAL_LOG);
-		assert.equal(error?.code, ErrorCodes.INVALID_JOURNAL_LOG);
+		const ob = new OrderBook({ journal, enableJournaling: true });
+
+		// The journal is replayed
+		assert.equal(ob.order("buy-50")?.price, 50);
+		assert.equal(ob.lastOp, 1);
+
+		// New logs are recorded
+		const response = ob.limit({
+			side: Side.SELL,
+			id: "sell-100",
+			size: 2,
+			price: 100,
+		});
+		assert.equal(response.log?.opId, 2);
+		assert.equal(typeof response.log?.ts, "number");
+		assert.equal(response.log?.op, "l");
+		assert.deepStrictEqual(response.log?.o, {
+			side: Side.SELL,
+			id: "sell-100",
+			size: 2,
+			price: 100,
+		});
+	} finally {
+		console.warn = warn;
 	}
 });
 
@@ -1658,8 +1764,7 @@ void test("orderbook test snapshot", () => {
 
 void test("orderbook restore from snapshot", () => {
 	// Create a new orderbook with 3 orders for price levels and make a snapshot
-	const journal: JournalLog[] = [];
-	const ob = new OrderBook({ enableJournaling: true });
+	const ob = new OrderBook();
 
 	const addStopOrder = (
 		side: Side,
@@ -1678,9 +1783,9 @@ void test("orderbook restore from snapshot", () => {
 	};
 
 	// Inizialize order book with some orders
-	addDepth(ob, "first-run-", 10, journal);
-	addDepth(ob, "second-run-", 10, journal);
-	addDepth(ob, "third-run-", 10, journal);
+	addDepth(ob, "first-run-", 10);
+	addDepth(ob, "second-run-", 10);
+	addDepth(ob, "third-run-", 10);
 
 	// Add some stop orders
 	// Test BUY side
@@ -1705,7 +1810,7 @@ void test("orderbook restore from snapshot", () => {
 	const snapshot = ob.snapshot();
 	{
 		// Create a new orderbook from the snapshot and check is the same as before
-		const ob2 = new OrderBook({ snapshot, enableJournaling: true });
+		const ob2 = new OrderBook({ snapshot });
 
 		assert.equal(ob.toString(), ob2.toString());
 		assert.deepStrictEqual(ob.depth(), ob2.depth());
@@ -1825,22 +1930,24 @@ void test("orderbook restore from snapshot", () => {
 	}
 
 	{
-		// Add three additional order to the original orderbook with journal
-		const lastOp = ob.lastOp;
-		addDepth(ob, "fourth-run-", 10, journal);
-		addDepth(ob, "fifth-run-", 10, journal);
-		addDepth(ob, "sixth-run-", 10, journal);
+		// Add three additional order to the original orderbook
+		addDepth(ob, "fourth-run-", 10);
+		addDepth(ob, "fifth-run-", 10);
+		addDepth(ob, "sixth-run-", 10);
 
-		const ob2 = new OrderBook({ snapshot, journal, enableJournaling: true });
-		assert.equal(ob2.lastOp, lastOp + 30); // every run add 10 additional orders
+		const ob2 = new OrderBook({ snapshot });
+		// The restored orderbook reflects the snapshot only, without the additional orders
+		assert.equal(ob2.lastOp, snapshot.lastOp);
+		assert.equal(ob2.order("fourth-run-buy-50") === undefined, true);
 	}
 });
 
 void test("orderbook test unreachable lines", () => {
-	const ob = new OrderBook({ enableJournaling: true });
+	const ob = new OrderBook();
 	addDepth(ob, "", 10);
 
-	// test SELL side remove order with journal enabled
+	// test SELL side remove order
 	const deleted = ob.cancel("sell-100");
-	assert.equal(ob.lastOp, deleted?.log?.opId);
+	assert.equal(deleted !== undefined, true);
+	assert.equal(ob.order("sell-100") === undefined, true);
 });

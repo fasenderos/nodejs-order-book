@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
 import test from "node:test";
 import { ErrorCodes, ErrorMessages } from "../src/errors";
 import {
@@ -406,19 +405,11 @@ void test("it should create StopLimitOrder", () => {
 
 void test("it should create order without passing a date or id", (t) => {
 	const fakeTimestamp = 1487076708000;
-	const fakeId = "some-uuid";
 	const { now } = Date;
-	const originalRandomUUID = randomUUID;
 
 	t.after(() => (Date.now = now));
-	// @ts-expect-error cannot assign because is readonly
-	// biome-ignore lint: we need to mock the returned value
-	t.after(() => (randomUUID = originalRandomUUID));
 
 	Date.now = (..._m) => fakeTimestamp;
-	// @ts-expect-error cannot assign because is readonly
-	// biome-ignore lint: we need to mock the returned value
-	randomUUID = () => fakeId;
 
 	const type = OrderType.STOP_MARKET;
 	const side = Side.BUY;
@@ -430,10 +421,14 @@ void test("it should create order without passing a date or id", (t) => {
 		size,
 		stopPrice,
 	});
-	assert.equal(order.id, fakeId);
+	const { id } = order;
+	assert.match(
+		id,
+		/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+	);
 	assert.equal(order.time, fakeTimestamp);
 	assert.deepStrictEqual(order.toObject(), {
-		id: fakeId,
+		id,
 		type,
 		side,
 		size,
@@ -442,7 +437,7 @@ void test("it should create order without passing a date or id", (t) => {
 	});
 	assert.equal(
 		order.toString(),
-		`${fakeId}:
+		`${id}:
     type: ${type}
     side: ${side}
     size: ${size}
@@ -453,7 +448,7 @@ void test("it should create order without passing a date or id", (t) => {
 	assert.equal(
 		order.toJSON(),
 		JSON.stringify({
-			id: fakeId,
+			id,
 			type,
 			side,
 			size,
