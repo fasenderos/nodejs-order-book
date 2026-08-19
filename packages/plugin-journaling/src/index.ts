@@ -3,9 +3,10 @@ import {
 	ERROR,
 	type JournalLog,
 	type OrderBook,
+    type OrderBookPlugin,
 	OrderType,
 } from "@nodejs-order-book/core";
-import type { JournalingPlugin, JournalingPluginOptions } from "./types.js";
+import type { JournalingPluginOptions } from "./types.js";
 
 /**
  * Maps an {@link OrderType} to the journal operation code used in log entries.
@@ -119,11 +120,10 @@ const replayJournal = (book: OrderBook, journal: JournalLog[]): void => {
  */
 export function journalingPlugin(
 	options: JournalingPluginOptions = {},
-): JournalingPlugin {
+): OrderBookPlugin {
 	if (options.journal != null && !Array.isArray(options.journal)) {
 		throw CustomError(ERROR.INVALID_JOURNAL_LOG);
 	}
-	const logs: JournalLog[] = [...(options.journal ?? [])];
 
 	return {
 		name: "journaling",
@@ -140,19 +140,15 @@ export function journalingPlugin(
 				// The correlation between the op code and the options shape is
 				// guaranteed by the emitter (OrderBook dispatches the correct
 				// options for each order type), so the log is cast to JournalLog.
-				const log = {
+				response.log = {
 					opId,
 					ts: Date.now(),
 					op: journalOpFromType(type),
 					o,
 				} as JournalLog;
-				logs.push(log);
-				response.log = log;
 			});
 			book.on("order.cancelled", ({ opId, orderID, response }) => {
-				const log = { opId, ts: Date.now(), op: "d" as const, o: { orderID } };
-				logs.push(log);
-				response.log = log;
+				response.log = { opId, ts: Date.now(), op: "d" as const, o: { orderID } };
 			});
 			book.on("order.modified", ({ opId, orderID, orderUpdate, response }) => {
 				const log = {
@@ -161,12 +157,8 @@ export function journalingPlugin(
 					op: "u" as const,
 					o: { orderID, orderUpdate },
 				};
-				logs.push(log);
 				response.log = log;
 			});
-		},
-		getJournal(): JournalLog[] {
-			return logs;
 		},
 	};
 }

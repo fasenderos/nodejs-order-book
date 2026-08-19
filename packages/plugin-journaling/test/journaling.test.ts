@@ -84,8 +84,6 @@ void test("journaling plugin records operations", () => {
 			orderID: "first-order",
 		});
 	}
-
-	assert.equal(jp.getJournal().length, 4);
 });
 
 void test("journaling plugin replays journal", () => {
@@ -377,29 +375,6 @@ void test("journaling plugin rejects invalid journal", () => {
 	);
 });
 
-void test("journaling plugin getJournal returns provided history and recorded logs", () => {
-	const journal: JournalLog[] = [
-		{
-			opId: 1,
-			ts: Date.now(),
-			op: "l",
-			o: { side: Side.BUY, id: "a", size: 10, price: 100 },
-		},
-	];
-	const jp = journalingPlugin({ journal });
-	const ob = new OrderBook();
-	ob.use(jp);
-
-	// Provided history is preserved
-	assert.equal(jp.getJournal().length, 1);
-
-	// New operations are appended
-	ob.limit({ side: Side.BUY, id: "b", size: 10, price: 90 });
-	assert.equal(jp.getJournal().length, 2);
-	assert.equal(jp.getJournal()[1].op, "l");
-	assert.equal(jp.getJournal()[1].opId, 2);
-});
-
 void test("journaling plugin replay is filtered by book.lastOp", () => {
 	const journal: JournalLog[] = [
 		{
@@ -427,8 +402,6 @@ void test("journaling plugin replay is filtered by book.lastOp", () => {
 	// Only op 2 was replayed (op 1 skipped)
 	assert.equal(ob.lastOp, 2);
 	assert.equal(ob.order("b")?.price, 90);
-	// The full journal is still preserved
-	assert.equal(jp.getJournal().length, 2);
 });
 
 void test("journaling plugin replay does not produce spurious logs", () => {
@@ -451,8 +424,6 @@ void test("journaling plugin replay does not produce spurious logs", () => {
 	const ob = new OrderBook();
 	ob.use(jp);
 
-	// Replay happened before subscribing: no duplicate logs
-	assert.equal(jp.getJournal().length, 2);
 	assert.equal(ob.lastOp, 2);
 });
 

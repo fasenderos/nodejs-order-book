@@ -883,9 +883,6 @@ ob.use(journaling)
 // After every operation, save the log
 const order = ob.limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
 await saveLog(order.log)
-
-// Retrieve the full journal (provided history + recorded logs)
-const journal = journaling.getJournal()
 ```
 
 To restore state on restart, pass the saved logs to the plugin — it replays them (filtered by the book's `lastOp`, so logs already covered by a restored snapshot are skipped):
