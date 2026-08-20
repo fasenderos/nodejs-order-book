@@ -1,23 +1,22 @@
 version: 2.1
+
 orbs:
-  codecov: codecov/codecov@1.0.2
+  codecov: codecov/codecov@6.0.0
 
 aliases:
   - &restore-cache
     restore_cache:
       key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
-  - &install-pnpm
-    run:
-      name: Install pnpm
-      command: corepack enable && corepack prepare pnpm@10.5.2 --activate
+
   - &install-deps
     run:
       name: Install dependencies
-      command: pnpm install --frozen-lockfile
+      command: corepack pnpm install --frozen-lockfile
+
   - &build-packages
     run:
       name: Build
-      command: pnpm run build
+      command: corepack pnpm run build
 
 jobs:
   build:
@@ -27,7 +26,6 @@ jobs:
     steps:
       - checkout
       - *restore-cache
-      - *install-pnpm
       - *install-deps
       - save_cache:
           key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
@@ -42,13 +40,12 @@ jobs:
     steps:
       - checkout
       - *restore-cache
-      - *install-pnpm
       - *install-deps
       - run:
           name: Unit tests
-          command: pnpm -r run test:cov
+          command: corepack pnpm -r run test:cov
       - codecov/upload:
-          file: './packages/*/coverage/lcov.info'
+          files: './packages/*/coverage/lcov.info'
 
 workflows:
   version: 2

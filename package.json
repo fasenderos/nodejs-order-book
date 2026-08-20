@@ -1,7 +1,7 @@
 {
 	"name": "nodejs-order-book",
 	"version": "10.1.1",
-	"packageManager": "pnpm@10.5.2",
+	"packageManager": "pnpm@11.22.0",
 	"main": "index.js",
 	"types": "index.d.ts",
 	"exports": {
@@ -46,7 +46,7 @@
 	"devEngines": {
 		"packageManager": {
 			"name": "pnpm",
-			"version": "10.5.2"
+			"version": "11.22.0"
 		}
 	}
 }
