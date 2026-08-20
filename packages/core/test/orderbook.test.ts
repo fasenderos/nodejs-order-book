@@ -1424,6 +1424,38 @@ void test("orderbook event order.rejected on modify of missing order", () => {
 	});
 });
 
+void test("orderbook event order.rejected on modify that crosses the spread with postOnly", () => {
+	const ob = new OrderBook();
+	addDepth(ob, "", 2);
+
+	// postOnly buy order that rests in the book without crossing
+	const process = ob.limit({
+		side: Side.BUY,
+		id: "post-only-buy",
+		size: 2,
+		price: 90,
+		postOnly: true,
+	});
+	assert.equal(process.err, null);
+
+	let captured: OrderBookEventMap["order.rejected"] | undefined;
+	ob.on("order.rejected", (payload) => {
+		captured = payload;
+	});
+
+	// Modify to a price that crosses the ask (100): the re-created postOnly
+	// order would match as taker and is rejected
+	const response = ob.modify("post-only-buy", { price: 150 });
+
+	assert.equal(response.err?.code, ErrorCodes.LIMIT_ORDER_POST_ONLY);
+	assert.equal(captured?.opId, 12); // l'opId è 12 perché addDepth genera 10 eventi (opId 1-10), il postOnly limit → 11, il modify → 12
+	assert.equal(captured?.error.code, ErrorCodes.LIMIT_ORDER_POST_ONLY);
+	assert.deepStrictEqual(captured?.options, {
+		orderID: "post-only-buy",
+		orderUpdate: { price: 150 },
+	});
+});
+
 void test("orderbook off removes event handler", () => {
 	const ob = new OrderBook();
 	addDepth(ob, "", 2);
