@@ -1,5 +1,6 @@
 {
 	"name": "nodejs-order-book",
+	"version": "10.1.1",
 	"packageManager": "pnpm@10.5.2",
 	"main": "index.js",
 	"types": "index.d.ts",
@@ -25,7 +26,7 @@
 		"test:ci": "turbo run test:ci",
 		"lint": "turbo run lint",
 		"lint:fix": "turbo run lint:fix",
-		"clean": "turbo run clean && rimraf .turbo node_modules pnpm-lock.yaml",
+		"clean": "turbo run clean && rimraf .turbo node_modules",
 		"bench": "turbo run bench",
 		"format": "biome format --write .",
 		"release": "release-it --ci"

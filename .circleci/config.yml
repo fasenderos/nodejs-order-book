@@ -5,15 +5,19 @@ orbs:
 aliases:
   - &restore-cache
     restore_cache:
-      key: dependency-cache-{{ checksum "package.json" }}
+      key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
+  - &install-pnpm
+    run:
+      name: Install pnpm
+      command: corepack enable && corepack prepare pnpm@10.5.2 --activate
   - &install-deps
     run:
       name: Install dependencies
-      command: npm ci
+      command: pnpm install --frozen-lockfile
   - &build-packages
     run:
       name: Build
-      command: npm run build
+      command: pnpm run build
 
 jobs:
   build:
@@ -23,9 +27,10 @@ jobs:
     steps:
       - checkout
       - *restore-cache
+      - *install-pnpm
       - *install-deps
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
           paths:
             - ./node_modules
       - *build-packages
@@ -37,12 +42,13 @@ jobs:
     steps:
       - checkout
       - *restore-cache
+      - *install-pnpm
       - *install-deps
       - run:
           name: Unit tests
-          command: npm run test:cov
+          command: pnpm -r run test:cov
       - codecov/upload:
-          file: './coverage/lcov.info'
+          file: './packages/*/coverage/lcov.info'
 
 workflows:
   version: 2
