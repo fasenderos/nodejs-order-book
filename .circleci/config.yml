@@ -69,7 +69,7 @@ jobs:
       - *install-deps
       - run:
           name: Unit tests
-          command: pnpm -r run test:cov
+          command: pnpm run test:cov
       - codecov/upload:
           files: './packages/*/coverage/lcov.info'
 
