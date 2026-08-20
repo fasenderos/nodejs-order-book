@@ -10,20 +10,23 @@ aliases:
 
   - &install-pnpm
     run:
-      name: Install Corepack
+      name: Install pnpm
       command: |
-        npm install --global corepack@latest
-        corepack --version
+        curl -fsSL https://get.pnpm.io/install.sh | sh -
+        echo 'export PNPM_HOME="$HOME/.local/share/pnpm"' >> "$BASH_ENV"
+        echo 'export PATH="$PNPM_HOME:$PATH"' >> "$BASH_ENV"
+        source "$BASH_ENV"
+        pnpm --version
 
   - &install-deps
     run:
       name: Install dependencies
-      command: corepack pnpm install --frozen-lockfile
+      command: pnpm install --frozen-lockfile
 
   - &build-packages
     run:
       name: Build
-      command: corepack pnpm run build
+      command: pnpm run build
 
 jobs:
   build:
@@ -52,7 +55,7 @@ jobs:
       - *install-deps
       - run:
           name: Unit tests
-          command: corepack pnpm -r run test:cov
+          command: pnpm -r run test:cov
       - codecov/upload:
           files: './packages/*/coverage/lcov.info'
 
