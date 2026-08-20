@@ -8,6 +8,13 @@ aliases:
     restore_cache:
       key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
 
+  - &install-pnpm
+    run:
+      name: Install Corepack
+      command: |
+        npm install --global corepack@latest
+        corepack --version
+
   - &install-deps
     run:
       name: Install dependencies
@@ -22,10 +29,11 @@ jobs:
   build:
     working_directory: ~/nodejs-order-book
     docker:
-      - image: cimg/node:22.5
+      - image: cimg/node:24
     steps:
       - checkout
       - *restore-cache
+      - *install-pnpm
       - *install-deps
       - save_cache:
           key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
@@ -36,10 +44,11 @@ jobs:
   test:
     working_directory: ~/nodejs-order-book
     docker:
-      - image: cimg/node:22.5
+      - image: cimg/node:24
     steps:
       - checkout
       - *restore-cache
+      - *install-pnpm
       - *install-deps
       - run:
           name: Unit tests
