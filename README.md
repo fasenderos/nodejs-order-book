@@ -36,10 +36,14 @@ Designed for trading systems, exchanges, and HFT simulations. </br></br>
   - [cancel()](#cancel)
 - [Understanding Order Results](#understanding-order-results)
 - [Self-Trade Prevention (STP)](#self-trade-prevention-stp)
+- [Plugins](#plugins)
+  - [Plugin API](#plugin-api)
+  - [Journaling Plugin](#journaling-plugin)
 - [Order Book Options](#order-book-options)
   - [Snapshot](#snapshot)
-  - [Journal Logs](#journal-logs)
-  - [Enable Journaling](#enable-journaling)
+  - [Journal Logs (deprecated)](#journal-logs-deprecated)
+  - [Enable Journaling (deprecated)](#enable-journaling-deprecated)
+- [Legacy Import Path](#legacy-import-path)
 - [Development](#development)
 - [Contributing](#contributing)
 - [License](#license)
@@ -56,12 +60,12 @@ Designed for trading systems, exchanges, and HFT simulations. </br></br>
 - Order price and/or size modification
 - Snapshot and journaling for order book state persistence and recovery
 - **High throughput** — benchmarked at 300k+ trades per second
-- Full TypeScript support with dual ESM/CJS exports
+- Full TypeScript support with ESM exports (CJS available via the legacy shim)
 
 ## Quick Start
 
 ```ts
-import { OrderBook, Side } from 'nodejs-order-book'
+import { OrderBook, Side } from '@nodejs-order-book/core'
 
 const ob = new OrderBook()
 
@@ -82,40 +86,48 @@ console.log(result.partial)  // Partial fill, if any
 
 ## Installation
 
+The core engine is published as `@nodejs-order-book/core`. The `nodejs-order-book` package is a legacy shim that re-exports it (see [Legacy Import Path](#legacy-import-path)).
+
 Install with npm:
 
-```
-npm install nodejs-order-book
+```bash
+npm install @nodejs-order-book/core
 ```
 
 Install with yarn:
 
-```
-yarn add nodejs-order-book
+```bash
+yarn add @nodejs-order-book/core
 ```
 
 Install with pnpm:
 
+```bash
+pnpm add @nodejs-order-book/core
 ```
-pnpm add nodejs-order-book
+
+For the journaling plugin:
+
+```bash
+npm install @nodejs-order-book/plugin-journaling
 ```
 
 ## Usage
 
-The package supports both **ESM** and **CommonJS**:
+The core engine is **ESM-only**. The canonical package is `@nodejs-order-book/core`; the `nodejs-order-book` package is a legacy shim that re-exports it (see [Legacy Import Path](#legacy-import-path)).
 
 ```ts
-// ESM (recommended)
-import { OrderBook, Side, OrderType, SelfTradePreventionMode } from 'nodejs-order-book'
+// Canonical (recommended)
+import { OrderBook, Side, OrderType, SelfTradePreventionMode } from '@nodejs-order-book/core'
 
-// CommonJS
+// Legacy shim (same API, both CJS and ESM)
 const { OrderBook, Side, OrderType, SelfTradePreventionMode } = require('nodejs-order-book')
 ```
 
 To start using the order book you need to import `OrderBook` and create a new instance:
 
 ```ts
-import { OrderBook } from 'nodejs-order-book'
+import { OrderBook } from '@nodejs-order-book/core'
 
 const ob = new OrderBook()
 ```
@@ -145,7 +157,6 @@ ob.limit({
 ob.market({ side: 'buy' | 'sell', size: number })
 
 ob.modify(orderID: string, {
-      side: 'buy' | 'sell',
       size: number,
       price: number
 })
@@ -158,7 +169,7 @@ ob.cancel(orderID: string)
 `Stop Market`, `Stop Limit` and `OCO` orders are supported.
 
 ```ts
-import { OrderBook } from 'nodejs-order-book'
+import { OrderBook } from '@nodejs-order-book/core'
 
 const ob = new OrderBook()
 
@@ -520,7 +531,7 @@ interface IProcessOrder {
   quantityLeft: number;              // Unfilled quantity of the taker order
   partialQuantityProcessed: number;  // Quantity consumed from the order in 'partial'
   err: OrderBookError | null;
-  log?: JournalLog;                  // Journal entry (only when enableJournaling is true)
+  log?: JournalLog;                  // Journal entry (only when the journaling plugin is installed)
   stpExpired?: IOrder[];             // Orders expired due to Self-Trade Prevention
 }
 ```
@@ -646,7 +657,7 @@ The STP mode of the **taker** order always takes precedence — the mode stored 
 Add `accountId` and `stpMode` to any order:
 
 ```ts
-import { OrderBook, SelfTradePreventionMode, Side } from 'nodejs-order-book'
+import { OrderBook, SelfTradePreventionMode, Side } from '@nodejs-order-book/core'
 
 const ob = new OrderBook()
 
@@ -680,18 +691,18 @@ When STP is triggered, the response (`IProcessOrder`) includes:
 | Field | Type | Description |
 |-------|------|-------------|
 | `stpExpired` | `IOrder[] \| undefined` | Orders removed from the book due to STP |
-| `err` | `OrderBookError \| null` | Error with `code: 1202` and `message: "Self-trade prevention triggered"` for `EXPIRE_TAKER` / `EXPIRE_BOTH` |
+| `err` | `OrderBookError \| null` | Error with `code: 1202` and `message: "STP triggered"` for `EXPIRE_TAKER` / `EXPIRE_BOTH` |
 
 ### Error code
 
 STP rejections return error code `1202`:
 
 ```ts
-import { ErrorCodes } from 'nodejs-order-book'
+import { ErrorCodes } from '@nodejs-order-book/core'
 
 assert.equal(result.err?.code, ErrorCodes.STP_TRIGGERED)
 // → 1202
-assert.equal(result.err?.message, 'Self-trade prevention triggered')
+assert.equal(result.err?.message, 'STP triggered')
 ```
 
 ### Scenarios
@@ -722,7 +733,7 @@ The taker order is rejected immediately. The resting maker order remains untouch
 
 ```
 stpExpired → undefined
-err        → { code: 1202, message: "Self-trade prevention triggered" }
+err        → { code: 1202, message: "STP triggered" }
 ```
 
 #### C) EXPIRE_BOTH — both orders expire
@@ -736,7 +747,7 @@ The maker is removed from the book and the taker is rejected. Both sides expire.
 
 ```
 stpExpired → [maker-buy-100]
-err        → { code: 1202, message: "Self-trade prevention triggered" }
+err        → { code: 1202, message: "STP triggered" }
 ```
 
 #### D) Different accounts — normal matching (no STP)
@@ -820,6 +831,72 @@ ob.createOrder({
 - Stop market and stop limit orders preserve the `stpMode` and apply it when triggered.
 - Modify operations reset `stpMode` to `NONE`.
 
+## Plugins
+
+Plugins extend the order book with additional behavior. They are installed with `use()` and can subscribe to operation events with `on()` / `off()`.
+
+### Plugin API
+
+```ts
+import { OrderBook } from '@nodejs-order-book/core'
+
+const ob = new OrderBook()
+
+// Install a plugin
+ob.use(plugin)
+
+// Subscribe to an event
+ob.on('order.processed', ({ opId, type, options, response }) => {
+  console.log(`Order ${options.id} processed (op #${opId})`)
+})
+
+// Unsubscribe
+const listener = ({ opId, type, options, response }) => { /* ... */ }
+ob.on('order.processed', listener)
+ob.off('order.processed', listener)
+```
+
+Available events: `trade`, `order.processed`, `order.cancelled`, `order.modified`, `order.rejected`. Each event payload carries the operation id (`opId`) plus event-specific data:
+
+- `trade` — a match occurred between a taker and a maker order (`price`, `size`, `makerOrderId`, `takerOrderId?`, `side`)
+- `order.processed` — an order was successfully processed (`type`, `options`, `response`)
+- `order.cancelled` — an order was cancelled (`orderID`, `response`)
+- `order.modified` — an order was modified (`orderID`, `orderUpdate`, `response`)
+- `order.rejected` — an operation failed validation (`options`, `error`)
+
+### Journaling Plugin
+
+The `@nodejs-order-book/plugin-journaling` package provides journaling as a plugin. Installing it always enables recording — there is no opt-out flag.
+
+```bash
+npm install @nodejs-order-book/plugin-journaling
+```
+
+```ts
+import { OrderBook } from '@nodejs-order-book/core'
+import { journalingPlugin } from '@nodejs-order-book/plugin-journaling'
+
+const ob = new OrderBook()
+const journaling = journalingPlugin()
+ob.use(journaling)
+
+// After every operation, save the log
+const order = ob.limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
+await saveLog(order.log)
+```
+
+To restore state on restart, pass the saved logs to the plugin — it replays them (filtered by the book's `lastOp`, so logs already covered by a restored snapshot are skipped):
+
+```ts
+const logs = await getLogs()
+const snapshot = await getSnapshot()
+
+const ob = new OrderBook({ snapshot: JSON.parse(snapshot) })
+ob.use(journalingPlugin({ journal: logs }))
+```
+
+Each log entry is validated during replay; an invalid entry throws an error with code `1201` (`INVALID_JOURNAL_LOG`).
+
 ## Order Book Options
 
 The order book can be initialized with the following options by passing them to the constructor:
@@ -839,7 +916,11 @@ Snapshots are crucial for restoring the order book to a previous state. The orde
 **Note**: The snapshot returns an object containing arrays of `bids` and `asks`. If the snapshot is saved to the database as a string, use `JSON.parse` to restore it when initializing the order book.
 
 ```ts
-const ob = new OrderBook({ enableJournaling: true })
+import { OrderBook } from '@nodejs-order-book/core'
+import { journalingPlugin } from '@nodejs-order-book/plugin-journaling'
+
+const ob = new OrderBook()
+ob.use(journalingPlugin())
 
 // After every order, save the log to the database
 const order = ob.limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
@@ -851,30 +932,33 @@ await saveSnapshot(JSON.stringify(snapshot))
 
 // Safe to remove logs before the snapshot's lastOp
 await removePreviousLogs(snapshot.lastOp)
+```
 
+```ts
 // On server restart, restore from snapshot + logs
 const logs = await getLogs()
 const snapshot = await getSnapshot()
 
-const ob = new OrderBook({
-  snapshot: JSON.parse(snapshot),
-  journal: logs,
-  enableJournaling: true,
-})
+const ob = new OrderBook({ snapshot: JSON.parse(snapshot) })
+ob.use(journalingPlugin({ journal: logs }))
 ```
 
-### Journal Logs
+### Journal Logs (deprecated)
+
+> **Deprecated**: The `journal` constructor option will be removed in **v12**. Use the [`journalingPlugin`](#journaling-plugin) instead.
 
 The `journal` option accepts an array of journal logs (obtained by setting `enableJournaling` to `true`). When provided, the order book replays all operations, restoring its state to match the last log.
 
 ```ts
 const logs = await getLogs()
-const ob = new OrderBook({ journal: logs, enableJournalLog: true })
+const ob = new OrderBook({ journal: logs, enableJournaling: true })
 ```
 
 Combining snapshots with journaling gives you full state persistence and auditability.
 
-### Enable Journaling
+### Enable Journaling (deprecated)
+
+> **Deprecated**: The `enableJournaling` constructor option will be removed in **v12**. Use the [`journalingPlugin`](#journaling-plugin) instead.
 
 When `enableJournaling` is `true`, the property `log` is attached to every operation response. These logs should be persisted and can be used to restore the order book on restart.
 
@@ -886,45 +970,61 @@ const order = ob.limit({ side: "sell", id: "uniqueID", size: 55, price: 100 })
 await saveLog(order.log)
 ```
 
+## Legacy Import Path
+
+The `nodejs-order-book` package is a legacy shim that re-exports `@nodejs-order-book/core`. It keeps existing imports working in both CJS and ESM:
+
+```ts
+// ESM
+import { OrderBook } from 'nodejs-order-book'
+
+// CommonJS
+const { OrderBook } = require('nodejs-order-book')
+```
+
+> **Note**: The core engine is ESM-only. The CommonJS shim relies on Node's `require(esm)` support, which requires **Node.js 20.19+ or 22.12+**.
+
+New projects should import from `@nodejs-order-book/core` directly. The shim will be removed in a future major version.
+
 ## Development
 
 ### Prerequisites
 
 - Node.js 18+
-- npm (or yarn / pnpm)
+- pnpm (the repo is a pnpm workspace)
 
 ### Setup
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
-# Build all distributions (CJS, ESM, types)
-npm run build
+# Build all packages (ESM + type declarations)
+pnpm run build
 
 # Run tests
-npm run test
+pnpm run test
 
-# Run tests with coverage
-npm run test:cov
+# Run tests with coverage (per package: cd packages/core && pnpm run test:cov)
 
 # Run benchmarks (build first)
-npm run bench
+pnpm run bench
 ```
 
 ### Commands
 
 | Command | Description |
 |---------|-------------|
-| `npm run build` | Build CJS, ESM, and type declarations |
-| `npm run test` | Run unit tests |
-| `npm run test:dev` | Run tests in watch mode |
-| `npm run test:cov` | Run tests with lcov coverage report |
-| `npm run bench` | Run performance benchmarks |
-| `npm run lint` | Check code style with Biome |
-| `npm run lint:fix` | Auto-fix lint issues |
-| `npm run clean` | Clean build output |
-| `npm run package` | Build and pack for local testing |
+| `pnpm run build` | Build ESM and type declarations for all packages |
+| `pnpm run test` | Run unit tests for all packages |
+| `pnpm run test:ci` | Run tests without coverage (CI) |
+| `pnpm run bench` | Run performance benchmarks |
+| `pnpm run lint` | Check code style with Biome |
+| `pnpm run lint:fix` | Auto-fix lint issues |
+| `pnpm run clean` | Clean build output and dependencies |
+| `pnpm run format` | Format the codebase with Biome |
+
+Per-package scripts (run from `packages/core` or `packages/plugin-journaling`): `test:dev` (watch mode), `test:cov` (lcov coverage report), `package` (build and pack).
 
 ## Contributing
 

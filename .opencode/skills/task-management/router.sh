@@ -99,10 +99,10 @@ PROJECT_ROOT="$(find_project_root)"
 # Route commands
 case "$1" in
   migrate)
-    cd "$PROJECT_ROOT" && npx ts-node "$MIGRATE_SCRIPT" "$@"
+    cd "$PROJECT_ROOT" && node --import=./packages/core/node_modules/tsx/dist/loader.mjs "$MIGRATE_SCRIPT" "$@"
     ;;
   *)
     # Run the task CLI with all arguments
-    cd "$PROJECT_ROOT" && npx ts-node "$CLI_SCRIPT" "$@"
+    cd "$PROJECT_ROOT" && node --import=./packages/core/node_modules/tsx/dist/loader.mjs "$CLI_SCRIPT" "$@"
     ;;
 esac

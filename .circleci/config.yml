@@ -1,31 +1,59 @@
 version: 2.1
+
 orbs:
-  codecov: codecov/codecov@1.0.2
+  codecov: codecov/codecov@6.0.0
 
 aliases:
   - &restore-cache
     restore_cache:
-      key: dependency-cache-{{ checksum "package.json" }}
+      key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
+
+  - &install-pnpm
+    run:
+      name: Install pnpm
+      command: |
+        PNPM_VERSION=$(node -p "require('./package.json').packageManager.match(/^pnpm@(.+)$/)?.[1]")
+
+        if [ -z "$PNPM_VERSION" ]; then
+          echo "ERROR: package.json must contain packageManager: pnpm@<version>"
+          exit 1
+        fi
+
+        echo "Installing pnpm $PNPM_VERSION"
+
+        curl -fsSL https://get.pnpm.io/install.sh | \
+          env PNPM_VERSION="$PNPM_VERSION" SHELL=/bin/bash ENV="$HOME/.bashrc" bash -
+
+        echo 'export PNPM_HOME="$HOME/.local/share/pnpm"' >> "$BASH_ENV"
+        echo 'export PATH="$PNPM_HOME:$PATH"' >> "$BASH_ENV"
+
+        export PNPM_HOME="$HOME/.local/share/pnpm"
+        export PATH="$PNPM_HOME:$PATH"
+
+        pnpm --version
+
   - &install-deps
     run:
       name: Install dependencies
-      command: npm ci
+      command: pnpm install --frozen-lockfile
+
   - &build-packages
     run:
       name: Build
-      command: npm run build
+      command: pnpm run build
 
 jobs:
   build:
     working_directory: ~/nodejs-order-book
     docker:
-      - image: cimg/node:22.5
+      - image: cimg/node:24.19
     steps:
       - checkout
       - *restore-cache
+      - *install-pnpm
       - *install-deps
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
           paths:
             - ./node_modules
       - *build-packages
@@ -33,16 +61,17 @@ jobs:
   test:
     working_directory: ~/nodejs-order-book
     docker:
-      - image: cimg/node:22.5
+      - image: cimg/node:24.19
     steps:
       - checkout
       - *restore-cache
+      - *install-pnpm
       - *install-deps
       - run:
           name: Unit tests
-          command: npm run test:cov
+          command: pnpm run test:cov
       - codecov/upload:
-          file: './coverage/lcov.info'
+          files: './packages/*/coverage/lcov.info'
 
 workflows:
   version: 2

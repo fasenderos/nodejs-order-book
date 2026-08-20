@@ -1,0 +1,70 @@
+{
+	"name": "@nodejs-order-book/plugin-journaling",
+	"version": "10.1.1",
+	"description": "Add Journaling functionalities to the Node.js Limit Order Book.",
+	"type": "module",
+	"author": "Andrea Fassina <fasenderos@gmail.com>",
+	"license": "MIT",
+	"homepage": "https://github.com/fasenderos/nodejs-order-book",
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:fasenderos/nodejs-order-book.git"
+	},
+	"bugs": {
+		"url": "https://github.com/fasenderos/nodejs-order-book/issues"
+	},
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
+	"scripts": {
+		"build": "pnpm run build:esm && pnpm run build:types",
+		"build:esm": "rimraf dist/esm && tsc -p config/tsconfig.esm.json",
+		"build:types": "rimraf dist/types && tsc -p config/tsconfig.types.json",
+		"clean": "rimraf dist .turbo coverage node_modules",
+		"lint": "biome check ./src ./test",
+		"lint:fix": "biome check --write ./src ./test",
+		"package": "pnpm run build && pnpm pack",
+		"postpublish": "pinst --enable",
+		"prepublishOnly": "pinst --disable",
+		"release": "release-it --ci",
+		"release:beta": "release-it --ci --preRelease=beta",
+		"release:major": "release-it major --ci",
+		"release:minor": "release-it minor --ci",
+		"release:patch": "release-it patch --ci",
+		"test": "c8 node --import=tsx --test ./test/*.test.ts",
+		"test:dev": "c8 node --import=tsx --test --watch ./test/*.test.ts",
+		"test:ci": "node --import=tsx --test ./test/*.test.ts",
+		"test:cov": "rimraf coverage && c8 --reporter=lcov node --import=tsx --test ./test/*.test.ts"
+	},
+	"dependencies": {
+		"@nodejs-order-book/core": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "^26.2.0",
+		"c8": "^11.0.0",
+		"pinst": "^3.0.0",
+		"tsx": "^4.23.12"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"files": [
+		"dist"
+	],
+	"keywords": [
+		"order-book",
+		"nodejs-order-book",
+		"orderbook",
+		"limit-order-book",
+		"exchange",
+		"hft",
+		"hft-trading",
+		"matching-algorithm",
+		"matching-engine",
+		"nodejs",
+		"performance",
+		"low-latency",
+		"trading-algorithm",
+		"typescript",
+		"trading"
+	]
+}

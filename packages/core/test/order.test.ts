@@ -1,0 +1,525 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { ErrorCodes, ErrorMessages } from "../src/errors";
+import {
+	LimitOrder,
+	OrderFactory,
+	StopLimitOrder,
+	StopMarketOrder,
+} from "../src/order";
+import {
+	OrderType,
+	SelfTradePreventionMode,
+	Side,
+	TimeInForce,
+} from "../src/types";
+
+void test("it should create LimitOrder", () => {
+	const id = "fakeId";
+	const side = Side.BUY;
+	const type = OrderType.LIMIT;
+	const size = 5;
+	const price = 100;
+	const time = Date.now();
+	const timeInForce = TimeInForce.IOC;
+
+	{
+		const order = OrderFactory.createOrder({
+			id,
+			type,
+			side,
+			size,
+			price,
+			origSize: size,
+			time,
+			timeInForce,
+			makerQty: size,
+			takerQty: 0,
+		});
+
+		assert.equal(order instanceof LimitOrder, true);
+		assert.equal(order.id, id);
+		assert.equal(order.type, type);
+		assert.equal(order.side, side);
+		assert.equal(order.size, size);
+		assert.equal(order.origSize, size);
+		assert.equal(order.price, price);
+		assert.equal(order.time, time);
+		assert.equal(order.timeInForce, timeInForce);
+		assert.equal(order.makerQty, size);
+		assert.equal(order.takerQty, 0);
+		assert.equal(order.ocoStopPrice, undefined);
+		assert.deepStrictEqual(order.toObject(), {
+			id,
+			type,
+			side,
+			size,
+			origSize: size,
+			price,
+			time,
+			timeInForce,
+			makerQty: size,
+			takerQty: 0,
+		});
+		assert.equal(
+			order.toString(),
+			`${id}:
+    type: ${type}
+    side: ${side}
+    size: ${size}
+    origSize: ${size}
+    price: ${price}
+    time: ${time}
+    timeInForce: ${timeInForce}
+    makerQty: ${size}
+    takerQty: 0`,
+		);
+		assert.equal(
+			order.toJSON(),
+			JSON.stringify({
+				id,
+				type,
+				side,
+				size,
+				origSize: size,
+				price,
+				time,
+				timeInForce,
+				makerQty: size,
+				takerQty: 0,
+			}),
+		);
+	}
+
+	{
+		// Limit Order with ocoStopPrice
+		const ocoStopPrice = 10;
+		const order = OrderFactory.createOrder({
+			id,
+			type,
+			side,
+			size,
+			price,
+			origSize: size,
+			time,
+			timeInForce,
+			makerQty: size,
+			takerQty: 0,
+			ocoStopPrice,
+		});
+		assert.equal(order instanceof LimitOrder, true);
+		assert.equal(order.id, id);
+		assert.equal(order.type, type);
+		assert.equal(order.side, side);
+		assert.equal(order.size, size);
+		assert.equal(order.origSize, size);
+		assert.equal(order.price, price);
+		assert.equal(order.time, time);
+		assert.equal(order.timeInForce, timeInForce);
+		assert.equal(order.makerQty, size);
+		assert.equal(order.takerQty, 0);
+		assert.equal(order.ocoStopPrice, ocoStopPrice);
+		assert.deepStrictEqual(order.toObject(), {
+			id,
+			type,
+			side,
+			size,
+			origSize: size,
+			price,
+			time,
+			timeInForce,
+			makerQty: size,
+			takerQty: 0,
+		});
+		assert.equal(
+			order.toString(),
+			`${id}:
+    type: ${type}
+    side: ${side}
+    size: ${size}
+    origSize: ${size}
+    price: ${price}
+    time: ${time}
+    timeInForce: ${timeInForce}
+    makerQty: ${size}
+    takerQty: 0`,
+		);
+		assert.equal(
+			order.toJSON(),
+			JSON.stringify({
+				id,
+				type,
+				side,
+				size,
+				origSize: size,
+				price,
+				time,
+				timeInForce,
+				makerQty: size,
+				takerQty: 0,
+			}),
+		);
+	}
+});
+
+void test("it should create StopMarketOrder", () => {
+	const id = "fakeId";
+	const side = Side.BUY;
+	const type = OrderType.STOP_MARKET;
+	const size = 5;
+	const stopPrice = 4;
+	const time = Date.now();
+	const order = OrderFactory.createOrder({
+		id,
+		type,
+		side,
+		size,
+		time,
+		stopPrice,
+	});
+
+	assert.equal(order instanceof StopMarketOrder, true);
+	assert.equal(order.id, id);
+	assert.equal(order.type, type);
+	assert.equal(order.side, side);
+	assert.equal(order.size, size);
+	assert.equal(order.stopPrice, stopPrice);
+	assert.equal(order.time, time);
+	assert.deepStrictEqual(order.toObject(), {
+		id,
+		type,
+		side,
+		size,
+		stopPrice,
+		time,
+	});
+	assert.equal(
+		order.toString(),
+		`${id}:
+    type: ${type}
+    side: ${side}
+    size: ${size}
+    stopPrice: ${stopPrice}
+    time: ${time}`,
+	);
+	assert.equal(
+		order.toJSON(),
+		JSON.stringify({
+			id,
+			type,
+			side,
+			size,
+			stopPrice,
+			time,
+		}),
+	);
+});
+
+void test("it should create StopMarketOrder with accountId and stpMode", () => {
+	const id = "fakeId2";
+	const side = Side.BUY;
+	const type = OrderType.STOP_MARKET;
+	const size = 5;
+	const stopPrice = 4;
+	const time = Date.now();
+	const accountId = "alice";
+	const stpMode = SelfTradePreventionMode.EXPIRE_MAKER;
+	const order = OrderFactory.createOrder({
+		id,
+		type,
+		side,
+		size,
+		time,
+		stopPrice,
+		accountId,
+		stpMode,
+	});
+
+	assert.equal(order instanceof StopMarketOrder, true);
+	assert.deepStrictEqual(order.toObject(), {
+		id,
+		type,
+		side,
+		size,
+		stopPrice,
+		time,
+		accountId,
+		stpMode,
+	});
+	assert.equal(
+		order.toJSON(),
+		JSON.stringify({
+			id,
+			type,
+			side,
+			size,
+			stopPrice,
+			time,
+			accountId,
+			stpMode,
+		}),
+	);
+});
+
+void test("it should create StopLimitOrder", () => {
+	const id = "fakeId";
+	const side = Side.BUY;
+	const type = OrderType.STOP_LIMIT;
+	const size = 5;
+	const price = 100;
+	const stopPrice = 4;
+	const time = Date.now();
+	const timeInForce = TimeInForce.IOC;
+	{
+		const order = OrderFactory.createOrder({
+			id,
+			type,
+			side,
+			size,
+			price,
+			time,
+			stopPrice,
+			timeInForce,
+		});
+
+		assert.equal(order instanceof StopLimitOrder, true);
+		assert.equal(order.id, id);
+		assert.equal(order.type, type);
+		assert.equal(order.side, side);
+		assert.equal(order.size, size);
+		assert.equal(order.price, price);
+		assert.equal(order.stopPrice, stopPrice);
+		assert.equal(order.timeInForce, timeInForce);
+		assert.equal(order.time, time);
+		assert.equal(order.isOCO, false);
+		assert.deepStrictEqual(order.toObject(), {
+			id,
+			type,
+			side,
+			size,
+			price,
+			stopPrice,
+			isOCO: false,
+			timeInForce,
+			time,
+		});
+		assert.equal(
+			order.toString(),
+			`${id}:
+    type: ${type}
+    side: ${side}
+    size: ${size}
+    price: ${price}
+    stopPrice: ${stopPrice}
+	isOCO: false
+    timeInForce: ${timeInForce}
+    time: ${time}`,
+		);
+		assert.equal(
+			order.toJSON(),
+			JSON.stringify({
+				id,
+				type,
+				side,
+				size,
+				price,
+				stopPrice,
+				isOCO: false,
+				timeInForce,
+				time,
+			}),
+		);
+		// Price setter
+		const newPrice = 120;
+		order.price = newPrice;
+		assert.equal(order.price, newPrice);
+	}
+
+	{
+		// Stop Limit Order created by OCO order
+		const order = OrderFactory.createOrder({
+			id,
+			type,
+			side,
+			size,
+			price,
+			time,
+			stopPrice,
+			timeInForce,
+			isOCO: true,
+		});
+
+		assert.equal(order instanceof StopLimitOrder, true);
+		assert.equal(order.id, id);
+		assert.equal(order.type, type);
+		assert.equal(order.side, side);
+		assert.equal(order.size, size);
+		assert.equal(order.price, price);
+		assert.equal(order.stopPrice, stopPrice);
+		assert.equal(order.timeInForce, timeInForce);
+		assert.equal(order.time, time);
+		assert.equal(order.isOCO, true);
+		assert.deepStrictEqual(order.toObject(), {
+			id,
+			type,
+			side,
+			size,
+			price,
+			stopPrice,
+			isOCO: true,
+			timeInForce,
+			time,
+		});
+		assert.equal(
+			order.toString(),
+			`${id}:
+    type: ${type}
+    side: ${side}
+    size: ${size}
+    price: ${price}
+    stopPrice: ${stopPrice}
+	isOCO: true
+    timeInForce: ${timeInForce}
+    time: ${time}`,
+		);
+		assert.equal(
+			order.toJSON(),
+			JSON.stringify({
+				id,
+				type,
+				side,
+				size,
+				price,
+				stopPrice,
+				isOCO: true,
+				timeInForce,
+				time,
+			}),
+		);
+		// Price setter
+		const newPrice = 120;
+		order.price = newPrice;
+		assert.equal(order.price, newPrice);
+	}
+});
+
+void test("it should create order without passing a date or id", (t) => {
+	const fakeTimestamp = 1487076708000;
+	const { now } = Date;
+
+	t.after(() => (Date.now = now));
+
+	Date.now = (..._m) => fakeTimestamp;
+
+	const type = OrderType.STOP_MARKET;
+	const side = Side.BUY;
+	const size = 5;
+	const stopPrice = 4;
+	const order = OrderFactory.createOrder({
+		type,
+		side,
+		size,
+		stopPrice,
+	});
+	const { id } = order;
+	assert.match(
+		id,
+		/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+	);
+	assert.equal(order.time, fakeTimestamp);
+	assert.deepStrictEqual(order.toObject(), {
+		id,
+		type,
+		side,
+		size,
+		stopPrice,
+		time: fakeTimestamp,
+	});
+	assert.equal(
+		order.toString(),
+		`${id}:
+    type: ${type}
+    side: ${side}
+    size: ${size}
+    stopPrice: ${stopPrice}
+    time: ${fakeTimestamp}`,
+	);
+
+	assert.equal(
+		order.toJSON(),
+		JSON.stringify({
+			id,
+			type,
+			side,
+			size,
+			stopPrice,
+			time: fakeTimestamp,
+		}),
+	);
+});
+
+void test("test orders setters", () => {
+	const type = OrderType.LIMIT;
+	const id = "fakeId";
+	const side = Side.BUY;
+	const size = 5;
+	const price = 100;
+	const time = Date.now();
+	const timeInForce = TimeInForce.GTC;
+	const order = OrderFactory.createOrder({
+		type,
+		id,
+		side,
+		size,
+		price,
+		origSize: size,
+		time,
+		timeInForce,
+		makerQty: size,
+		takerQty: 0,
+	});
+
+	// Price setter
+	const newPrice = 300;
+	order.price = newPrice;
+	assert.equal(order.price, newPrice);
+
+	// Size setter
+	const newSize = 40;
+	order.size = newSize;
+	assert.equal(order.size, newSize);
+
+	// Time setter
+	const newTime = Date.now();
+	order.time = newTime;
+	assert.equal(order.time, newTime);
+
+	// Original size should not be changed
+	assert.equal(order.origSize, size);
+});
+
+void test("test invalid order type", () => {
+	try {
+		const id = "fakeId";
+		const side = Side.BUY;
+		const type = "invalidOrderType";
+		const size = 5;
+		const price = 100;
+		const time = Date.now();
+		const timeInForce = TimeInForce.IOC;
+		OrderFactory.createOrder({
+			id,
+			// @ts-expect-error order type invalid
+			type,
+			side,
+			size,
+			price,
+			time,
+			timeInForce,
+		});
+		// biome-ignore lint/suspicious/noExplicitAny: use any for error
+	} catch (error: any) {
+		assert.equal(error?.message, ErrorMessages.INVALID_ORDER_TYPE);
+		assert.equal(error?.code, ErrorCodes.INVALID_ORDER_TYPE);
+	}
+});

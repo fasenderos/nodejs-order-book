@@ -1,0 +1,1 @@
+module.exports = require("@nodejs-order-book/core");
