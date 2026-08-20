@@ -25,7 +25,6 @@ import {
 	type OrderBookEventMap,
 	type OrderBookOptions,
 	type OrderBookPlugin,
-	type OrderRequestOptions,
 	OrderType,
 	type OrderUpdatePrice,
 	type OrderUpdateSize,

@@ -3,7 +3,7 @@ import {
 	ERROR,
 	type JournalLog,
 	type OrderBook,
-    type OrderBookPlugin,
+	type OrderBookPlugin,
 	OrderType,
 } from "@nodejs-order-book/core";
 import type { JournalingPluginOptions } from "./types.js";
@@ -148,7 +148,12 @@ export function journalingPlugin(
 				} as JournalLog;
 			});
 			book.on("order.cancelled", ({ opId, orderID, response }) => {
-				response.log = { opId, ts: Date.now(), op: "d" as const, o: { orderID } };
+				response.log = {
+					opId,
+					ts: Date.now(),
+					op: "d" as const,
+					o: { orderID },
+				};
 			});
 			book.on("order.modified", ({ opId, orderID, orderUpdate, response }) => {
 				const log = {

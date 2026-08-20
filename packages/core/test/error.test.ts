@@ -22,12 +22,10 @@ void test("Test default CustomError", () => {
 	assert.equal(c.code, ErrorCodes.DEFAULT);
 	assert.equal(c instanceof OrderBookError, true);
 
-	for (const key in ERROR) {
-		if (Object.hasOwn(ERROR, key)) {
-			const error = CustomError(ERROR[key]);
-			assert.equal(error.message, ErrorMessages[key]);
-			assert.equal(error.code, ErrorCodes[key]);
-			assert.equal(error instanceof OrderBookError, true);
-		}
+	for (const key of Object.keys(ERROR) as Array<keyof typeof ERROR>) {
+		const error = CustomError(ERROR[key]);
+		assert.equal(error.message, ErrorMessages[key]);
+		assert.equal(error.code, ErrorCodes[key]);
+		assert.equal(error instanceof OrderBookError, true);
 	}
 });

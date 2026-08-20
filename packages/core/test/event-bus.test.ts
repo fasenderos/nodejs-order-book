@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { EventBus } from "../src/event-bus";
 
-interface TestEventMap {
+type TestEventMap = {
 	ping: { value: number };
 	pong: { value: string };
-}
+};
 
 void test("event bus delivers payload to registered handler", () => {
 	const bus = new EventBus<TestEventMap>();

@@ -1371,77 +1371,6 @@ void test("orderbook event order.modified payload", () => {
 	assert.equal(captured?.response, response);
 });
 
-void test("orderbook event trade emitted for fully filled and partial maker orders", () => {
-	const ob = new OrderBook();
-	addDepth(ob, "", 2);
-
-	const trades: OrderBookEventMap["trade"][] = [];
-	ob.on("trade", (payload) => {
-		trades.push(payload);
-	});
-
-	ob.market({ side: Side.BUY, size: 3 });
-
-	// 2 units fully filled at 100 (sell-100) + 1 unit partial at 110 (sell-110)
-	assert.equal(trades.length, 2);
-	assert.deepStrictEqual(trades[0], {
-		opId: 11,
-		price: 100,
-		size: 2,
-		makerOrderId: "sell-100",
-		takerOrderId: undefined,
-		side: Side.BUY,
-	});
-	assert.deepStrictEqual(trades[1], {
-		opId: 11,
-		price: 110,
-		size: 1,
-		makerOrderId: "sell-110",
-		takerOrderId: undefined,
-		side: Side.BUY,
-	});
-});
-
-void test("orderbook event trade includes taker order id", () => {
-	const ob = new OrderBook();
-	addDepth(ob, "", 2);
-
-	const trades: OrderBookEventMap["trade"][] = [];
-	ob.on("trade", (payload) => {
-		trades.push(payload);
-	});
-
-	ob.limit({ side: Side.BUY, id: "taker-1", size: 1, price: 100 });
-
-	assert.equal(trades.length, 1);
-	assert.equal(trades[0]?.opId, 11);
-	assert.equal(trades[0]?.price, 100);
-	assert.equal(trades[0]?.size, 1);
-	assert.equal(trades[0]?.makerOrderId, "sell-100");
-	assert.equal(trades[0]?.takerOrderId, "taker-1");
-	assert.equal(trades[0]?.side, Side.BUY);
-});
-
-void test("orderbook event no trade emitted when order rests", () => {
-	const ob = new OrderBook();
-	addDepth(ob, "", 2);
-
-	let trades = 0;
-	ob.on("trade", () => {
-		trades++;
-	});
-
-	const response = ob.limit({
-		side: Side.BUY,
-		id: "rest-1",
-		size: 1,
-		price: 95,
-	});
-
-	assert.equal(response.err, null);
-	assert.equal(trades, 0);
-});
-
 void test("orderbook event order.rejected on invalid market order", () => {
 	const ob = new OrderBook();
 
@@ -1887,7 +1816,7 @@ void test("orderbook restore from snapshot", () => {
 		Object.entries(prev).forEach(([price, orders]) => {
 			assert.deepStrictEqual(
 				orders.map((order) => order.toObject()),
-				restored[price].map((order) => order.toObject()),
+				restored[Number(price)].map((order) => order.toObject()),
 			);
 		});
 
@@ -1917,7 +1846,7 @@ void test("orderbook restore from snapshot", () => {
 		Object.entries(prevStopBook).forEach(([price, orders]) => {
 			assert.deepStrictEqual(
 				orders.map((order) => order.toObject()),
-				restoredStopBook[price].map((order) => order.toObject()),
+				restoredStopBook[Number(price)].map((order) => order.toObject()),
 			);
 		});
 

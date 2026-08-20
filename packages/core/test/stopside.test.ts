@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ErrorCodes, ErrorMessages } from "../src/errors";
+import { ErrorCodes, ErrorMessages, type OrderBookError } from "../src/errors";
 import { OrderFactory } from "../src/order";
 import { StopSide } from "../src/stopside";
 import { OrderType, Side, TimeInForce } from "../src/types";
@@ -107,8 +107,9 @@ void test("it should append/remove orders from queue on BUY side", () => {
 		// order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type INVALID_PRICE_LEVEL
 		os.remove("some-id", 100);
 	} catch (error) {
-		assert.equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL);
-		assert.equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL);
+		const err = error as OrderBookError;
+		assert.equal(err.message, ErrorMessages.INVALID_PRICE_LEVEL);
+		assert.equal(err.code, ErrorCodes.INVALID_PRICE_LEVEL);
 	}
 });
 
@@ -214,8 +215,9 @@ void test("it should append/remove orders from queue on SELL side", () => {
 		// order1 has been replaced whit updateOrder, so trying to update order1 will throw an error of type INVALID_PRICE_LEVEL
 		os.remove("some-id", 100);
 	} catch (error) {
-		assert.equal(error?.message, ErrorMessages.INVALID_PRICE_LEVEL);
-		assert.equal(error?.code, ErrorCodes.INVALID_PRICE_LEVEL);
+		const err = error as OrderBookError;
+		assert.equal(err.message, ErrorMessages.INVALID_PRICE_LEVEL);
+		assert.equal(err.code, ErrorCodes.INVALID_PRICE_LEVEL);
 	}
 });
 
@@ -223,7 +225,7 @@ void test("it should find all queue between upper and lower bound", () => {
 	const appenOrder = (
 		orderId: string,
 		stopPrice: number,
-		side,
+		side: Side,
 		os: StopSide,
 	): void => {
 		const order = OrderFactory.createOrder({

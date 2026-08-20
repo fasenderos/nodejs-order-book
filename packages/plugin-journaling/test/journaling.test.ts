@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { JournalLog } from "@nodejs-order-book/core";
-import { ERROR, OrderBook, Side } from "@nodejs-order-book/core";
+import { OrderBook, Side } from "@nodejs-order-book/core";
 import { journalingPlugin } from "../src/index";
 
 const addDepth = (
