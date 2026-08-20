@@ -34,7 +34,7 @@
 		"test": "c8 node --import=tsx --test ./test/*.test.ts",
 		"test:dev": "c8 node --import=tsx --test --watch ./test/*.test.ts",
 		"test:ci": "node --import=tsx --test ./test/*.test.ts",
-		"test:cov": "c8 --reporter=lcov node --import=tsx --test ./test/*.test.ts"
+		"test:cov": "rimraf coverage && c8 --reporter=lcov node --import=tsx --test ./test/*.test.ts"
 	},
 	"dependencies": {
 		"denque": "2.1.0",

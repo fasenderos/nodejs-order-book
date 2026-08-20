@@ -13,10 +13,17 @@
 			"dependsOn": ["^build"],
 			"outputs": []
 		},
+		"test:cov": {
+			"dependsOn": ["^build"],
+			"outputs": []
+		},
 		"@nodejs-order-book/core#test": {
 			"dependsOn": ["@nodejs-order-book/plugin-journaling#build"]
 		},
 		"@nodejs-order-book/core#test:ci": {
+			"dependsOn": ["@nodejs-order-book/plugin-journaling#build"]
+		},
+		"@nodejs-order-book/core#test:cov": {
 			"dependsOn": ["@nodejs-order-book/plugin-journaling#build"]
 		},
 		"lint": {
