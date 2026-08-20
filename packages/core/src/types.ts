@@ -468,20 +468,6 @@ export type OrderOperationOptions =
  * relevant to the domain event.
  */
 export type OrderBookEventMap = {
-	/** Emitted when a trade (match) occurs between a taker and a maker order. */
-	trade: {
-		opId: number;
-		/** Price at which the trade executed. */
-		price: number;
-		/** Quantity traded. */
-		size: number;
-		/** ID of the resting (maker) order. */
-		makerOrderId: string;
-		/** ID of the incoming (taker) order, if any. */
-		takerOrderId?: string;
-		/** Side of the taker order. */
-		side: Side;
-	};
 	/** Emitted after an order is successfully processed (market, limit, stop, OCO). */
 	"order.processed": {
 		opId: number;
@@ -506,6 +492,8 @@ export type OrderBookEventMap = {
 	/** Emitted when an order operation fails validation. */
 	"order.rejected": {
 		opId: number;
+		/** Type of the processed order. */
+		type?: OrderType;
 		options: OrderOperationOptions;
 		error: OrderBookError;
 	};

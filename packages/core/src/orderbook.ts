@@ -125,43 +125,6 @@ export class OrderBook {
 	}
 
 	/**
-	 * Emit a `trade` event for every match contained in the response
-	 * (fully filled maker orders plus the partial fill, if any).
-	 * @param opId - The operation id shared with the originating event.
-	 * @param options - The options of the taker order.
-	 * @param response - The processed order response.
-	 */
-	private readonly emitTrades = (
-		opId: number,
-		options: OrderRequestOptions,
-		response: IProcessOrder,
-	): void => {
-		for (const order of response.done) {
-			// When a limit taker is fully filled it is pushed into `done` as well;
-			// skip it so only the resting (maker) orders are reported as trades.
-			if (order.id === options.id) continue;
-			this.eventBus.emit("trade", {
-				opId,
-				price: (order as ILimitOrder).price,
-				size: order.size,
-				makerOrderId: order.id,
-				takerOrderId: options.id,
-				side: options.side,
-			});
-		}
-		if (response.partial !== null && response.partialQuantityProcessed > 0) {
-			this.eventBus.emit("trade", {
-				opId,
-				price: response.partial.price,
-				size: response.partialQuantityProcessed,
-				makerOrderId: response.partial.id,
-				takerOrderId: options.id,
-				side: options.side,
-			});
-		}
-	};
-
-	/**
 	 * Create new order. See {@link CreateOrderOptions} for details.
 	 *
 	 * @param options
@@ -218,18 +181,18 @@ export class OrderBook {
 	 */
 	public market(options: MarketOrderOptions): IProcessOrder {
 		const response = this._market(options);
+		const opId = ++this._lastOp;
 		if (response.err === null) {
-			const opId = ++this._lastOp;
 			this.eventBus.emit("order.processed", {
 				opId,
 				type: OrderType.MARKET,
 				options,
 				response,
 			});
-			this.emitTrades(opId, options, response);
 		} else {
 			this.eventBus.emit("order.rejected", {
-				opId: ++this._lastOp,
+				opId,
+				type: OrderType.MARKET,
 				options,
 				error: response.err,
 			});
@@ -248,18 +211,18 @@ export class OrderBook {
 	 */
 	public stopMarket = (options: StopMarketOrderOptions): IProcessOrder => {
 		const response = this._stopMarket(options);
+		const opId = ++this._lastOp;
 		if (response.err === null) {
-			const opId = ++this._lastOp;
 			this.eventBus.emit("order.processed", {
 				opId,
 				type: OrderType.STOP_MARKET,
 				options,
 				response,
 			});
-			this.emitTrades(opId, options, response);
 		} else {
 			this.eventBus.emit("order.rejected", {
-				opId: ++this._lastOp,
+				opId,
+				type: OrderType.STOP_MARKET,
 				options,
 				error: response.err,
 			});
@@ -281,18 +244,18 @@ export class OrderBook {
 	 */
 	public limit(options: LimitOrderOptions): IProcessOrder {
 		const response = this._limit(options);
+		const opId = ++this._lastOp;
 		if (response.err === null) {
-			const opId = ++this._lastOp;
 			this.eventBus.emit("order.processed", {
 				opId,
 				type: OrderType.LIMIT,
 				options,
 				response,
 			});
-			this.emitTrades(opId, options, response);
 		} else {
 			this.eventBus.emit("order.rejected", {
-				opId: ++this._lastOp,
+				opId,
+				type: OrderType.LIMIT,
 				options,
 				error: response.err,
 			});
@@ -314,18 +277,18 @@ export class OrderBook {
 	 */
 	public stopLimit = (options: StopLimitOrderOptions): IProcessOrder => {
 		const response = this._stopLimit(options);
+		const opId = ++this._lastOp;
 		if (response.err === null) {
-			const opId = ++this._lastOp;
 			this.eventBus.emit("order.processed", {
 				opId,
 				type: OrderType.STOP_LIMIT,
 				options,
 				response,
 			});
-			this.emitTrades(opId, options, response);
 		} else {
 			this.eventBus.emit("order.rejected", {
-				opId: ++this._lastOp,
+				opId,
+				type: OrderType.STOP_LIMIT,
 				options,
 				error: response.err,
 			});
@@ -358,18 +321,18 @@ export class OrderBook {
 	 */
 	public oco = (options: OCOOrderOptions): IProcessOrder => {
 		const response = this._oco(options);
+		const opId = ++this._lastOp;
 		if (response.err === null) {
-			const opId = ++this._lastOp;
 			this.eventBus.emit("order.processed", {
 				opId,
 				type: OrderType.OCO,
 				options,
 				response,
 			});
-			this.emitTrades(opId, options, response);
 		} else {
 			this.eventBus.emit("order.rejected", {
-				opId: ++this._lastOp,
+				opId,
+				type: OrderType.OCO,
 				options,
 				error: response.err,
 			});
@@ -439,6 +402,7 @@ export class OrderBook {
 		const error = CustomError(ERROR.INVALID_PRICE_OR_QUANTITY);
 		this.eventBus.emit("order.rejected", {
 			opId: ++this._lastOp,
+			type: OrderType.LIMIT,
 			options: { orderID, orderUpdate },
 			error,
 		});
