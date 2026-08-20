@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 #v6.0.10
         with:
           version: 10.5.2
       - name: Setup .npmrc file to publish to npm
@@ -34,6 +34,6 @@ jobs:
       - name: Build
         run: pnpm run build
       - name: Publish to npm
-        run: pnpm publish --access public
+        run: pnpm -r publish --access public && pnpm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

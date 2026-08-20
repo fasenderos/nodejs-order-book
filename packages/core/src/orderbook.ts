@@ -389,12 +389,20 @@ export class OrderBook {
 					"",
 					SelfTradePreventionMode.NONE,
 				);
-				this.eventBus.emit("order.modified", {
-					opId: ++this._lastOp,
-					orderID,
-					orderUpdate,
-					response,
-				});
+				if (response.err === null) {
+					this.eventBus.emit("order.modified", {
+						opId: ++this._lastOp,
+						orderID,
+						orderUpdate,
+						response,
+					});
+				} else {
+					this.eventBus.emit("order.rejected", {
+						opId: ++this._lastOp,
+						options: { orderID, orderUpdate },
+						error: response.err,
+					});
+				}
 				return response;
 			}
 		}

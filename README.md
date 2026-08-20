@@ -90,25 +90,25 @@ The core engine is published as `@nodejs-order-book/core`. The `nodejs-order-boo
 
 Install with npm:
 
-```
+```bash
 npm install @nodejs-order-book/core
 ```
 
 Install with yarn:
 
-```
+```bash
 yarn add @nodejs-order-book/core
 ```
 
 Install with pnpm:
 
-```
+```bash
 pnpm add @nodejs-order-book/core
 ```
 
 For the journaling plugin:
 
-```
+```bash
 npm install @nodejs-order-book/plugin-journaling
 ```
 
@@ -932,7 +932,9 @@ await saveSnapshot(JSON.stringify(snapshot))
 
 // Safe to remove logs before the snapshot's lastOp
 await removePreviousLogs(snapshot.lastOp)
+```
 
+```ts
 // On server restart, restore from snapshot + logs
 const logs = await getLogs()
 const snapshot = await getSnapshot()
