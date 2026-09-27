@@ -1010,13 +1010,18 @@ export class OrderBook {
 								continue;
 							}
 							case SelfTradePreventionMode.EXPIRE_TAKER: {
-								// Taker expires immediately, nothing matches
+								// Taker expires immediately, nothing matches.
+								// response.quantityLeft is intentionally left untouched: it already
+								// holds the unfilled quantity, which is lower than the level-entry
+								// `quantityToTrade` when STP triggers after a partial fill inside
+								// this price level. Resetting it would resurrect filled quantity.
 								response.err = CustomError(ERROR.STP_TRIGGERED);
-								response.quantityLeft = quantityToTrade;
 								return response;
 							}
 							case SelfTradePreventionMode.EXPIRE_BOTH: {
-								// Remove maker from book AND expire taker
+								// Remove maker from book AND expire taker.
+								// As in EXPIRE_TAKER, response.quantityLeft must keep the running
+								// unfilled quantity rather than the level-entry quantityToTrade.
 								const removedOrder = this._cancelOrder(headOrder.id, true);
 								if (removedOrder?.order !== undefined) {
 									if (response.stpExpired === undefined) {
@@ -1025,7 +1030,6 @@ export class OrderBook {
 									response.stpExpired.push(removedOrder.order);
 								}
 								response.err = CustomError(ERROR.STP_TRIGGERED);
-								response.quantityLeft = quantityToTrade;
 								return response;
 							}
 						}

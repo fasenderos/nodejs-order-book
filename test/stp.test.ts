@@ -630,3 +630,170 @@ void test("STP Scenario P: IOC order with EXPIRE_MAKER", () => {
 	// Order should not be on book since IOC with remaining qty
 	assert.equal(ob.order("taker-ioc-sell-90"), undefined);
 });
+
+// ============================================================================
+// Scenario Q: EXPIRE_TAKER firing mid-queue (after a partial fill in the level)
+// Regression test: quantityLeft must report the unfilled quantity, not the
+// quantity left on entry to the price level.
+// ============================================================================
+void test("STP Scenario Q: EXPIRE_TAKER mid-queue reports unfilled quantityLeft", () => {
+	const ob = new OrderBook();
+
+	// Same price level, same side: "bob" is consumable, "alice" triggers STP.
+	ob.limit({
+		side: Side.BUY,
+		id: "bob-buy-100",
+		size: 1,
+		price: 100,
+		accountId: "bob",
+	});
+	ob.limit({
+		side: Side.BUY,
+		id: "alice-buy-100",
+		size: 9,
+		price: 100,
+		accountId: "alice",
+	});
+
+	// 8-unit taker: 1 fills against bob, then alice's maker triggers STP.
+	const taker = ob.limit({
+		side: Side.SELL,
+		id: "alice-taker-sell-90",
+		size: 8,
+		price: 90,
+		accountId: "alice",
+		stpMode: SelfTradePreventionMode.EXPIRE_TAKER,
+	});
+
+	assert.equal(taker.err?.code, ErrorCodes.STP_TRIGGERED);
+	// 8 requested - 1 filled against bob = 7 unfilled and expired.
+	assert.equal(taker.quantityLeft, 7);
+	assert.equal(taker.done.length, 1);
+	assert.equal(taker.done[0].id, "bob-buy-100");
+	assert.equal(taker.done[0].size, 1);
+	// Same-account maker is untouched and the expired taker is not on the book.
+	assert.notEqual(ob.order("alice-buy-100"), undefined);
+	assert.equal(ob.order("alice-taker-sell-90"), undefined);
+});
+
+// ============================================================================
+// Scenario R: EXPIRE_BOTH firing mid-queue (after a partial fill in the level)
+// ============================================================================
+void test("STP Scenario R: EXPIRE_BOTH mid-queue reports unfilled quantityLeft", () => {
+	const ob = new OrderBook();
+
+	ob.limit({
+		side: Side.BUY,
+		id: "bob-buy-100",
+		size: 1,
+		price: 100,
+		accountId: "bob",
+	});
+	ob.limit({
+		side: Side.BUY,
+		id: "alice-buy-100",
+		size: 9,
+		price: 100,
+		accountId: "alice",
+	});
+
+	const taker = ob.limit({
+		side: Side.SELL,
+		id: "alice-taker-sell-90",
+		size: 8,
+		price: 90,
+		accountId: "alice",
+		stpMode: SelfTradePreventionMode.EXPIRE_BOTH,
+	});
+
+	assert.equal(taker.err?.code, ErrorCodes.STP_TRIGGERED);
+	assert.equal(taker.quantityLeft, 7);
+	assert.equal(taker.done.length, 1);
+	assert.equal(taker.done[0].id, "bob-buy-100");
+	// EXPIRE_BOTH also removes the same-account maker.
+	assert.equal(taker.stpExpired?.length, 1);
+	assert.equal(taker.stpExpired?.[0].id, "alice-buy-100");
+	assert.equal(ob.order("alice-buy-100"), undefined);
+	assert.equal(ob.order("alice-taker-sell-90"), undefined);
+});
+
+// ============================================================================
+// Scenario S: market order EXPIRE_TAKER mid-queue
+// ============================================================================
+void test("STP Scenario S: market EXPIRE_TAKER mid-queue reports unfilled quantityLeft", () => {
+	const ob = new OrderBook();
+
+	ob.limit({
+		side: Side.BUY,
+		id: "bob-buy-100",
+		size: 1,
+		price: 100,
+		accountId: "bob",
+	});
+	ob.limit({
+		side: Side.BUY,
+		id: "alice-buy-100",
+		size: 9,
+		price: 100,
+		accountId: "alice",
+	});
+
+	const taker = ob.market({
+		side: Side.SELL,
+		id: "alice-market-sell",
+		size: 8,
+		accountId: "alice",
+		stpMode: SelfTradePreventionMode.EXPIRE_TAKER,
+	});
+
+	assert.equal(taker.err?.code, ErrorCodes.STP_TRIGGERED);
+	assert.equal(taker.quantityLeft, 7);
+	assert.equal(taker.done.length, 1);
+	assert.equal(taker.done[0].id, "bob-buy-100");
+	assert.notEqual(ob.order("alice-buy-100"), undefined);
+});
+
+// ============================================================================
+// Scenario T: EXPIRE_MAKER mid-queue must keep the unfilled quantity intact.
+// This mode never aborts matching, so it is structurally immune to the
+// quantityLeft regression; asserted here to lock the behaviour in.
+// ============================================================================
+void test("STP Scenario T: EXPIRE_MAKER mid-queue reports unfilled quantityLeft", () => {
+	const ob = new OrderBook();
+
+	ob.limit({
+		side: Side.BUY,
+		id: "bob-buy-100",
+		size: 1,
+		price: 100,
+		accountId: "bob",
+	});
+	ob.limit({
+		side: Side.BUY,
+		id: "alice-buy-100",
+		size: 9,
+		price: 100,
+		accountId: "alice",
+	});
+
+	// EXPIRE_MAKER drops alice's maker and keeps matching, so the taker
+	// completes its full 8 units and nothing is left unfilled.
+	const taker = ob.limit({
+		side: Side.SELL,
+		id: "alice-taker-sell-90",
+		size: 8,
+		price: 90,
+		accountId: "alice",
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
+	});
+
+	assert.equal(taker.err, null);
+	assert.equal(taker.stpExpired?.length, 1);
+	assert.equal(taker.stpExpired?.[0].id, "alice-buy-100");
+	// 1 unit filled against bob, the remaining 7 rests on the book.
+	assert.equal(taker.quantityLeft, 7);
+	assert.equal(taker.done.length, 1);
+	assert.equal(taker.done[0].id, "bob-buy-100");
+	assert.notEqual(ob.order("alice-taker-sell-90"), undefined);
+	assert.equal((ob.order("alice-taker-sell-90") as { size: number }).size, 7);
+});
