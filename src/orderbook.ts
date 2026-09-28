@@ -690,7 +690,14 @@ export class OrderBook {
 		}
 
 		if (timeInForce === TimeInForce.FOK) {
-			const fillable = this.canFillOrder(sideToProcess, side, size, price);
+			// FOK is atomic, so this check is STP-aware.
+			const fillable = this.canFillOrder(
+				sideToProcess,
+				(levelPrice: number) => comparator(price, levelPrice),
+				size,
+				takerAccountId,
+				stpMode,
+			);
 			if (!fillable) {
 				response.err = CustomError(ERROR.LIMIT_ORDER_FOK_NOT_FILLABLE);
 				return;
@@ -1010,13 +1017,18 @@ export class OrderBook {
 								continue;
 							}
 							case SelfTradePreventionMode.EXPIRE_TAKER: {
-								// Taker expires immediately, nothing matches
+								// Taker expires immediately, nothing matches.
+								// response.quantityLeft is intentionally left untouched: it already
+								// holds the unfilled quantity, which is lower than the level-entry
+								// `quantityToTrade` when STP triggers after a partial fill inside
+								// this price level. Resetting it would resurrect filled quantity.
 								response.err = CustomError(ERROR.STP_TRIGGERED);
-								response.quantityLeft = quantityToTrade;
 								return response;
 							}
 							case SelfTradePreventionMode.EXPIRE_BOTH: {
-								// Remove maker from book AND expire taker
+								// Remove maker from book AND expire taker.
+								// As in EXPIRE_TAKER, response.quantityLeft must keep the running
+								// unfilled quantity rather than the level-entry quantityToTrade.
 								const removedOrder = this._cancelOrder(headOrder.id, true);
 								if (removedOrder?.order !== undefined) {
 									if (response.stpExpired === undefined) {
@@ -1025,7 +1037,6 @@ export class OrderBook {
 									response.stpExpired.push(removedOrder.order);
 								}
 								response.err = CustomError(ERROR.STP_TRIGGERED);
-								response.quantityLeft = quantityToTrade;
 								return response;
 							}
 						}
@@ -1064,57 +1075,105 @@ export class OrderBook {
 		return response;
 	};
 
+	/**
+	 * Tells whether a self-trade check is required for this order, which is also the
+	 * point past which level volumes stop being enough and orders must be walked
+	 * individually.
+	 *
+	 * The conditions mirror the guard in `processQueue`, and the two must stay
+	 * equivalent: if this reports a check where the matcher would not, a FOK order
+	 * gets rejected as not fillable while the same order would otherwise have
+	 * matched.
+	 */
+	private readonly shouldCheckSelfTrade = (
+		takerAccountId?: string,
+		stpMode?: SelfTradePreventionMode,
+	): boolean => {
+		return (
+			Boolean(takerAccountId) &&
+			stpMode != null &&
+			stpMode !== SelfTradePreventionMode.NONE
+		);
+	};
+
+	/**
+	 * Decides whether a FOK order can be filled in full, before the book is touched.
+	 *
+	 * Liquidity is walked in the same order the matcher consumes it, and a maker
+	 * belonging to the taker's own account is not tradeable when STP is active.
+	 * The three modes differ in how they stop the walk:
+	 * EXPIRE_MAKER expires the maker and matching continues past it, while
+	 * EXPIRE_TAKER and EXPIRE_BOTH stop the taker there, leaving no liquidity
+	 * beyond that maker reachable.
+	 *
+	 * Only the STP-active path has to inspect individual orders. Without STP there
+	 * is nothing to rule out, so level volumes are exact and the walk stays one
+	 * step per price level.
+	 *
+	 * @param isLevelReachable - tells whether a level is within the taker's price.
+	 * @returns true when `size` can be filled in full.
+	 */
 	private readonly canFillOrder = (
 		orderSide: OrderSide,
-		side: Side,
+		isLevelReachable: (levelPrice: number) => boolean,
 		size: number,
-		price: number,
+		takerAccountId?: string,
+		stpMode?: SelfTradePreventionMode,
 	): boolean => {
-		return side === Side.BUY
-			? this.buyOrderCanBeFilled(orderSide, size, price)
-			: this.sellOrderCanBeFilled(orderSide, size, price);
-	};
-
-	private readonly buyOrderCanBeFilled = (
-		orderSide: OrderSide,
-		size: number,
-		price: number,
-	): boolean => {
+		// Necessary condition, so it is safe to reject on regardless of STP.
 		if (orderSide.volume() < size) {
 			return false;
 		}
-
-		let cumulativeSize = 0;
-		// biome-ignore lint/suspicious/useIterableCallbackReturn: the forEach of the priceTree must return true to break the loop
-		orderSide.priceTree().forEach((_: number, level: OrderQueue) => {
-			if (price >= level.price() && cumulativeSize < size) {
-				cumulativeSize += level.volume();
-			} else {
-				return true; // break the loop
-			}
-		});
-		return cumulativeSize >= size;
-	};
-
-	private readonly sellOrderCanBeFilled = (
-		orderSide: OrderSide,
-		size: number,
-		price: number,
-	): boolean => {
-		if (orderSide.volume() < size) {
-			return false;
+		if (!this.shouldCheckSelfTrade(takerAccountId, stpMode)) {
+			let cumulativeSize = 0;
+			// biome-ignore lint/suspicious/useIterableCallbackReturn: the forEach of the priceTree must return true to break the loop
+			orderSide.priceTree().forEach((levelPrice: number, level: OrderQueue) => {
+				if (isLevelReachable(levelPrice) && cumulativeSize < size) {
+					cumulativeSize += level.volume();
+				} else {
+					return true; // break the loop
+				}
+			});
+			return cumulativeSize >= size;
 		}
-
-		let cumulativeSize = 0;
-		// biome-ignore lint/suspicious/useIterableCallbackReturn: the forEach of the priceTree must return true to break the loop
-		orderSide.priceTree().forEach((_: number, level: OrderQueue) => {
-			if (price <= level.price() && cumulativeSize < size) {
-				cumulativeSize += level.volume();
-			} else {
-				return true; // break the loop
+		// A same-account maker is not tradeable, so the walk has to inspect orders
+		// rather than just level volumes. The price tree is ordered best-price-first
+		// on both sides, which is the order the matcher consumes levels in. Snapshot
+		// the reachable levels rather than polling for the next one: this walk removes
+		// nothing, so polling would keep returning the level it is already on.
+		const levels: OrderQueue[] = [];
+		orderSide.priceTree().forEach((levelPrice: number, level: OrderQueue) => {
+			if (isLevelReachable(levelPrice)) {
+				levels.push(level);
 			}
 		});
-		return cumulativeSize >= size;
+
+		let quantityLeft = size;
+		for (const level of levels) {
+			for (const order of level.toArray()) {
+				// `shouldCheckSelfTrade` above already guarantees takerAccountId is a
+				// non-empty string, so this cannot match an order that has no
+				// accountId, nor a second order with an empty one.
+				if (order.accountId === takerAccountId) {
+					if (stpMode !== SelfTradePreventionMode.EXPIRE_MAKER) {
+						// EXPIRE_TAKER / EXPIRE_BOTH stop the taker here, so no
+						// liquidity beyond this maker is reachable. STP is guaranteed
+						// active in this branch, so every other mode aborts.
+						return false;
+					}
+					// EXPIRE_MAKER expires the maker, so it offers no tradeable size
+					// and the walk continues past it.
+					continue;
+				}
+				if (quantityLeft <= order.size) {
+					// The taker completes here, so an STP maker further down the queue
+					// is never reached, exactly as in `processQueue`.
+					return true;
+				}
+				quantityLeft -= order.size;
+			}
+		}
+		return false;
 	};
 
 	private readonly validateMarketOrder = (
