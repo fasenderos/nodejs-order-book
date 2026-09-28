@@ -1083,16 +1083,14 @@ export class OrderBook {
 	 * The conditions mirror the guard in `processQueue`, and the two must stay
 	 * equivalent: if this reports a check where the matcher would not, a FOK order
 	 * gets rejected as not fillable while the same order would otherwise have
-	 * matched. Note the empty-string account test, since `processQueue` tests
-	 * truthiness and `accountId` is type-legal as "".
+	 * matched.
 	 */
 	private readonly shouldCheckSelfTrade = (
 		takerAccountId?: string,
 		stpMode?: SelfTradePreventionMode,
 	): boolean => {
 		return (
-			takerAccountId !== undefined &&
-			takerAccountId !== "" &&
+			Boolean(takerAccountId) &&
 			stpMode != null &&
 			stpMode !== SelfTradePreventionMode.NONE
 		);

@@ -716,8 +716,9 @@ void test("EXPIRE_MAKER mid-queue reports unfilled quantityLeft", () => {
 		accountId: "alice",
 	});
 
-	// EXPIRE_MAKER drops alice's maker and keeps matching, so the taker
-	// completes its full 8 units and nothing is left unfilled.
+	// EXPIRE_MAKER drops alice's maker and keeps matching, but she is the only
+	// bid left at that level, so there is nothing behind her to consume: only
+	// bob's single unit fills and the taker's remaining 7 rest on the book.
 	const taker = ob.limit({
 		side: Side.SELL,
 		id: "alice-taker-sell-90",
@@ -730,7 +731,6 @@ void test("EXPIRE_MAKER mid-queue reports unfilled quantityLeft", () => {
 	assert.equal(taker.err, null);
 	assert.equal(taker.stpExpired?.length, 1);
 	assert.equal(taker.stpExpired?.[0].id, "alice-buy-100");
-	// 1 unit filled against bob, the remaining 7 rests on the book.
 	assert.equal(taker.quantityLeft, 7);
 	assert.equal(taker.done.length, 1);
 	assert.equal(taker.done[0].id, "bob-buy-100");
