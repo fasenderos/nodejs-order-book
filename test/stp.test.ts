@@ -38,12 +38,9 @@ const addDepth = (
 	}
 };
 
-// ============================================================================
-// Scenario A: EXPIRE_MAKER
 // Taker with EXPIRE_MAKER would match maker orders from the same account.
 // The maker orders on the book are expired, taker continues.
-// ============================================================================
-void test("STP Scenario A: EXPIRE_MAKER — maker expires, taker continues", () => {
+void test("EXPIRE_MAKER — maker expires, taker continues", () => {
 	const ob = new OrderBook();
 
 	// Place maker orders from account "alice"
@@ -92,12 +89,9 @@ void test("STP Scenario A: EXPIRE_MAKER — maker expires, taker continues", () 
 	assert.equal(ob.order("maker-buy-90"), undefined);
 });
 
-// ============================================================================
-// Scenario B: EXPIRE_TAKER
 // Taker with EXPIRE_TAKER would match maker orders from the same account.
 // The taker order expires, maker orders stay on the book.
-// ============================================================================
-void test("STP Scenario B: EXPIRE_TAKER — taker expires, maker stays", () => {
+void test("EXPIRE_TAKER — taker expires, maker stays", () => {
 	const ob = new OrderBook();
 
 	// Place maker order from account "alice"
@@ -131,11 +125,8 @@ void test("STP Scenario B: EXPIRE_TAKER — taker expires, maker stays", () => {
 	assert.notEqual(ob.order("maker-buy-100"), undefined);
 });
 
-// ============================================================================
-// Scenario C: EXPIRE_BOTH
 // Both taker and matching maker orders expire.
-// ============================================================================
-void test("STP Scenario C: EXPIRE_BOTH — both maker and taker expire", () => {
+void test("EXPIRE_BOTH — both maker and taker expire", () => {
 	const ob = new OrderBook();
 
 	// Place maker order from account "alice"
@@ -169,11 +160,8 @@ void test("STP Scenario C: EXPIRE_BOTH — both maker and taker expire", () => {
 	assert.equal(ob.order("maker-buy-100"), undefined);
 });
 
-// ============================================================================
-// Scenario D: STP depends on taker mode, not maker mode
 // Taker with EXPIRE_TAKER vs Maker with EXPIRE_MAKER — taker mode wins
-// ============================================================================
-void test("STP Scenario D: taker STP mode wins over maker mode", () => {
+void test("taker STP mode wins over maker mode", () => {
 	const ob = new OrderBook();
 
 	// Maker has EXPIRE_MAKER (irrelevant — taker mode is what matters)
@@ -206,10 +194,7 @@ void test("STP Scenario D: taker STP mode wins over maker mode", () => {
 	assert.notEqual(ob.order("maker-buy-100"), undefined);
 });
 
-// ============================================================================
-// Scenario E: STP with market order
-// ============================================================================
-void test("STP Scenario E: market order with EXPIRE_MAKER", () => {
+void test("market order with EXPIRE_MAKER", () => {
 	const ob = new OrderBook();
 
 	// Place maker order from account "alice"
@@ -238,10 +223,7 @@ void test("STP Scenario E: market order with EXPIRE_MAKER", () => {
 	assert.equal(taker.done.length, 0);
 });
 
-// ============================================================================
-// Scenario F: Market order with EXPIRE_TAKER
-// ============================================================================
-void test("STP Scenario F: market order with EXPIRE_TAKER", () => {
+void test("market order with EXPIRE_TAKER", () => {
 	const ob = new OrderBook();
 
 	// Place maker order from account "alice"
@@ -270,10 +252,7 @@ void test("STP Scenario F: market order with EXPIRE_TAKER", () => {
 	assert.notEqual(ob.order("maker-buy-100"), undefined);
 });
 
-// ============================================================================
-// Scenario G: STP NOT triggered — different accounts
-// ============================================================================
-void test("STP Scenario G: different accounts — normal matching", () => {
+void test("different accounts — normal matching", () => {
 	const ob = new OrderBook();
 
 	// Maker from account "alice"
@@ -309,10 +288,7 @@ void test("STP Scenario G: different accounts — normal matching", () => {
 	assert.equal(remainingMaker?.size, 2);
 });
 
-// ============================================================================
-// Scenario H: STP NOT triggered — accountId not set (backward compat)
-// ============================================================================
-void test("STP Scenario H: no accountId — backward compatible", () => {
+void test("no accountId — backward compatible", () => {
 	const ob = new OrderBook();
 
 	// Maker without accountId
@@ -339,10 +315,7 @@ void test("STP Scenario H: no accountId — backward compatible", () => {
 	assert.equal(taker.stpExpired, undefined);
 });
 
-// ============================================================================
-// Scenario I: STP with partial fill — mixed accounts at same price level
-// ============================================================================
-void test("STP Scenario I: mixed accounts at same price level", () => {
+void test("mixed accounts at same price level", () => {
 	const ob = new OrderBook();
 
 	// Maker 1: from "alice" at price 100
@@ -392,10 +365,7 @@ void test("STP Scenario I: mixed accounts at same price level", () => {
 	assert.equal(ob.order("maker-alice-100"), undefined);
 });
 
-// ============================================================================
-// Scenario J: STP with multiple price levels
-// ============================================================================
-void test("STP Scenario J: multiple price levels with same account", () => {
+void test("multiple price levels with same account", () => {
 	const ob = new OrderBook();
 
 	// Maker from "alice" at price 90
@@ -436,10 +406,7 @@ void test("STP Scenario J: multiple price levels with same account", () => {
 	assert.equal(taker.quantityLeft, 3);
 });
 
-// ============================================================================
-// Scenario K: STP with EXPIRE_BOTH on market order
-// ============================================================================
-void test("STP Scenario K: market order with EXPIRE_BOTH", () => {
+void test("market order with EXPIRE_BOTH", () => {
 	const ob = new OrderBook();
 
 	// Place maker order from account "alice"
@@ -470,10 +437,7 @@ void test("STP Scenario K: market order with EXPIRE_BOTH", () => {
 	assert.equal(ob.order("maker-buy-100"), undefined);
 });
 
-// ============================================================================
-// Scenario L: STP mode NONE — no prevention
-// ============================================================================
-void test("STP Scenario L: SelfTradePreventionMode.NONE — no prevention", () => {
+void test("SelfTradePreventionMode.NONE — no prevention", () => {
 	const ob = new OrderBook();
 
 	// Maker from alice
@@ -501,10 +465,7 @@ void test("STP Scenario L: SelfTradePreventionMode.NONE — no prevention", () =
 	assert.equal(taker.stpExpired, undefined);
 });
 
-// ============================================================================
-// Scenario M: STP not active — order without accountId still works with STP mode
-// ============================================================================
-void test("STP Scenario M: STP mode but no accountId — no prevention", () => {
+void test("STP mode but no accountId — no prevention", () => {
 	const ob = new OrderBook();
 
 	// Maker without accountId
@@ -530,10 +491,7 @@ void test("STP Scenario M: STP mode but no accountId — no prevention", () => {
 	assert.equal(taker.stpExpired, undefined);
 });
 
-// ============================================================================
-// Scenario N: STP with createOrder
-// ============================================================================
-void test("STP Scenario N: STP via createOrder API", () => {
+void test("STP via createOrder API", () => {
 	const ob = new OrderBook();
 
 	// Maker from alice
@@ -562,10 +520,7 @@ void test("STP Scenario N: STP via createOrder API", () => {
 	assert.equal(taker.quantityLeft, 3);
 });
 
-// ============================================================================
-// Scenario O: STP with stop market order (triggered later)
-// ============================================================================
-void test("STP Scenario O: STP carries through triggered stop orders", () => {
+void test("STP carries through triggered stop orders", () => {
 	const ob = new OrderBook();
 
 	// Place some depth to establish a market price
@@ -594,10 +549,7 @@ void test("STP Scenario O: STP carries through triggered stop orders", () => {
 	assert.equal(stopResult.done.length, 1);
 });
 
-// ============================================================================
-// Scenario P: EXPIRE_MAKER with IOC order
-// ============================================================================
-void test("STP Scenario P: IOC order with EXPIRE_MAKER", () => {
+void test("IOC order with EXPIRE_MAKER", () => {
 	const ob = new OrderBook();
 
 	// Maker from alice at price 100
@@ -631,12 +583,9 @@ void test("STP Scenario P: IOC order with EXPIRE_MAKER", () => {
 	assert.equal(ob.order("taker-ioc-sell-90"), undefined);
 });
 
-// ============================================================================
-// Scenario Q: EXPIRE_TAKER firing mid-queue (after a partial fill in the level)
 // Regression test: quantityLeft must report the unfilled quantity, not the
 // quantity left on entry to the price level.
-// ============================================================================
-void test("STP Scenario Q: EXPIRE_TAKER mid-queue reports unfilled quantityLeft", () => {
+void test("EXPIRE_TAKER mid-queue reports unfilled quantityLeft", () => {
 	const ob = new OrderBook();
 
 	// Same price level, same side: "bob" is consumable, "alice" triggers STP.
@@ -676,10 +625,7 @@ void test("STP Scenario Q: EXPIRE_TAKER mid-queue reports unfilled quantityLeft"
 	assert.equal(ob.order("alice-taker-sell-90"), undefined);
 });
 
-// ============================================================================
-// Scenario R: EXPIRE_BOTH firing mid-queue (after a partial fill in the level)
-// ============================================================================
-void test("STP Scenario R: EXPIRE_BOTH mid-queue reports unfilled quantityLeft", () => {
+void test("EXPIRE_BOTH mid-queue reports unfilled quantityLeft", () => {
 	const ob = new OrderBook();
 
 	ob.limit({
@@ -717,10 +663,7 @@ void test("STP Scenario R: EXPIRE_BOTH mid-queue reports unfilled quantityLeft",
 	assert.equal(ob.order("alice-taker-sell-90"), undefined);
 });
 
-// ============================================================================
-// Scenario S: market order EXPIRE_TAKER mid-queue
-// ============================================================================
-void test("STP Scenario S: market EXPIRE_TAKER mid-queue reports unfilled quantityLeft", () => {
+void test("market EXPIRE_TAKER mid-queue reports unfilled quantityLeft", () => {
 	const ob = new OrderBook();
 
 	ob.limit({
@@ -753,12 +696,9 @@ void test("STP Scenario S: market EXPIRE_TAKER mid-queue reports unfilled quanti
 	assert.notEqual(ob.order("alice-buy-100"), undefined);
 });
 
-// ============================================================================
-// Scenario T: EXPIRE_MAKER mid-queue must keep the unfilled quantity intact.
 // This mode never aborts matching, so it is structurally immune to the
 // quantityLeft regression; asserted here to lock the behaviour in.
-// ============================================================================
-void test("STP Scenario T: EXPIRE_MAKER mid-queue reports unfilled quantityLeft", () => {
+void test("EXPIRE_MAKER mid-queue reports unfilled quantityLeft", () => {
 	const ob = new OrderBook();
 
 	ob.limit({
@@ -796,4 +736,248 @@ void test("STP Scenario T: EXPIRE_MAKER mid-queue reports unfilled quantityLeft"
 	assert.equal(taker.done[0].id, "bob-buy-100");
 	assert.notEqual(ob.order("alice-taker-sell-90"), undefined);
 	assert.equal((ob.order("alice-taker-sell-90") as { size: number }).size, 7);
+});
+
+// FOK must stay atomic when STP is configured.
+// The FOK feasibility check used to sum raw level volume, so it counted
+// same-account makers as tradeable liquidity. The order was then admitted,
+// consumed a maker, hit its own order and aborted mid-queue, leaving the book
+// half-mutated. It must now be rejected before touching the book.
+
+/**
+ * Builds the shared FOK + STP fixture: a foreign maker in front of the taker's
+ * own maker on the same price level, so the STP check is only reached after a
+ * partial fill inside the level.
+ */
+const addFokStpDepth = (ob: OrderBook): void => {
+	ob.limit({
+		side: Side.SELL,
+		id: "x0-sell-100",
+		size: 2,
+		price: 100,
+		accountId: "x",
+	});
+	ob.limit({
+		side: Side.SELL,
+		id: "c1-sell-100",
+		size: 4,
+		price: 100,
+		accountId: "c",
+	});
+};
+
+void test("FOK with EXPIRE_TAKER is rejected without touching the book", () => {
+	const ob = new OrderBook();
+	addFokStpDepth(ob);
+
+	const taker = ob.limit({
+		side: Side.BUY,
+		id: "c-fok-buy-110",
+		size: 5,
+		price: 110,
+		timeInForce: TimeInForce.FOK,
+		accountId: "c",
+		stpMode: SelfTradePreventionMode.EXPIRE_TAKER,
+	});
+
+	assert.equal(taker.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE);
+	// Only 2 of the 5 units were tradeable, so nothing may be executed.
+	assert.equal(taker.done.length, 0);
+	assert.equal(taker.quantityLeft, 5);
+	// The book must be exactly as it was: x0 was never consumed.
+	assert.notEqual(ob.order("x0-sell-100"), undefined);
+	assert.notEqual(ob.order("c1-sell-100"), undefined);
+	assert.equal(ob.order("c-fok-buy-110"), undefined);
+	// depth() is [asks, bids] and the makers rest on the ask side.
+	assert.deepEqual(ob.depth(), [[[100, 6]], []]);
+});
+
+void test("FOK with EXPIRE_BOTH is rejected without touching the book", () => {
+	const ob = new OrderBook();
+	addFokStpDepth(ob);
+
+	const taker = ob.limit({
+		side: Side.BUY,
+		id: "c-fok-buy-110",
+		size: 5,
+		price: 110,
+		timeInForce: TimeInForce.FOK,
+		accountId: "c",
+		stpMode: SelfTradePreventionMode.EXPIRE_BOTH,
+	});
+
+	assert.equal(taker.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE);
+	assert.equal(taker.done.length, 0);
+	assert.equal(taker.quantityLeft, 5);
+	assert.notEqual(ob.order("x0-sell-100"), undefined);
+	assert.notEqual(ob.order("c1-sell-100"), undefined);
+	assert.equal(ob.order("c-fok-buy-110"), undefined);
+});
+
+void test("FOK with EXPIRE_MAKER is rejected when the expired makers carried the fill", () => {
+	const ob = new OrderBook();
+	// 6 units of depth, but 4 of them belong to the taker's own account, so only
+	// 2 are tradeable and a 5-unit FOK cannot fill.
+	addFokStpDepth(ob);
+
+	const taker = ob.limit({
+		side: Side.BUY,
+		id: "c-fok-buy-110",
+		size: 5,
+		price: 110,
+		timeInForce: TimeInForce.FOK,
+		accountId: "c",
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
+	});
+
+	assert.equal(taker.err?.code, ErrorCodes.LIMIT_ORDER_FOK_NOT_FILLABLE);
+	assert.equal(taker.done.length, 0);
+	assert.equal(taker.quantityLeft, 5);
+	// Neither the foreign maker nor the expired one may be removed, and the FOK
+	// order must never rest on the book.
+	assert.notEqual(ob.order("x0-sell-100"), undefined);
+	assert.notEqual(ob.order("c1-sell-100"), undefined);
+	assert.equal(ob.order("c-fok-buy-110"), undefined);
+});
+
+void test("FOK still fills when the STP maker is not reached", () => {
+	const ob = new OrderBook();
+	// The foreign maker alone covers the whole order, so matching completes
+	// before the taker's own maker is ever reached and STP never fires.
+	ob.limit({
+		side: Side.SELL,
+		id: "x0-sell-100",
+		size: 6,
+		price: 100,
+		accountId: "x",
+	});
+	ob.limit({
+		side: Side.SELL,
+		id: "c1-sell-100",
+		size: 4,
+		price: 100,
+		accountId: "c",
+	});
+
+	const taker = ob.limit({
+		side: Side.BUY,
+		id: "c-fok-buy-110",
+		size: 5,
+		price: 110,
+		timeInForce: TimeInForce.FOK,
+		accountId: "c",
+		stpMode: SelfTradePreventionMode.EXPIRE_TAKER,
+	});
+
+	// Guards against the new check over-rejecting a genuinely fillable order.
+	assert.equal(taker.err, null);
+	assert.equal(taker.quantityLeft, 0);
+	assert.equal(ob.order("c1-sell-100") !== undefined, true);
+});
+
+void test("FOK with EXPIRE_MAKER still fills on sufficient depth", () => {
+	const ob = new OrderBook();
+	addFokStpDepth(ob);
+	// Extra depth at a worse price: once c1 is expired, x0 and x2 can still
+	// cover the full 5 units, so the order must be accepted.
+	ob.limit({
+		side: Side.SELL,
+		id: "x2-sell-105",
+		size: 4,
+		price: 105,
+		accountId: "x",
+	});
+
+	const taker = ob.limit({
+		side: Side.BUY,
+		id: "c-fok-buy-110",
+		size: 5,
+		price: 110,
+		timeInForce: TimeInForce.FOK,
+		accountId: "c",
+		stpMode: SelfTradePreventionMode.EXPIRE_MAKER,
+	});
+
+	// Guards against the new check over-rejecting when EXPIRE_MAKER drops a maker
+	// that was not needed to complete the fill.
+	assert.equal(taker.err, null);
+	assert.equal(taker.quantityLeft, 0);
+	assert.equal(ob.order("c1-sell-100"), undefined);
+});
+
+// The FOK self-trade guard must agree with `processQueue`.
+//
+// The pre-check and the matcher answer the same question, so if they disagree
+// on when STP applies, a FOK order gets rejected while the very same order on
+// GTC would have matched. Both cases below are ones where `processQueue` does
+// not fire STP and the pre-check must therefore not either.
+
+void test("FOK with an empty accountId is not self-trade blocked", () => {
+	// accountId is type-legal as "", and processQueue tests truthiness, so an
+	// empty accountId means no self-trade check at all.
+	const ob = new OrderBook();
+	ob.limit({
+		side: Side.SELL,
+		id: "anon-sell-100",
+		size: 2,
+		price: 100,
+		accountId: "",
+	});
+	ob.limit({
+		side: Side.SELL,
+		id: "alice-sell-100",
+		size: 4,
+		price: 100,
+		accountId: "alice",
+	});
+
+	const taker = ob.limit({
+		side: Side.BUY,
+		id: "anon-fok-buy-110",
+		size: 5,
+		price: 110,
+		timeInForce: TimeInForce.FOK,
+		accountId: "",
+		stpMode: SelfTradePreventionMode.EXPIRE_TAKER,
+	});
+
+	assert.equal(taker.err, null);
+	assert.equal(taker.quantityLeft, 0);
+	assert.equal(taker.done.length, 2);
+	assert.equal(taker.done[0].id, "anon-sell-100");
+});
+
+void test("FOK with a null stpMode is not self-trade blocked", () => {
+	// Not type-legal, but reachable from JS callers, and processQueue treats
+	// `stpMode != null` as no STP configured.
+	const ob = new OrderBook();
+	ob.limit({
+		side: Side.SELL,
+		id: "alice-sell-100",
+		size: 4,
+		price: 100,
+		accountId: "alice",
+	});
+	ob.limit({
+		side: Side.SELL,
+		id: "bob-sell-100",
+		size: 4,
+		price: 100,
+		accountId: "bob",
+	});
+
+	const taker = ob.limit({
+		side: Side.BUY,
+		id: "alice-fok-buy-110",
+		size: 5,
+		price: 110,
+		timeInForce: TimeInForce.FOK,
+		accountId: "alice",
+		stpMode: null as unknown as SelfTradePreventionMode,
+	});
+
+	assert.equal(taker.err, null);
+	assert.equal(taker.quantityLeft, 0);
+	assert.equal(taker.done.length, 2);
+	assert.equal(taker.done[0].id, "alice-sell-100");
 });
