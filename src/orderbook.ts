@@ -1064,6 +1064,8 @@ export class OrderBook {
 						const partial = OrderFactory.createOrder({
 							...headOrder.toObject(),
 							size: headOrder.size - response.quantityLeft,
+							// The linked OCO stop is removed below on any fill
+							ocoStopPrice: undefined,
 						});
 						response.partial = partial.toObject();
 						this.orders[headOrder.id] = partial;

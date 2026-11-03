@@ -131,6 +131,7 @@ void test("it should create LimitOrder", () => {
 			timeInForce,
 			makerQty: size,
 			takerQty: 0,
+			ocoStopPrice,
 		});
 		assert.equal(
 			order.toString(),
@@ -158,6 +159,7 @@ void test("it should create LimitOrder", () => {
 				timeInForce,
 				makerQty: size,
 				takerQty: 0,
+				ocoStopPrice,
 			}),
 		);
 	}

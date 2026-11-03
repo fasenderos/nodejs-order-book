@@ -1992,3 +1992,44 @@ void test("test snapshot restores marketPrice", () => {
 	const { marketPrice: _, ...legacy } = snapshot;
 	assert.equal(new OrderBook({ snapshot: legacy }).marketPrice, 0);
 });
+
+void test("test snapshot keeps OCO link and postOnly", () => {
+	const restore = (book: OrderBook) =>
+		new OrderBook({ snapshot: JSON.parse(JSON.stringify(book.snapshot())) });
+	const withOCO = () => {
+		const ob = new OrderBook();
+		ob.limit({ id: "a", side: Side.SELL, size: 1, price: 100 });
+		ob.market({ side: Side.BUY, size: 1 });
+		ob.oco({
+			id: "oco",
+			side: Side.SELL,
+			size: 2,
+			price: 110,
+			stopPrice: 90,
+			stopLimitPrice: 89,
+		});
+		return restore(ob);
+	};
+
+	// Cancelling the limit leg also removes the stop leg
+	const cancelled = withOCO();
+	assert.equal(cancelled.cancel("oco")?.stopOrder?.id, "oco");
+	assert.equal(cancelled.snapshot().stopBook.asks.length, 0);
+
+	// Filling the limit leg, even partially, removes the stop leg
+	const filled = withOCO();
+	assert.equal(filled.market({ side: Side.BUY, size: 1 }).err, null);
+	assert.equal(filled.snapshot().stopBook.asks.length, 0);
+	assert.equal(filled.market({ side: Side.BUY, size: 1 }).err, null);
+	filled.limit({ id: "b", side: Side.BUY, size: 1, price: 85 });
+	assert.deepEqual(filled.market({ side: Side.SELL, size: 1 }).activated, []);
+
+	// postOnly survives the restore
+	const ob = new OrderBook();
+	ob.limit({ id: "a", side: Side.SELL, size: 1, price: 100 });
+	ob.limit({ id: "p", side: Side.BUY, size: 1, price: 90, postOnly: true });
+	assert.equal(
+		restore(ob).modify("p", { price: 100 }).err?.message,
+		ErrorMessages.LIMIT_ORDER_POST_ONLY,
+	);
+});

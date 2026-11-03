@@ -143,6 +143,8 @@ export interface ILimitOrder {
 	timeInForce: TimeInForce;
 	takerQty: number;
 	makerQty: number;
+	postOnly?: boolean;
+	ocoStopPrice?: number;
 	accountId?: string;
 	stpMode?: SelfTradePreventionMode;
 }
