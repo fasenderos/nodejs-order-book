@@ -1847,6 +1847,9 @@ void test("orderbook test unreachable lines", () => {
 
 void test("test non-finite price and size are rejected", () => {
 	const ob = new OrderBook();
+	// Trade once so marketPrice is 100: stop and OCO checks compare against it
+	ob.limit({ id: "trade", side: Side.SELL, size: 1, price: 100 });
+	ob.market({ side: Side.BUY, size: 1 });
 	ob.limit({ id: "ask", side: Side.SELL, size: 5, price: 100 });
 	for (const bad of [
 		Number.NaN,
@@ -1873,10 +1876,12 @@ void test("test non-finite price and size are rejected", () => {
 			ob.modify("ask", { size: bad }).err?.message,
 			ErrorMessages.INVALID_PRICE_OR_QUANTITY,
 		);
-		assert.equal(
-			ob.stopMarket({ side: Side.BUY, size: 1, stopPrice: bad }).err?.message,
-			ErrorMessages.INVALID_CONDITIONAL_ORDER,
-		);
+		for (const side of [Side.BUY, Side.SELL]) {
+			assert.equal(
+				ob.stopMarket({ side, size: 1, stopPrice: bad }).err?.message,
+				ErrorMessages.INVALID_CONDITIONAL_ORDER,
+			);
+		}
 		assert.equal(
 			ob.oco({
 				id: `oco${bad}`,
@@ -1888,7 +1893,6 @@ void test("test non-finite price and size are rejected", () => {
 			}).err?.message,
 			ErrorMessages.INVALID_CONDITIONAL_ORDER,
 		);
-		// Sell OCO: price > marketPrice > stopPrice holds for stopPrice -Infinity
 		assert.equal(
 			ob.oco({
 				id: `ocoSell${bad}`,
@@ -1901,6 +1905,55 @@ void test("test non-finite price and size are rejected", () => {
 			ErrorMessages.INVALID_CONDITIONAL_ORDER,
 		);
 	}
+	for (const stopPrice of [0, -5]) {
+		assert.equal(
+			ob.stopMarket({ side: Side.SELL, size: 1, stopPrice }).err?.message,
+			ErrorMessages.INVALID_CONDITIONAL_ORDER,
+		);
+	}
 	assert.deepEqual(ob.depth(), [[[100, 5]], []]);
-	assert.equal(ob.marketPrice, 0);
+	assert.equal(ob.marketPrice, 100);
+	assert.equal(ob.snapshot().stopBook.bids.length, 0);
+	assert.equal(ob.snapshot().stopBook.asks.length, 0);
+
+	// Controls: the same orders with valid values are accepted
+	assert.equal(
+		ob.oco({
+			id: "ocoBuy",
+			side: Side.BUY,
+			size: 1,
+			price: 90,
+			stopPrice: 110,
+			stopLimitPrice: 115,
+		}).err,
+		null,
+	);
+	assert.equal(
+		ob.oco({
+			id: "ocoSell",
+			side: Side.SELL,
+			size: 1,
+			price: 110,
+			stopPrice: 90,
+			stopLimitPrice: 85,
+		}).err,
+		null,
+	);
+	assert.equal(
+		ob.stopMarket({ side: Side.SELL, size: 1, stopPrice: 90 }).err,
+		null,
+	);
+});
+
+void test("test ocoStopPrice passed to limit is ignored", () => {
+	const ob = new OrderBook();
+	ob.limit({
+		id: "ask",
+		side: Side.SELL,
+		size: 1,
+		price: 100,
+		ocoStopPrice: Number.NaN,
+	} as Parameters<OrderBook["limit"]>[0]);
+	assert.equal(ob.order("ask")?.ocoStopPrice, undefined);
+	assert.equal(ob.market({ side: Side.BUY, size: 1 }).err, null);
 });

@@ -51,7 +51,7 @@ export class StopBook {
 	validConditionalOrder = (marketPrice: number, order: StopOrder): boolean => {
 		let response = false;
 		const { type, side, stopPrice } = order;
-		if (!Number.isFinite(stopPrice)) return response;
+		if (!(Number.isFinite(stopPrice) && stopPrice > 0)) return response;
 		if (type === OrderType.STOP_LIMIT) {
 			// Buy: marketPrice < stopPrice <= price
 			if (

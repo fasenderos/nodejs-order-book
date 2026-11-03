@@ -478,8 +478,10 @@ export class OrderBook {
 	};
 
 	private readonly _limit = (
-		options: LimitOrderOptions & { ocoStopPrice?: number },
+		options: LimitOrderOptions,
 		incomingResponse?: IProcessOrder,
+		// Kept out of options so a caller-supplied field can't reach the book
+		ocoStopPrice?: number,
 	): IProcessOrder => {
 		const response = incomingResponse ?? this.validateLimitOrder(options);
 		if (response.err !== null) return response;
@@ -491,7 +493,7 @@ export class OrderBook {
 			options.price,
 			options.postOnly ?? false,
 			options.timeInForce ?? TimeInForce.GTC,
-			options.ocoStopPrice,
+			ocoStopPrice,
 			options.accountId,
 			options.stpMode,
 		);
@@ -537,9 +539,9 @@ export class OrderBook {
 					size: options.size,
 					price: options.price,
 					timeInForce: options.timeInForce,
-					ocoStopPrice: options.stopPrice,
 				},
 				response,
+				options.stopPrice,
 			);
 			/* node:coverage ignore next - Already validated with limit test */
 			if (response.err !== null) return response;
