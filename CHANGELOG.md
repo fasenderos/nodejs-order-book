@@ -1,5 +1,29 @@
 # Changelog
 
+## [10.2.1](https://github.com/fasenderos/nodejs-order-book/compare/v10.1.1...v10.2.1) (2026-11-03)
+
+### Bug Fixes
+
+* keep FOK atomic when STP blocks the fill ([4486c52](https://github.com/fasenderos/nodejs-order-book/commit/4486c52aecdcaa1ebf80eaab2bb91b5ee3cd238a))
+* keep OCO link and postOnly when restoring a snapshot ([498d965](https://github.com/fasenderos/nodejs-order-book/commit/498d96579056fe505f443df72e6d55881bfae795))
+* persist marketPrice in snapshots ([e5945d2](https://github.com/fasenderos/nodejs-order-book/commit/e5945d2e525cd3a2a96aabca75086ada85e0821c))
+* reject non-finite OCO stop price ([6a5c320](https://github.com/fasenderos/nodejs-order-book/commit/6a5c320f675268ef81be6252c9d53f560ec6254e))
+* reject non-finite price, size and stop prices ([78c9ed6](https://github.com/fasenderos/nodejs-order-book/commit/78c9ed6e37f635f3081289c04ded1e96efcc7996))
+* reject non-positive stop prices and ignore caller ocoStopPrice ([35d7a35](https://github.com/fasenderos/nodejs-order-book/commit/35d7a35643bb2ae456c315e4d1468037f018f80c))
+* report unfilled quantityLeft when STP triggers mid-queue ([7f72a38](https://github.com/fasenderos/nodejs-order-book/commit/7f72a38bda04bb914a8f09a7bebd9c3b9a1ceba0))
+* use truthiness in the FOK self-trade guard ([e3a2089](https://github.com/fasenderos/nodejs-order-book/commit/e3a20891a9fbf54c49f164fff6331a87e0827d4f))
+
+### Chore
+
+* remove dependabot ([1759968](https://github.com/fasenderos/nodejs-order-book/commit/17599685610342af8f4f6e5f493fd38e4ebb0d48))
+* sync 10.2.0 release metadata to main ([da21c2f](https://github.com/fasenderos/nodejs-order-book/commit/da21c2ffa2a061bb170e818c64596b94ca1df1e9))
+
+### Documentation
+
+* add comprehensive explanation of order results ([d358973](https://github.com/fasenderos/nodejs-order-book/commit/d358973412900170aa8ceb3cb608e89513fd281a))
+* improve readme ([083c64a](https://github.com/fasenderos/nodejs-order-book/commit/083c64a1c51c6d2323a4a89245475249d4cfd35f))
+* remove wrong references ([53915dd](https://github.com/fasenderos/nodejs-order-book/commit/53915dd61dcf855d9748bbbf9ebe91a346c83145))
+
 ## [10.2.0](https://github.com/fasenderos/nodejs-order-book/compare/v10.1.1...v10.2.0) (2026-09-28)
 
 ### Bug Fixes
