@@ -1888,6 +1888,18 @@ void test("test non-finite price and size are rejected", () => {
 			}).err?.message,
 			ErrorMessages.INVALID_CONDITIONAL_ORDER,
 		);
+		// Sell OCO: price > marketPrice > stopPrice holds for stopPrice -Infinity
+		assert.equal(
+			ob.oco({
+				id: `ocoSell${bad}`,
+				side: Side.SELL,
+				size: 1,
+				price: 110,
+				stopPrice: bad,
+				stopLimitPrice: 90,
+			}).err?.message,
+			ErrorMessages.INVALID_CONDITIONAL_ORDER,
+		);
 	}
 	assert.deepEqual(ob.depth(), [[[100, 5]], []]);
 	assert.equal(ob.marketPrice, 0);

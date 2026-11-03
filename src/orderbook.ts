@@ -957,7 +957,11 @@ export class OrderBook {
 	 */
 	private readonly validateOCOOrder = (options: OCOOrderOptions): boolean => {
 		let response = false;
-		if (!isPositiveFinite(options.stopLimitPrice)) return response;
+		if (
+			!isPositiveFinite(options.stopPrice) ||
+			!isPositiveFinite(options.stopLimitPrice)
+		)
+			return response;
 		if (
 			options.side === Side.BUY &&
 			options.price < this._marketPrice &&
