@@ -1844,3 +1844,192 @@ void test("orderbook test unreachable lines", () => {
 	const deleted = ob.cancel("sell-100");
 	assert.equal(ob.lastOp, deleted?.log?.opId);
 });
+
+void test("test non-finite price and size are rejected", () => {
+	const ob = new OrderBook();
+	// Trade once so marketPrice is 100: stop and OCO checks compare against it
+	ob.limit({ id: "trade", side: Side.SELL, size: 1, price: 100 });
+	ob.market({ side: Side.BUY, size: 1 });
+	ob.limit({ id: "ask", side: Side.SELL, size: 5, price: 100 });
+	for (const bad of [
+		Number.NaN,
+		Number.POSITIVE_INFINITY,
+		Number.NEGATIVE_INFINITY,
+	]) {
+		assert.equal(
+			ob.limit({ id: "p", side: Side.BUY, size: 1, price: bad }).err?.message,
+			ErrorMessages.INVALID_PRICE,
+		);
+		assert.equal(
+			ob.limit({ id: "s", side: Side.BUY, size: bad, price: 90 }).err?.message,
+			ErrorMessages.INVALID_QUANTITY,
+		);
+		assert.equal(
+			ob.market({ side: Side.BUY, size: bad }).err?.message,
+			ErrorMessages.INSUFFICIENT_QUANTITY,
+		);
+		assert.equal(
+			ob.modify("ask", { price: bad }).err?.message,
+			ErrorMessages.INVALID_PRICE_OR_QUANTITY,
+		);
+		assert.equal(
+			ob.modify("ask", { size: bad }).err?.message,
+			ErrorMessages.INVALID_PRICE_OR_QUANTITY,
+		);
+		for (const side of [Side.BUY, Side.SELL]) {
+			assert.equal(
+				ob.stopMarket({ side, size: 1, stopPrice: bad }).err?.message,
+				ErrorMessages.INVALID_CONDITIONAL_ORDER,
+			);
+		}
+		assert.equal(
+			ob.oco({
+				id: `oco${bad}`,
+				side: Side.BUY,
+				size: 1,
+				price: 90,
+				stopPrice: 110,
+				stopLimitPrice: bad,
+			}).err?.message,
+			ErrorMessages.INVALID_CONDITIONAL_ORDER,
+		);
+		assert.equal(
+			ob.oco({
+				id: `ocoSell${bad}`,
+				side: Side.SELL,
+				size: 1,
+				price: 110,
+				stopPrice: bad,
+				stopLimitPrice: 90,
+			}).err?.message,
+			ErrorMessages.INVALID_CONDITIONAL_ORDER,
+		);
+	}
+	for (const stopPrice of [0, -5]) {
+		assert.equal(
+			ob.stopMarket({ side: Side.SELL, size: 1, stopPrice }).err?.message,
+			ErrorMessages.INVALID_CONDITIONAL_ORDER,
+		);
+	}
+	assert.deepEqual(ob.depth(), [[[100, 5]], []]);
+	assert.equal(ob.marketPrice, 100);
+	assert.equal(ob.snapshot().stopBook.bids.length, 0);
+	assert.equal(ob.snapshot().stopBook.asks.length, 0);
+
+	// Controls: the same orders with valid values are accepted
+	assert.equal(
+		ob.oco({
+			id: "ocoBuy",
+			side: Side.BUY,
+			size: 1,
+			price: 90,
+			stopPrice: 110,
+			stopLimitPrice: 115,
+		}).err,
+		null,
+	);
+	assert.equal(
+		ob.oco({
+			id: "ocoSell",
+			side: Side.SELL,
+			size: 1,
+			price: 110,
+			stopPrice: 90,
+			stopLimitPrice: 85,
+		}).err,
+		null,
+	);
+	assert.equal(
+		ob.stopMarket({ side: Side.SELL, size: 1, stopPrice: 90 }).err,
+		null,
+	);
+});
+
+void test("test ocoStopPrice passed to limit is ignored", () => {
+	const ob = new OrderBook();
+	ob.limit({
+		id: "ask",
+		side: Side.SELL,
+		size: 1,
+		price: 100,
+		ocoStopPrice: Number.NaN,
+	} as Parameters<OrderBook["limit"]>[0]);
+	assert.equal(ob.order("ask")?.ocoStopPrice, undefined);
+	assert.equal(ob.market({ side: Side.BUY, size: 1 }).err, null);
+});
+
+void test("test snapshot restores marketPrice", () => {
+	const ob = new OrderBook({ enableJournaling: true });
+	ob.limit({ id: "a1", side: Side.SELL, size: 1, price: 100 });
+	ob.market({ side: Side.BUY, size: 1 });
+	ob.limit({ id: "a2", side: Side.SELL, size: 5, price: 99 });
+	const snapshot = JSON.parse(JSON.stringify(ob.snapshot()));
+	assert.equal(snapshot.marketPrice, 100);
+	// A sell stop is only valid below the market price
+	const stop = ob.stopMarket({ side: Side.SELL, size: 1, stopPrice: 95 });
+	assert.equal(stop.err, null);
+	assert.ok(stop.log);
+
+	const restored = new OrderBook({ snapshot, journal: [stop.log] });
+	assert.equal(restored.marketPrice, 100);
+	// Stop-market ids are generated, so compare everything else
+	const stops = (book: OrderBook) =>
+		book
+			.snapshot()
+			.stopBook.asks.flatMap((l) => l.orders)
+			.map(({ side, size, stopPrice }) => ({ side, size, stopPrice }));
+	assert.deepEqual(stops(restored), [
+		{ side: Side.SELL, size: 1, stopPrice: 95 },
+	]);
+	// A buy stop below the market price is still rejected after restore
+	assert.equal(
+		restored.stopMarket({ side: Side.BUY, size: 1, stopPrice: 50 }).err
+			?.message,
+		ErrorMessages.INVALID_CONDITIONAL_ORDER,
+	);
+
+	// Snapshots taken before marketPrice was saved still load
+	const { marketPrice: _, ...legacy } = snapshot;
+	assert.equal(new OrderBook({ snapshot: legacy }).marketPrice, 0);
+});
+
+void test("test snapshot keeps OCO link and postOnly", () => {
+	const restore = (book: OrderBook) =>
+		new OrderBook({ snapshot: JSON.parse(JSON.stringify(book.snapshot())) });
+	const withOCO = () => {
+		const ob = new OrderBook();
+		ob.limit({ id: "a", side: Side.SELL, size: 1, price: 100 });
+		ob.market({ side: Side.BUY, size: 1 });
+		ob.oco({
+			id: "oco",
+			side: Side.SELL,
+			size: 2,
+			price: 110,
+			stopPrice: 90,
+			stopLimitPrice: 89,
+		});
+		return restore(ob);
+	};
+
+	// Cancelling the limit leg also removes the stop leg
+	const cancelled = withOCO();
+	assert.equal(cancelled.cancel("oco")?.stopOrder?.id, "oco");
+	assert.equal(cancelled.snapshot().stopBook.asks.length, 0);
+
+	// Filling the limit leg, even partially, removes the stop leg
+	const filled = withOCO();
+	assert.equal(filled.market({ side: Side.BUY, size: 1 }).err, null);
+	assert.equal(filled.snapshot().stopBook.asks.length, 0);
+	assert.equal(filled.market({ side: Side.BUY, size: 1 }).err, null);
+	filled.limit({ id: "b", side: Side.BUY, size: 1, price: 85 });
+	assert.deepEqual(filled.market({ side: Side.SELL, size: 1 }).activated, []);
+
+	// postOnly survives the restore
+	const ob = new OrderBook();
+	ob.limit({ id: "a", side: Side.SELL, size: 1, price: 100 });
+	ob.limit({ id: "p", side: Side.BUY, size: 1, price: 90, postOnly: true });
+	assert.equal(
+		restore(ob).modify("p", { price: 100 }).err?.message,
+		ErrorMessages.LIMIT_ORDER_POST_ONLY,
+	);
+});

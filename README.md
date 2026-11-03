@@ -833,6 +833,7 @@ A `snapshot` represents the state of the order book at a specific point in time.
 - `stopBook`: An object with `bids` and `asks` properties related to every `StopOrder` in the order book.
 - `ts`: A Unix timestamp of when the snapshot was taken.
 - `lastOp`: The ID of the last operation included in the snapshot.
+- `marketPrice`: The price of the last trade. Stop and OCO orders are validated and triggered against it. Snapshots taken before v10.2.1 don't include it, so after restoring one of those the market price is `0` until the next trade.
 
 Snapshots are crucial for restoring the order book to a previous state. The order book can restore from a snapshot before processing any journal logs, ensuring consistency and accuracy. After taking a snapshot, you can safely remove all logs preceding the `lastOp` id.
 

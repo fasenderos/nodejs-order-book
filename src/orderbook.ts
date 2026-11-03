@@ -33,6 +33,9 @@ import {
 } from "./types";
 
 const validTimeInForce = Object.values(TimeInForce);
+// Rejects non-numbers, NaN and ±Infinity along with values <= 0
+const isPositiveFinite = (n: unknown): n is number =>
+	Number.isFinite(n) && (n as number) > 0;
 
 export class OrderBook {
 	private orders: { [key: string]: LimitOrder } = {};
@@ -279,7 +282,7 @@ export class OrderBook {
 		if (orderUpdate?.price !== undefined || orderUpdate?.size !== undefined) {
 			const newPrice = orderUpdate.price ?? order.price;
 			const newSize = orderUpdate.size ?? order.size;
-			if (newPrice > 0 && newSize > 0) {
+			if (isPositiveFinite(newPrice) && isPositiveFinite(newSize)) {
 				const response = this.getProcessOrderResponse(newSize);
 				this._cancelOrder(order.id, true);
 				this.createLimitOrder(
@@ -407,7 +410,14 @@ export class OrderBook {
 			asks.push({ price, orders: orders.toArray().map((o) => o.toObject()) });
 		});
 		const stopBook = this.stopBook.snapshot();
-		return { bids, asks, stopBook, ts: Date.now(), lastOp: this._lastOp };
+		return {
+			bids,
+			asks,
+			stopBook,
+			ts: Date.now(),
+			lastOp: this._lastOp,
+			marketPrice: this._marketPrice,
+		};
 	};
 
 	private readonly _market = (
@@ -475,8 +485,10 @@ export class OrderBook {
 	};
 
 	private readonly _limit = (
-		options: LimitOrderOptions & { ocoStopPrice?: number },
+		options: LimitOrderOptions,
 		incomingResponse?: IProcessOrder,
+		// Kept out of options so a caller-supplied field can't reach the book
+		ocoStopPrice?: number,
 	): IProcessOrder => {
 		const response = incomingResponse ?? this.validateLimitOrder(options);
 		if (response.err !== null) return response;
@@ -488,7 +500,7 @@ export class OrderBook {
 			options.price,
 			options.postOnly ?? false,
 			options.timeInForce ?? TimeInForce.GTC,
-			options.ocoStopPrice,
+			ocoStopPrice,
 			options.accountId,
 			options.stpMode,
 		);
@@ -534,9 +546,9 @@ export class OrderBook {
 					size: options.size,
 					price: options.price,
 					timeInForce: options.timeInForce,
-					ocoStopPrice: options.stopPrice,
 				},
 				response,
+				options.stopPrice,
 			);
 			/* node:coverage ignore next - Already validated with limit test */
 			if (response.err !== null) return response;
@@ -574,6 +586,7 @@ export class OrderBook {
 
 	private readonly restoreSnapshot = (snapshot: Snapshot): void => {
 		this._lastOp = snapshot.lastOp;
+		this._marketPrice = snapshot.marketPrice ?? 0;
 		for (const level of snapshot.bids) {
 			for (const order of level.orders) {
 				const newOrder = OrderFactory.createOrder(order);
@@ -955,6 +968,11 @@ export class OrderBook {
 	private readonly validateOCOOrder = (options: OCOOrderOptions): boolean => {
 		let response = false;
 		if (
+			!isPositiveFinite(options.stopPrice) ||
+			!isPositiveFinite(options.stopLimitPrice)
+		)
+			return response;
+		if (
 			options.side === Side.BUY &&
 			options.price < this._marketPrice &&
 			this._marketPrice < options.stopPrice
@@ -1046,6 +1064,8 @@ export class OrderBook {
 						const partial = OrderFactory.createOrder({
 							...headOrder.toObject(),
 							size: headOrder.size - response.quantityLeft,
+							// The linked OCO stop is removed below on any fill
+							ocoStopPrice: undefined,
 						});
 						response.partial = partial.toObject();
 						this.orders[headOrder.id] = partial;
@@ -1186,7 +1206,7 @@ export class OrderBook {
 			return response;
 		}
 
-		if (typeof order.size !== "number" || order.size <= 0) {
+		if (!isPositiveFinite(order.size)) {
 			response.err = CustomError(ERROR.INSUFFICIENT_QUANTITY);
 			return response;
 		}
@@ -1208,12 +1228,12 @@ export class OrderBook {
 			return response;
 		}
 
-		if (typeof options.size !== "number" || options.size <= 0) {
+		if (!isPositiveFinite(options.size)) {
 			response.err = CustomError(ERROR.INVALID_QUANTITY);
 			return response;
 		}
 
-		if (typeof options.price !== "number" || options.price <= 0) {
+		if (!isPositiveFinite(options.price)) {
 			response.err = CustomError(ERROR.INVALID_PRICE);
 			return response;
 		}

@@ -1,5 +1,23 @@
 # Changelog
 
+## [10.2.0](https://github.com/fasenderos/nodejs-order-book/compare/v10.1.1...v10.2.0) (2026-09-28)
+
+### Bug Fixes
+
+* keep FOK atomic when STP blocks the fill ([4486c52](https://github.com/fasenderos/nodejs-order-book/commit/4486c52aecdcaa1ebf80eaab2bb91b5ee3cd238a))
+* report unfilled quantityLeft when STP triggers mid-queue ([7f72a38](https://github.com/fasenderos/nodejs-order-book/commit/7f72a38bda04bb914a8f09a7bebd9c3b9a1ceba0))
+* use truthiness in the FOK self-trade guard ([e3a2089](https://github.com/fasenderos/nodejs-order-book/commit/e3a20891a9fbf54c49f164fff6331a87e0827d4f))
+
+### Chore
+
+* remove dependabot ([1759968](https://github.com/fasenderos/nodejs-order-book/commit/17599685610342af8f4f6e5f493fd38e4ebb0d48))
+
+### Documentation
+
+* add comprehensive explanation of order results ([d358973](https://github.com/fasenderos/nodejs-order-book/commit/d358973412900170aa8ceb3cb608e89513fd281a))
+* improve readme ([083c64a](https://github.com/fasenderos/nodejs-order-book/commit/083c64a1c51c6d2323a4a89245475249d4cfd35f))
+* remove wrong references ([53915dd](https://github.com/fasenderos/nodejs-order-book/commit/53915dd61dcf855d9748bbbf9ebe91a346c83145))
+
 ## [10.1.1](https://github.com/fasenderos/nodejs-order-book/compare/v10.1.0...v10.1.1) (2026-06-27)
 
 ## [10.1.0](https://github.com/fasenderos/nodejs-order-book/compare/v10.0.1...v10.1.0) (2026-06-27)

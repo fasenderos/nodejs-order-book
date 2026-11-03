@@ -143,6 +143,8 @@ export interface ILimitOrder {
 	timeInForce: TimeInForce;
 	takerQty: number;
 	makerQty: number;
+	postOnly?: boolean;
+	ocoStopPrice?: number;
 	accountId?: string;
 	stpMode?: SelfTradePreventionMode;
 }
@@ -433,5 +435,7 @@ export interface Snapshot {
 	ts: number;
 	/** The id of the last operation inserted in the orderbook */
 	lastOp: number;
+	/** Price of the last trade. Missing in snapshots taken before 10.2.1 */
+	marketPrice?: number;
 }
 /* node:coverage enable */

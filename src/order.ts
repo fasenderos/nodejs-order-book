@@ -170,6 +170,10 @@ export class LimitOrder extends BaseOrder {
 		timeInForce: this._timeInForce,
 		makerQty: this._makerQty,
 		takerQty: this._takerQty,
+		...(this._postOnly ? { postOnly: true } : {}),
+		...(this._ocoStopPrice !== undefined
+			? { ocoStopPrice: this._ocoStopPrice }
+			: {}),
 		...(this._accountId ? { accountId: this._accountId } : {}),
 		...(this._stpMode !== SelfTradePreventionMode.NONE
 			? { stpMode: this._stpMode }
