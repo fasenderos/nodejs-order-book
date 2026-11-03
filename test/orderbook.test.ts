@@ -1957,3 +1957,38 @@ void test("test ocoStopPrice passed to limit is ignored", () => {
 	assert.equal(ob.order("ask")?.ocoStopPrice, undefined);
 	assert.equal(ob.market({ side: Side.BUY, size: 1 }).err, null);
 });
+
+void test("test snapshot restores marketPrice", () => {
+	const ob = new OrderBook({ enableJournaling: true });
+	ob.limit({ id: "a1", side: Side.SELL, size: 1, price: 100 });
+	ob.market({ side: Side.BUY, size: 1 });
+	ob.limit({ id: "a2", side: Side.SELL, size: 5, price: 99 });
+	const snapshot = JSON.parse(JSON.stringify(ob.snapshot()));
+	assert.equal(snapshot.marketPrice, 100);
+	// A sell stop is only valid below the market price
+	const stop = ob.stopMarket({ side: Side.SELL, size: 1, stopPrice: 95 });
+	assert.equal(stop.err, null);
+	assert.ok(stop.log);
+
+	const restored = new OrderBook({ snapshot, journal: [stop.log] });
+	assert.equal(restored.marketPrice, 100);
+	// Stop-market ids are generated, so compare everything else
+	const stops = (book: OrderBook) =>
+		book
+			.snapshot()
+			.stopBook.asks.flatMap((l) => l.orders)
+			.map(({ side, size, stopPrice }) => ({ side, size, stopPrice }));
+	assert.deepEqual(stops(restored), [
+		{ side: Side.SELL, size: 1, stopPrice: 95 },
+	]);
+	// A buy stop below the market price is still rejected after restore
+	assert.equal(
+		restored.stopMarket({ side: Side.BUY, size: 1, stopPrice: 50 }).err
+			?.message,
+		ErrorMessages.INVALID_CONDITIONAL_ORDER,
+	);
+
+	// Snapshots taken before marketPrice was saved still load
+	const { marketPrice: _, ...legacy } = snapshot;
+	assert.equal(new OrderBook({ snapshot: legacy }).marketPrice, 0);
+});

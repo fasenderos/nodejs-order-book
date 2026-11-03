@@ -410,7 +410,14 @@ export class OrderBook {
 			asks.push({ price, orders: orders.toArray().map((o) => o.toObject()) });
 		});
 		const stopBook = this.stopBook.snapshot();
-		return { bids, asks, stopBook, ts: Date.now(), lastOp: this._lastOp };
+		return {
+			bids,
+			asks,
+			stopBook,
+			ts: Date.now(),
+			lastOp: this._lastOp,
+			marketPrice: this._marketPrice,
+		};
 	};
 
 	private readonly _market = (
@@ -579,6 +586,7 @@ export class OrderBook {
 
 	private readonly restoreSnapshot = (snapshot: Snapshot): void => {
 		this._lastOp = snapshot.lastOp;
+		this._marketPrice = snapshot.marketPrice ?? 0;
 		for (const level of snapshot.bids) {
 			for (const order of level.orders) {
 				const newOrder = OrderFactory.createOrder(order);
