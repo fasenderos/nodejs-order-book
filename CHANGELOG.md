@@ -2,6 +2,10 @@
 
 ## [10.2.1](https://github.com/fasenderos/nodejs-order-book/compare/v10.1.1...v10.2.1) (2026-11-03)
 
+### Security
+
+* reject non-finite (`NaN`, `±Infinity`) prices, sizes and stop prices. Reported by M.Fahmi Pratama (https://github.com/FoGroup7)
+
 ### Bug Fixes
 
 * keep FOK atomic when STP blocks the fill ([4486c52](https://github.com/fasenderos/nodejs-order-book/commit/4486c52aecdcaa1ebf80eaab2bb91b5ee3cd238a))
