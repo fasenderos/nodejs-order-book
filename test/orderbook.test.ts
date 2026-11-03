@@ -1844,3 +1844,51 @@ void test("orderbook test unreachable lines", () => {
 	const deleted = ob.cancel("sell-100");
 	assert.equal(ob.lastOp, deleted?.log?.opId);
 });
+
+void test("test non-finite price and size are rejected", () => {
+	const ob = new OrderBook();
+	ob.limit({ id: "ask", side: Side.SELL, size: 5, price: 100 });
+	for (const bad of [
+		Number.NaN,
+		Number.POSITIVE_INFINITY,
+		Number.NEGATIVE_INFINITY,
+	]) {
+		assert.equal(
+			ob.limit({ id: "p", side: Side.BUY, size: 1, price: bad }).err?.message,
+			ErrorMessages.INVALID_PRICE,
+		);
+		assert.equal(
+			ob.limit({ id: "s", side: Side.BUY, size: bad, price: 90 }).err?.message,
+			ErrorMessages.INVALID_QUANTITY,
+		);
+		assert.equal(
+			ob.market({ side: Side.BUY, size: bad }).err?.message,
+			ErrorMessages.INSUFFICIENT_QUANTITY,
+		);
+		assert.equal(
+			ob.modify("ask", { price: bad }).err?.message,
+			ErrorMessages.INVALID_PRICE_OR_QUANTITY,
+		);
+		assert.equal(
+			ob.modify("ask", { size: bad }).err?.message,
+			ErrorMessages.INVALID_PRICE_OR_QUANTITY,
+		);
+		assert.equal(
+			ob.stopMarket({ side: Side.BUY, size: 1, stopPrice: bad }).err?.message,
+			ErrorMessages.INVALID_CONDITIONAL_ORDER,
+		);
+		assert.equal(
+			ob.oco({
+				id: `oco${bad}`,
+				side: Side.BUY,
+				size: 1,
+				price: 90,
+				stopPrice: 110,
+				stopLimitPrice: bad,
+			}).err?.message,
+			ErrorMessages.INVALID_CONDITIONAL_ORDER,
+		);
+	}
+	assert.deepEqual(ob.depth(), [[[100, 5]], []]);
+	assert.equal(ob.marketPrice, 0);
+});

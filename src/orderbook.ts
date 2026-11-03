@@ -33,6 +33,9 @@ import {
 } from "./types";
 
 const validTimeInForce = Object.values(TimeInForce);
+// Rejects non-numbers, NaN and ±Infinity along with values <= 0
+const isPositiveFinite = (n: unknown): n is number =>
+	Number.isFinite(n) && (n as number) > 0;
 
 export class OrderBook {
 	private orders: { [key: string]: LimitOrder } = {};
@@ -279,7 +282,7 @@ export class OrderBook {
 		if (orderUpdate?.price !== undefined || orderUpdate?.size !== undefined) {
 			const newPrice = orderUpdate.price ?? order.price;
 			const newSize = orderUpdate.size ?? order.size;
-			if (newPrice > 0 && newSize > 0) {
+			if (isPositiveFinite(newPrice) && isPositiveFinite(newSize)) {
 				const response = this.getProcessOrderResponse(newSize);
 				this._cancelOrder(order.id, true);
 				this.createLimitOrder(
@@ -954,6 +957,7 @@ export class OrderBook {
 	 */
 	private readonly validateOCOOrder = (options: OCOOrderOptions): boolean => {
 		let response = false;
+		if (!isPositiveFinite(options.stopLimitPrice)) return response;
 		if (
 			options.side === Side.BUY &&
 			options.price < this._marketPrice &&
@@ -1186,7 +1190,7 @@ export class OrderBook {
 			return response;
 		}
 
-		if (typeof order.size !== "number" || order.size <= 0) {
+		if (!isPositiveFinite(order.size)) {
 			response.err = CustomError(ERROR.INSUFFICIENT_QUANTITY);
 			return response;
 		}
@@ -1208,12 +1212,12 @@ export class OrderBook {
 			return response;
 		}
 
-		if (typeof options.size !== "number" || options.size <= 0) {
+		if (!isPositiveFinite(options.size)) {
 			response.err = CustomError(ERROR.INVALID_QUANTITY);
 			return response;
 		}
 
-		if (typeof options.price !== "number" || options.price <= 0) {
+		if (!isPositiveFinite(options.price)) {
 			response.err = CustomError(ERROR.INVALID_PRICE);
 			return response;
 		}
